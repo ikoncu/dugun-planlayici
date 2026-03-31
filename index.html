@@ -10,192 +10,221 @@
             --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
             --green:#059669;--green-bg:#ecfdf5;--green-light:#34d399;
             --red:#dc2626;--red-bg:#fef2f2;
-            --blue:#2563eb;--blue-bg:#eff6ff;
-            --orange:#ea580c;--orange-bg:#fff7ed;
             --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
             --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
             --gray-700:#374151;--gray-900:#111827;
             --white:#fff;
-            --phase1:#8b5cf6;--phase1-bg:#f5f3ff;
-            --phase2:#b8860b;--phase2-bg:#fdf8ef;
-            --phase3:#0891b2;--phase3-bg:#ecfeff;
+            --c0:#8b5cf6;--c0-bg:#f5f3ff;
+            --c1:#b8860b;--c1-bg:#fdf8ef;
+            --c2:#0891b2;--c2-bg:#ecfeff;
+            --c3:#059669;--c3-bg:#ecfdf5;
+            --c4:#dc2626;--c4-bg:#fef2f2;
+            --c5:#ea580c;--c5-bg:#fff7ed;
         }
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;padding-bottom:80px}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;padding-bottom:68px}
 
-        /* Header */
-        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:20px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
-        .header h1{font-size:22px;font-weight:700;letter-spacing:0.5px}
-        .countdowns{display:flex;justify-content:center;gap:12px;margin-top:12px;flex-wrap:wrap}
-        .cd-box{background:rgba(255,255,255,0.1);border-radius:10px;padding:8px 14px;backdrop-filter:blur(10px);min-width:120px}
-        .cd-box .cd-num{font-size:22px;font-weight:800;color:var(--gold-light)}
-        .cd-box .cd-label{font-size:11px;opacity:0.8;margin-top:1px}
-        .overall-progress{margin-top:12px;display:flex;align-items:center;gap:10px;justify-content:center}
-        .progress-bar-mini{width:150px;height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden}
+        /* HEADER */
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:18px 16px 14px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+        .header h1{font-size:20px;font-weight:700;letter-spacing:0.5px}
+        .countdowns{display:flex;justify-content:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+        .cd-box{background:rgba(255,255,255,0.1);border-radius:10px;padding:7px 12px;min-width:110px}
+        .cd-box .cd-num{font-size:20px;font-weight:800;color:var(--gold-light)}
+        .cd-box .cd-label{font-size:10px;opacity:0.8;margin-top:1px}
+        .overall-progress{margin-top:10px;display:flex;align-items:center;gap:10px;justify-content:center}
+        .progress-bar-mini{width:140px;height:5px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden}
         .progress-fill-mini{height:100%;background:var(--gold-light);border-radius:3px;transition:width 0.5s}
-        .progress-pct{font-size:13px;font-weight:600;color:var(--gold-light)}
+        .progress-pct{font-size:12px;font-weight:600;color:var(--gold-light)}
 
-        /* Roadmap container */
-        .roadmap{max-width:640px;margin:0 auto;padding:24px 16px;position:relative}
+        /* BOTTOM TAB BAR */
+        .tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--gray-200);display:flex;z-index:100;height:60px;box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
+        .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--gray-400);font-size:10px;font-weight:500;transition:color 0.2s;padding:8px 4px}
+        .tab-item .tab-icon{font-size:20px;line-height:1;transition:transform 0.2s}
+        .tab-item.active{color:var(--gold)}
+        .tab-item.active .tab-icon{transform:scale(1.1)}
 
-        /* Vertical line */
+        /* SCREENS */
+        .screen{display:none}
+        .screen.active{display:block}
+
+        /* ROADMAP */
+        .roadmap{max-width:640px;margin:0 auto;padding:20px 16px 8px;position:relative}
         .roadmap::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:3px;background:var(--gray-200);z-index:0}
 
         /* Phase */
-        .phase{position:relative;margin-bottom:32px}
-        .phase-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;cursor:pointer;position:relative;z-index:1;transition:all 0.2s}
-        .phase-header:hover{transform:translateX(4px)}
-        .phase-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;z-index:2;position:relative}
-        .phase-info{flex:1}
-        .phase-name{font-size:17px;font-weight:700}
-        .phase-dates{font-size:12px;opacity:0.7;margin-top:2px}
-        .phase-progress{display:flex;align-items:center;gap:6px;margin-top:6px}
-        .phase-progress-bar{flex:1;height:5px;background:rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;max-width:120px}
-        .phase-progress-fill{height:100%;border-radius:3px;transition:width 0.4s}
-        .phase-progress-text{font-size:11px;font-weight:600}
-        .phase-chevron{font-size:18px;transition:transform 0.3s;flex-shrink:0}
+        .phase{position:relative;margin-bottom:24px}
+        .phase-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;cursor:pointer;position:relative;z-index:1;transition:all 0.2s;user-select:none}
+        .phase-header:hover{transform:translateX(3px)}
+        .phase-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
+        .phase-info{flex:1;min-width:0}
+        .phase-name{font-size:15px;font-weight:700}
+        .phase-dates{font-size:11px;opacity:0.7;margin-top:1px}
+        .phase-progress{display:flex;align-items:center;gap:5px;margin-top:4px}
+        .phase-progress-bar{width:80px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;overflow:hidden}
+        .phase-progress-fill{height:100%;border-radius:2px;transition:width 0.4s}
+        .phase-progress-text{font-size:10px;font-weight:600}
+        .phase-actions{display:flex;gap:4px;flex-shrink:0}
+        .phase-del-btn{background:none;border:none;font-size:14px;cursor:pointer;opacity:0.5;padding:3px;border-radius:4px}
+        .phase-del-btn:hover{opacity:1;background:rgba(0,0,0,0.1)}
+        .phase-chevron{font-size:14px;transition:transform 0.3s;flex-shrink:0}
         .phase.open .phase-chevron{transform:rotate(90deg)}
-
-        /* Phase colors */
-        .phase-1 .phase-header{background:var(--phase1-bg);color:var(--phase1)}
-        .phase-1 .phase-dot{background:var(--phase1)}
-        .phase-1 .phase-progress-fill{background:var(--phase1)}
-        .phase-2 .phase-header{background:var(--phase2-bg);color:var(--phase2)}
-        .phase-2 .phase-dot{background:var(--phase2)}
-        .phase-2 .phase-progress-fill{background:var(--phase2)}
-        .phase-3 .phase-header{background:var(--phase3-bg);color:var(--phase3)}
-        .phase-3 .phase-dot{background:var(--phase3)}
-        .phase-3 .phase-progress-fill{background:var(--phase3)}
-
-        /* Completed phase */
         .phase.completed .phase-header{opacity:0.6}
 
-        /* Steps */
-        .phase-steps{overflow:hidden;max-height:0;transition:max-height 0.4s ease;padding-left:16px}
-        .phase.open .phase-steps{max-height:5000px}
+        /* Dynamic phase colors */
+        .pc-0 .phase-header{background:var(--c0-bg);color:var(--c0)} .pc-0 .phase-dot{background:var(--c0)} .pc-0 .phase-progress-fill{background:var(--c0)}
+        .pc-1 .phase-header{background:var(--c1-bg);color:var(--c1)} .pc-1 .phase-dot{background:var(--c1)} .pc-1 .phase-progress-fill{background:var(--c1)}
+        .pc-2 .phase-header{background:var(--c2-bg);color:var(--c2)} .pc-2 .phase-dot{background:var(--c2)} .pc-2 .phase-progress-fill{background:var(--c2)}
+        .pc-3 .phase-header{background:var(--c3-bg);color:var(--c3)} .pc-3 .phase-dot{background:var(--c3)} .pc-3 .phase-progress-fill{background:var(--c3)}
+        .pc-4 .phase-header{background:var(--c4-bg);color:var(--c4)} .pc-4 .phase-dot{background:var(--c4)} .pc-4 .phase-progress-fill{background:var(--c4)}
+        .pc-5 .phase-header{background:var(--c5-bg);color:var(--c5)} .pc-5 .phase-dot{background:var(--c5)} .pc-5 .phase-progress-fill{background:var(--c5)}
 
-        /* Step card */
-        .step{display:flex;gap:10px;margin:8px 0;position:relative}
-        .step-line{position:relative;display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0}
-        .step-circle{width:20px;height:20px;border-radius:50%;border:2px solid var(--gray-300);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;z-index:1;flex-shrink:0}
+        /* Steps container */
+        .phase-steps{overflow:hidden;max-height:0;transition:max-height 0.4s ease;padding-left:14px}
+        .phase.open .phase-steps{max-height:8000px}
+
+        /* Step */
+        .step{display:flex;gap:8px;margin:6px 0;position:relative;transition:transform 0.15s,opacity 0.15s}
+        .step.drag-over-top{border-top:2px solid var(--gold);margin-top:8px}
+        .step.drag-over-bot{border-bottom:2px solid var(--gold);margin-bottom:8px}
+        .step.dragging{opacity:0.35}
+
+        .step-left{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0;gap:0}
+        .drag-handle{width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--gray-300);font-size:13px;flex-shrink:0;touch-action:none;border-radius:4px}
+        .drag-handle:hover{color:var(--gray-500);background:var(--gray-100)}
+        .drag-handle:active{cursor:grabbing}
+        .step-circle{width:18px;height:18px;border-radius:50%;border:2px solid var(--gray-300);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0}
         .step-circle:hover{transform:scale(1.15)}
         .step-circle.done{background:var(--green);border-color:var(--green)}
-        .step-circle.done::after{content:'';width:6px;height:10px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px}
-        .step-connector{flex:1;width:2px;background:var(--gray-200);margin:2px 0}
+        .step-circle.done::after{content:'';width:5px;height:8px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px}
+        .step-connector{flex:1;width:2px;background:var(--gray-200);margin:2px 0;min-height:8px}
         .step.done .step-connector{background:var(--green-light)}
 
-        .step-card{flex:1;background:var(--white);border-radius:12px;border:1px solid var(--gray-100);overflow:hidden;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+        .step-card{flex:1;background:var(--white);border-radius:11px;border:1px solid var(--gray-100);overflow:hidden;transition:box-shadow 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
         .step-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-        .step.done .step-card{opacity:0.55}
+        .step.done .step-card{opacity:0.5}
         .step.active .step-card{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,134,11,0.15),0 4px 12px rgba(184,134,11,0.1)}
-
-        .step-main{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:10px}
-        .step-title{font-size:14px;font-weight:500;flex:1;line-height:1.3}
+        .step-main{display:flex;align-items:center;padding:10px 12px;cursor:pointer;gap:8px}
+        .step-title{font-size:13px;font-weight:500;flex:1;line-height:1.3}
         .step.done .step-title{text-decoration:line-through;color:var(--gray-400)}
-        .step-expand{font-size:14px;color:var(--gray-400);transition:transform 0.2s}
+        .step-expand{font-size:12px;color:var(--gray-400);transition:transform 0.2s}
         .step.expanded .step-expand{transform:rotate(90deg)}
-
-        /* Step detail panel */
-        .step-detail{display:none;padding:0 14px 14px;border-top:1px solid var(--gray-100)}
+        .step-detail{display:none;padding:0 12px 12px;border-top:1px solid var(--gray-100)}
         .step.expanded .step-detail{display:block}
-        .step-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:50px;font-family:inherit;margin-top:8px}
+        .step-hint{font-size:12px;color:var(--gray-500);margin-top:8px;line-height:1.5}
+        .step-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:12px;resize:vertical;min-height:44px;font-family:inherit;margin-top:8px}
         .step-note:focus{outline:none;border-color:var(--gold)}
-        .step-hint{font-size:12px;color:var(--gray-500);margin-top:6px;line-height:1.5}
-        .step-deadline{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px}
-        .step-deadline input{border:1px solid var(--gray-200);border-radius:6px;padding:4px 8px;font-size:13px;font-family:inherit}
+        .step-del-btn{margin-top:8px;font-size:11px;color:var(--red);background:var(--red-bg);border:none;border-radius:6px;padding:4px 10px;cursor:pointer}
 
-        /* Venue carousel (special step) */
-        .venue-scroll{display:flex;gap:12px;overflow-x:auto;padding:12px 0 4px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
-        .venue-scroll::-webkit-scrollbar{height:4px}
-        .venue-scroll::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:2px}
-        .v-card{min-width:260px;max-width:280px;background:var(--gray-50);border-radius:10px;padding:14px;border:1px solid var(--gray-100);scroll-snap-align:start;flex-shrink:0;position:relative}
-        .v-card.fav{border-color:var(--gold);background:var(--gold-bg)}
-        .v-name{font-size:15px;font-weight:600;margin-bottom:8px;padding-right:28px}
-        .v-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
-        .v-tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gray-100);color:var(--gray-700);font-weight:500}
-        .v-tag.green{background:var(--green-bg);color:var(--green)}
-        .v-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--gray-500)}
-        .v-row input{border:none;text-align:right;width:100px;font-size:12px;background:transparent;font-family:inherit}
-        .v-row input:focus{outline:none;color:var(--gray-900)}
-        .v-note{width:100%;border:1px solid var(--gray-200);border-radius:6px;padding:6px 8px;font-size:12px;resize:none;height:40px;margin-top:6px;font-family:inherit}
-        .v-actions{display:flex;gap:6px;margin-top:8px}
-        .v-actions a,.v-actions button{font-size:11px;padding:4px 8px;border-radius:5px;border:1px solid var(--gray-200);background:var(--white);text-decoration:none;color:var(--gray-700);cursor:pointer}
-        .v-actions a.ig{background:#833AB4;color:white;border-color:#833AB4}
-        .v-fav{position:absolute;top:10px;right:10px;background:none;border:none;font-size:20px;cursor:pointer}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,134,11,0.25)}50%{box-shadow:0 0 0 5px rgba(184,134,11,0)}}
+        .step.active .step-circle{animation:pulse 2s infinite;border-color:var(--gold);background:var(--gold-bg)}
 
-        /* Budget mini */
-        .budget-mini{margin-top:10px}
-        .budget-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-50);font-size:13px}
-        .budget-row:last-child{border:none}
-        .budget-total{font-weight:600;font-size:14px;margin-top:6px;text-align:right;color:var(--gold)}
+        /* Add step row */
+        .add-step-row{padding:6px 0 10px;display:flex;gap:8px;align-items:center}
+        .add-step-input{flex:1;padding:8px 10px;border:1px dashed var(--gray-300);border-radius:8px;font-size:13px;font-family:inherit;background:var(--white)}
+        .add-step-input:focus{outline:none;border-color:var(--gold);border-style:solid}
+        .add-step-btn{padding:8px 12px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:12px;cursor:pointer;white-space:nowrap}
 
-        /* Floating buttons */
-        .fab-group{position:fixed;bottom:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:50}
-        .fab{width:48px;height:48px;border-radius:50%;border:none;color:white;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
-        .fab:hover{transform:scale(1.1)}
-        .fab-note{background:var(--gold)}
-        .fab-budget{background:var(--green)}
+        /* Add phase button */
+        .add-phase-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);margin:0 16px 20px;padding:12px;border:2px dashed var(--gray-300);border-radius:14px;background:none;cursor:pointer;font-size:13px;color:var(--gray-500);transition:all 0.2s}
+        .add-phase-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
 
-        /* Modal */
+        /* VENUES */
+        .screen-header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--white);border-bottom:1px solid var(--gray-100);position:sticky;top:0;z-index:10}
+        .screen-title{font-size:18px;font-weight:700}
+        .btn-sm{padding:7px 13px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;background:var(--gold);color:white}
+        .venue-grid{padding:12px 16px;display:flex;flex-direction:column;gap:12px;max-width:640px;margin:0 auto}
+        .venue-card{background:var(--white);border-radius:14px;border:1px solid var(--gray-100);box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;position:relative}
+        .venue-card.fav{border-color:var(--gold);border-width:2px}
+        .vc-top{padding:14px 14px 10px}
+        .vc-name{font-size:16px;font-weight:600;padding-right:32px;margin-bottom:6px}
+        .vc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+        .vc-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--gray-100);color:var(--gray-700);font-weight:500}
+        .vc-tag.green{background:var(--green-bg);color:var(--green)}
+        .vc-tag.purple{background:#f5f3ff;color:#8b5cf6}
+        .vc-fav{position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;line-height:1}
+        .vc-expand-btn{width:100%;background:none;border:none;border-top:1px solid var(--gray-100);padding:8px;font-size:12px;color:var(--gray-500);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+        .vc-expand-btn:hover{background:var(--gray-50)}
+        .vc-expand-arrow{transition:transform 0.2s;font-size:11px}
+        .venue-card.expanded .vc-expand-arrow{transform:rotate(180deg)}
+        .vc-detail{display:none;padding:12px 14px;border-top:1px solid var(--gray-100);background:var(--gray-50)}
+        .venue-card.expanded .vc-detail{display:block}
+        .vc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--gray-100);font-size:13px}
+        .vc-row span{color:var(--gray-500)}
+        .vc-row input{border:none;background:transparent;text-align:right;font-size:13px;font-family:inherit;width:150px;color:var(--gray-900)}
+        .vc-row input:focus{outline:none}
+        .vc-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:13px;resize:none;height:55px;font-family:inherit;margin-top:8px;background:var(--white)}
+        .vc-note:focus{outline:none;border-color:var(--gold)}
+        .vc-actions{display:flex;gap:8px;margin-top:10px}
+        .vc-actions a,.vc-actions button{font-size:12px;padding:6px 12px;border-radius:7px;border:1px solid var(--gray-200);background:var(--white);text-decoration:none;color:var(--gray-700);cursor:pointer;font-weight:500}
+        .vc-actions a.ig{background:linear-gradient(135deg,#833AB4,#FD1D1D);color:white;border:none}
+        .vc-actions .del{color:var(--red);border-color:var(--red-bg)}
+
+        /* BUDGET */
+        .budget-screen{max-width:640px;margin:0 auto;padding:0 0 20px}
+        .budget-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px}
+        .bt-card{text-align:center;padding:12px 8px;border-radius:12px;background:var(--white);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+        .bt-card .bt-amt{font-size:17px;font-weight:700}
+        .bt-card .bt-lbl{font-size:10px;color:var(--gray-500);margin-top:2px}
+        .bt-card.total .bt-amt{color:var(--gold)}
+        .bt-card.spent .bt-amt{color:var(--red)}
+        .bt-card.rem .bt-amt{color:var(--green)}
+        .budget-set{padding:0 16px 12px}
+        .budget-set label{font-size:12px;font-weight:500;color:var(--gray-500);display:block;margin-bottom:4px}
+        .budget-set-row{display:flex;gap:8px}
+        .budget-set-row input{flex:1;padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit}
+        .budget-set-row input:focus{outline:none;border-color:var(--gold)}
+        .budget-set-row button{padding:9px 14px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;cursor:pointer}
+        .budget-add{padding:0 16px 16px}
+        .budget-add-form{background:var(--white);border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+        .budget-add-form .row{display:flex;gap:8px;margin-bottom:8px}
+        .budget-add-form input,.budget-add-form select{flex:1;padding:9px 10px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;font-family:inherit}
+        .budget-add-form input:focus,.budget-add-form select:focus{outline:none;border-color:var(--gold)}
+        .budget-add-form button{padding:9px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;font-weight:500;cursor:pointer;width:100%}
+        .budget-list{padding:0 16px}
+        .bi-card{background:var(--white);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+        .bi-name{font-size:14px;font-weight:500}
+        .bi-status{font-size:11px;color:var(--gray-400);margin-top:2px}
+        .bi-right{display:flex;align-items:center;gap:8px}
+        .bi-amount{font-size:15px;font-weight:700}
+        .bi-amount.paid{color:var(--green)}
+        .bi-del{background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:18px;line-height:1}
+        .bi-del:hover{color:var(--red)}
+        .empty-hint{text-align:center;padding:24px;color:var(--gray-400);font-size:13px}
+
+        /* NOTES */
+        .notes-screen{max-width:640px;margin:0 auto;padding:0 0 20px}
+        .notes-input-area{padding:16px}
+        .notes-input-area textarea{width:100%;border:1px solid var(--gray-200);border-radius:12px;padding:12px 14px;font-size:14px;resize:none;height:80px;font-family:inherit}
+        .notes-input-area textarea:focus{outline:none;border-color:var(--gold)}
+        .notes-input-area button{margin-top:8px;padding:10px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:14px;font-weight:500;cursor:pointer;width:100%}
+        .notes-list{padding:0 16px}
+        .note-card{background:var(--white);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border-left:4px solid var(--gold)}
+        .note-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .note-date{font-size:11px;color:var(--gray-400)}
+        .note-del{background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:18px;line-height:1}
+        .note-del:hover{color:var(--red)}
+        .note-body{font-size:14px;line-height:1.55;white-space:pre-wrap;color:var(--gray-700)}
+
+        /* MODAL */
         .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center}
         .modal-overlay.active{display:flex}
-        .modal{background:var(--white);border-radius:16px 16px 0 0;padding:20px 16px 30px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;animation:slideUp 0.3s}
+        .modal{background:var(--white);border-radius:16px 16px 0 0;padding:20px 16px 30px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s}
         @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
         .modal-title{font-size:17px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
         .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-500)}
         .form-group{margin-bottom:12px}
         .form-group label{font-size:13px;font-weight:500;color:var(--gray-700);display:block;margin-bottom:4px}
-        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit}
-        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--gold)}
-        .btn{padding:10px 16px;border-radius:8px;border:none;font-size:14px;font-weight:500;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
-        .btn-primary{background:var(--gold);color:white}
-        .btn-primary:hover{background:var(--gold-light)}
+        .form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit}
+        .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--gold)}
+        .color-picker{display:flex;gap:8px;flex-wrap:wrap}
+        .color-opt{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.15s}
+        .color-opt.selected{border-color:var(--gray-900);transform:scale(1.1)}
+        .btn-block{padding:11px 16px;border-radius:8px;border:none;font-size:14px;font-weight:500;cursor:pointer;width:100%;background:var(--gold);color:white;margin-top:4px}
+        .btn-block:hover{background:var(--gold-light)}
 
-        /* Notes panel */
-        .notes-panel{position:fixed;top:0;right:-100%;width:100%;max-width:360px;height:100%;background:var(--white);z-index:150;transition:right 0.3s;box-shadow:-4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}
-        .notes-panel.open{right:0}
-        .notes-header{padding:16px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center}
-        .notes-header h3{font-size:16px}
-        .notes-body{flex:1;overflow-y:auto;padding:12px}
-        .notes-input{padding:12px;border-top:1px solid var(--gray-100)}
-        .notes-input textarea{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;font-size:13px;resize:none;height:60px;font-family:inherit}
-        .notes-input textarea:focus{outline:none;border-color:var(--gold)}
-        .note-item{background:var(--gray-50);border-radius:8px;padding:10px;margin-bottom:8px;position:relative}
-        .note-item .n-date{font-size:11px;color:var(--gray-400)}
-        .note-item .n-text{font-size:13px;margin-top:4px;white-space:pre-wrap;line-height:1.4}
-        .note-item .n-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:16px}
-        .note-item .n-del:hover{color:var(--red)}
-        .note-add-btn{margin-top:6px;padding:8px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;cursor:pointer;width:100%}
+        /* DRAG GHOST */
+        .drag-ghost{position:fixed;pointer-events:none;z-index:500;opacity:0.85;box-shadow:0 8px 24px rgba(0,0,0,0.18);border-radius:11px;background:var(--white);transform:rotate(1.5deg)}
 
-        /* Budget panel */
-        .budget-panel{position:fixed;top:0;right:-100%;width:100%;max-width:360px;height:100%;background:var(--white);z-index:150;transition:right 0.3s;box-shadow:-4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}
-        .budget-panel.open{right:0}
-        .bp-header{padding:16px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center}
-        .bp-header h3{font-size:16px}
-        .bp-body{flex:1;overflow-y:auto;padding:12px}
-        .bp-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-        .bp-stat{text-align:center;padding:10px 6px;border-radius:8px;background:var(--gray-50)}
-        .bp-stat .amt{font-size:16px;font-weight:700}
-        .bp-stat .lbl{font-size:10px;color:var(--gray-500);margin-top:2px}
-        .bp-stat.t .amt{color:var(--gold)}
-        .bp-stat.s .amt{color:var(--red)}
-        .bp-stat.r .amt{color:var(--green)}
-        .bp-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-50);font-size:13px}
-        .bp-item button{background:none;border:none;color:var(--gray-300);cursor:pointer}
-        .bp-input{padding:12px;border-top:1px solid var(--gray-100)}
-
-        /* Overlay for panels */
-        .panel-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:140}
-        .panel-overlay.active{display:block}
-
-        /* Active step pulse */
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,134,11,0.2)}50%{box-shadow:0 0 0 6px rgba(184,134,11,0)}}
-        .step.active .step-circle{animation:pulse 2s infinite;border-color:var(--gold);background:var(--gold-bg)}
-
-        /* "You are here" marker */
-        .here-marker{text-align:center;padding:6px 0;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1px;margin:4px 0 4px 34px}
-        .here-marker span{background:var(--gold-bg);padding:3px 10px;border-radius:10px}
-
-        @media(min-width:600px){.roadmap{padding:32px 24px}.roadmap::before{left:36px}.step-line{width:32px}}
+        @media(min-width:600px){.roadmap{padding:28px 24px}.roadmap::before{left:36px}}
     </style>
 </head>
 <body>
@@ -203,14 +232,8 @@
 <div class="header">
     <h1>Dugun Yol Haritasi</h1>
     <div class="countdowns">
-        <div class="cd-box">
-            <div class="cd-num" id="cd-nisan">--</div>
-            <div class="cd-label">gun / nisana</div>
-        </div>
-        <div class="cd-box">
-            <div class="cd-num" id="cd-dugun">--</div>
-            <div class="cd-label">gun / dugune</div>
-        </div>
+        <div class="cd-box"><div class="cd-num" id="cd-nisan">--</div><div class="cd-label">gun / nisana</div></div>
+        <div class="cd-box"><div class="cd-num" id="cd-dugun">--</div><div class="cd-label">gun / dugune</div></div>
     </div>
     <div class="overall-progress">
         <div class="progress-bar-mini"><div class="progress-fill-mini" id="overall-fill" style="width:0%"></div></div>
@@ -218,126 +241,144 @@
     </div>
 </div>
 
-<div class="roadmap" id="roadmap"></div>
-
-<!-- Floating Buttons -->
-<div class="fab-group">
-    <button class="fab fab-budget" onclick="toggleBudgetPanel()" title="Butce">&#8378;</button>
-    <button class="fab fab-note" onclick="toggleNotesPanel()" title="Notlar">&#9998;</button>
+<!-- ROADMAP SCREEN -->
+<div class="screen active" id="screen-roadmap">
+    <div class="roadmap" id="roadmap"></div>
 </div>
 
-<!-- Notes Panel -->
-<div class="panel-overlay" id="panel-overlay" onclick="closeAllPanels()"></div>
-<div class="notes-panel" id="notes-panel">
-    <div class="notes-header">
-        <h3>Notlar</h3>
-        <button class="modal-close" onclick="toggleNotesPanel()">&times;</button>
+<!-- VENUES SCREEN -->
+<div class="screen" id="screen-venues">
+    <div class="screen-header">
+        <div class="screen-title">Mekanlar</div>
+        <button class="btn-sm" onclick="openVenueModal()">+ Mekan Ekle</button>
     </div>
-    <div class="notes-body" id="notes-body"></div>
-    <div class="notes-input">
-        <textarea id="note-input" placeholder="Not yazin..."></textarea>
-        <button class="note-add-btn" onclick="addNote()">Kaydet</button>
-    </div>
+    <div class="venue-grid" id="venue-grid"></div>
 </div>
 
-<!-- Budget Panel -->
-<div class="budget-panel" id="budget-panel">
-    <div class="bp-header">
-        <h3>Butce Takibi</h3>
-        <button class="modal-close" onclick="toggleBudgetPanel()">&times;</button>
-    </div>
-    <div class="bp-body" id="bp-body"></div>
-    <div class="bp-input">
-        <div style="display:flex;gap:6px;margin-bottom:8px">
-            <input type="text" id="bi-name" placeholder="Kalem adi" style="flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
-            <input type="number" id="bi-amount" placeholder="Tutar" style="width:90px;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
-        </div>
-        <div style="display:flex;gap:6px">
-            <select id="bi-status" style="flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
-                <option value="planned">Planli</option>
-                <option value="paid">Odendi</option>
-            </select>
-            <button class="note-add-btn" style="width:auto;padding:8px 14px;margin:0" onclick="addBudgetItem()">Ekle</button>
-        </div>
-        <div style="margin-top:8px">
-            <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">Toplam Butce (TL)</div>
-            <div style="display:flex;gap:6px">
-                <input type="number" id="total-budget-input" placeholder="500000" style="flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
-                <button class="note-add-btn" style="width:auto;padding:8px 14px;margin:0" onclick="setTotalBudget()">Kaydet</button>
+<!-- BUDGET SCREEN -->
+<div class="screen" id="screen-budget">
+    <div class="screen-header"><div class="screen-title">Butce Takibi</div></div>
+    <div class="budget-screen">
+        <div class="budget-totals" id="budget-totals"></div>
+        <div class="budget-set">
+            <label>Toplam Butce (TL)</label>
+            <div class="budget-set-row">
+                <input type="number" id="total-budget-input" placeholder="Ornegin: 500000">
+                <button onclick="setTotalBudget()">Kaydet</button>
             </div>
         </div>
+        <div class="budget-add">
+            <div class="budget-add-form">
+                <div class="row"><input type="text" id="bi-name" placeholder="Kalem adi (orn: Mekan kaporasi)"></div>
+                <div class="row">
+                    <input type="number" id="bi-amount" placeholder="Tutar (TL)">
+                    <select id="bi-status"><option value="planned">Planli</option><option value="paid">Odendi</option></select>
+                </div>
+                <button onclick="addBudgetItem()">+ Kalem Ekle</button>
+            </div>
+        </div>
+        <div class="budget-list"><div id="budget-items-container"></div></div>
     </div>
 </div>
 
-<!-- Add Venue Modal -->
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this){this.classList.remove('active')}">
-    <div class="modal" id="modal-venue" style="display:none">
-        <div class="modal-title">Yeni Mekan Ekle <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('active')">&times;</button></div>
+<!-- NOTES SCREEN -->
+<div class="screen" id="screen-notes">
+    <div class="screen-header"><div class="screen-title">Notlar</div></div>
+    <div class="notes-screen">
+        <div class="notes-input-area">
+            <textarea id="note-input" placeholder="Aklina geleni yaz..."></textarea>
+            <button onclick="addNote()">Kaydet</button>
+        </div>
+        <div class="notes-list" id="notes-list"></div>
+    </div>
+</div>
+
+<!-- BOTTOM TAB BAR -->
+<nav class="tab-bar">
+    <button class="tab-item active" id="tab-roadmap" onclick="switchTab('roadmap')">
+        <span class="tab-icon">&#128506;</span><span>Yol Haritasi</span>
+    </button>
+    <button class="tab-item" id="tab-venues" onclick="switchTab('venues')">
+        <span class="tab-icon">&#127962;</span><span>Mekanlar</span>
+    </button>
+    <button class="tab-item" id="tab-budget" onclick="switchTab('budget')">
+        <span class="tab-icon">&#128176;</span><span>Butce</span>
+    </button>
+    <button class="tab-item" id="tab-notes" onclick="switchTab('notes')">
+        <span class="tab-icon">&#9998;</span><span>Notlar</span>
+    </button>
+</nav>
+
+<!-- ADD VENUE MODAL -->
+<div class="modal-overlay" id="modal-venue-overlay" onclick="if(event.target===this)this.classList.remove('active')">
+    <div class="modal">
+        <div class="modal-title">Yeni Mekan Ekle <button class="modal-close" onclick="document.getElementById('modal-venue-overlay').classList.remove('active')">&times;</button></div>
         <div class="form-group"><label>Mekan Adi</label><input type="text" id="nv-name"></div>
         <div class="form-group"><label>Instagram</label><input type="url" id="nv-ig" placeholder="https://instagram.com/..."></div>
-        <div class="form-group"><label>Ozellikler (virgul ile)</label><input type="text" id="nv-feat" placeholder="Acik hava, Yemekli"></div>
-        <button class="btn btn-primary" onclick="addVenue()">Ekle</button>
+        <div class="form-group"><label>Ozellikler (virgul ile)</label><input type="text" id="nv-feat" placeholder="Acik hava, Yemekli, Alkolu"></div>
+        <button class="btn-block" onclick="addVenue()">Ekle</button>
+    </div>
+</div>
+
+<!-- ADD PHASE MODAL -->
+<div class="modal-overlay" id="modal-phase-overlay" onclick="if(event.target===this)this.classList.remove('active')">
+    <div class="modal">
+        <div class="modal-title">Yeni Kategori <button class="modal-close" onclick="document.getElementById('modal-phase-overlay').classList.remove('active')">&times;</button></div>
+        <div class="form-group"><label>Kategori Adi</label><input type="text" id="np-name" placeholder="orn: Kina Gecesi Hazirliklari"></div>
+        <div class="form-group"><label>Tarih Arali (opsiyonel)</label><input type="text" id="np-dates" placeholder="orn: Agustos 2026"></div>
+        <div class="form-group">
+            <label>Renk</label>
+            <div class="color-picker" id="color-picker">
+                <div class="color-opt" style="background:#8b5cf6" data-ci="0" onclick="selectColor(0)"></div>
+                <div class="color-opt selected" style="background:#b8860b" data-ci="1" onclick="selectColor(1)"></div>
+                <div class="color-opt" style="background:#0891b2" data-ci="2" onclick="selectColor(2)"></div>
+                <div class="color-opt" style="background:#059669" data-ci="3" onclick="selectColor(3)"></div>
+                <div class="color-opt" style="background:#dc2626" data-ci="4" onclick="selectColor(4)"></div>
+                <div class="color-opt" style="background:#ea580c" data-ci="5" onclick="selectColor(5)"></div>
+            </div>
+        </div>
+        <button class="btn-block" onclick="addPhase()">Kategori Ekle</button>
     </div>
 </div>
 
 <script>
-// ===================== DATA =====================
+// ═══════════════ DATA ═══════════════
 const NISAN_DATE = '2026-05-16';
+const COLORS = [0,1,2,3,4,5];
 
 const DEFAULT_PHASES = [
-    {
-        id: 'nisan',
-        name: 'Nisan Hazirliklari',
-        phaseClass: 'phase-1',
-        dates: 'Simdi \u2192 16 Mayis 2026',
-        deadline: '2026-05-16',
-        steps: [
-            {id:'n1',title:'Saglik raporu al',hint:'Nikah icin zorunlu. Aile hekiminden veya devlet hastanesinden alinir.',done:false,note:''},
-            {id:'n2',title:'Nisan mekani belirle',hint:'Restoran, otel veya ev? Kisi sayisina gore karar ver.',done:false,note:''},
-            {id:'n3',title:'Nisan yuzugu al',hint:'Tek tas veya alyans? Butceye dikkat.',done:false,note:''},
-            {id:'n4',title:'Nisan kiyafetleri',hint:'Gelin & damat nisan kiyafetleri, kuafor randevusu.',done:false,note:''},
-            {id:'n5',title:'Davetli listesi (nisan)',hint:'Yakin aile + yakin arkadaslar. Kisi sayisini netlesrir.',done:false,note:''},
-            {id:'n6',title:'Nisan organizasyonu',hint:'Soz kesme detaylari, cicek, pasta, fotograf.',done:false,note:''},
-            {id:'n7',title:'Dugun mekani arastirmasi baslat',hint:'Mekanlari simdi arastirmaya basla, erken rezervasyon avantajli.',done:false,note:'',type:'venues'},
-        ]
-    },
-    {
-        id: 'dugun',
-        name: 'Dugun Hazirliklari',
-        phaseClass: 'phase-2',
-        dates: 'Mayis \u2192 Agustos/Eylul 2026',
-        deadline: '2026-09-01',
-        steps: [
-            {id:'d1',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi dikkatlice oku, kapora odemesini yap.',done:false,note:''},
-            {id:'d2',title:'Nikah basvurusu (nufus mudurlugu)',hint:'Nufus cuzdani fotokopisi, vesikalik, saglik raporu gerekli.',done:false,note:''},
-            {id:'d3',title:'Dugun organizatoru sec',hint:'En az 2-3 organizatorle gorusun, referans isteyin.',done:false,note:''},
-            {id:'d4',title:'Nikah sahitleri belirle',hint:'2 sahit gerekli, TC kimlik numaralari hazir olsun.',done:false,note:''},
-            {id:'d5',title:'Gelinlik / Damatlk',hint:'En az 3 ay once siparis verin, provayi unutmayin.',done:false,note:''},
-            {id:'d6',title:'Davetiye tasarimi & siparisi',hint:'Dijital veya basili? Davetli sayisina gore siparis.',done:false,note:''},
-            {id:'d7',title:'Fotograf / Video ekibi',hint:'Portfolyo inceleyin, dis cekim istiyorsaniz belirtin.',done:false,note:''},
-            {id:'d8',title:'Muzik / DJ secimi',hint:'Canli muzik mi DJ mi? Playlist hazirlarin.',done:false,note:''},
-            {id:'d9',title:'Cicek & dekorasyon',hint:'Mekan dekorasyonu, gelin cicegi, yaka cicegi.',done:false,note:''},
-            {id:'d10',title:'Menu secimi',hint:'Yemekli ise tadim yapmayi unutmayin. Ozel diyet ihtiyaclari.',done:false,note:''},
-            {id:'d11',title:'Kuafor & makyaj',hint:'Prova makyaji yaptirin, sac modeli belirleyin.',done:false,note:''},
-            {id:'d12',title:'Alyans secimi',hint:'Kuyumculardan fiyat alin, isim/tarih yazdirmak icin sure.',done:false,note:''},
-            {id:'d13',title:'Kina gecesi organizasyonu',hint:'Mekan, kina malzemeleri, muzik, davetliler.',done:false,note:''},
-            {id:'d14',title:'Davetli listesi (dugun)',hint:'Gelin tarafi + damat tarafi, oturma plani.',done:false,note:''},
-            {id:'d15',title:'Son kontroller & prova',hint:'Tum tedarikci onaylari, mekan provasi, akis plani.',done:false,note:''},
-        ]
-    },
-    {
-        id: 'balayi',
-        name: 'Balayi & Son',
-        phaseClass: 'phase-3',
-        dates: 'Dugun sonrasi',
-        deadline: '2026-10-01',
-        steps: [
-            {id:'b1',title:'Balayi destinasyonu arastir',hint:'Ic veya dis? Butce ve sure belirle.',done:false,note:''},
-            {id:'b2',title:'Otel & ucak rezervasyonu',hint:'Erken rezervasyon = uygun fiyat.',done:false,note:''},
-            {id:'b3',title:'Pasaport / Vize (gerekiyorsa)',hint:'Yurt disi ise en az 2 ay onceden basvurun.',done:false,note:''},
-            {id:'b4',title:'Balayi butcesi',hint:'Konaklama, ulasim, yemek, aktiviteler.',done:false,note:''},
-        ]
-    }
+    {id:'nisan',name:'Nisan Hazirliklari',ci:0,dates:'Simdi \u2192 16 Mayis 2026',steps:[
+        {id:'n1',title:'Saglik raporu al',hint:'Nikah icin zorunlu. Aile hekiminden veya devlet hastanesinden alinir.',done:false,note:''},
+        {id:'n2',title:'Nisan mekani belirle',hint:'Restoran, otel veya ev? Kisi sayisina gore karar ver.',done:false,note:''},
+        {id:'n3',title:'Nisan yuzugu al',hint:'Tek tas veya alyans? Butceye dikkat.',done:false,note:''},
+        {id:'n4',title:'Nisan kiyafetleri',hint:'Gelin & damat nisan kiyafetleri, kuafor randevusu.',done:false,note:''},
+        {id:'n5',title:'Davetli listesi (nisan)',hint:'Yakin aile + yakin arkadaslar. Kisi sayisini netlesrir.',done:false,note:''},
+        {id:'n6',title:'Nisan organizasyonu',hint:'Soz kesme detaylari, cicek, pasta, fotograf.',done:false,note:''},
+        {id:'n7',title:'Dugun mekani arastirmasina basla',hint:'Mekanlari simdi incele, erken rezervasyon avantajli. Mekanlar sekmesine goz at!',done:false,note:''},
+    ]},
+    {id:'dugun',name:'Dugun Hazirliklari',ci:1,dates:'Mayis \u2192 Agustos/Eylul 2026',steps:[
+        {id:'d1',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi dikkatlice oku, kapora odemesini yap.',done:false,note:''},
+        {id:'d2',title:'Nikah basvurusu (nufus mudurlugu)',hint:'Nufus cuzdani fotokopisi, vesikalik, saglik raporu gerekli.',done:false,note:''},
+        {id:'d3',title:'Dugun organizatoru sec',hint:'En az 2-3 organizatorle gorusun, referans isteyin.',done:false,note:''},
+        {id:'d4',title:'Nikah sahitleri belirle',hint:'2 sahit gerekli, TC kimlik numaralari hazir olsun.',done:false,note:''},
+        {id:'d5',title:'Gelinlik / Damatlk',hint:'En az 3 ay once siparis verin, provayi unutmayin.',done:false,note:''},
+        {id:'d6',title:'Davetiye tasarimi & siparisi',hint:'Dijital veya basili? Davetli sayisina gore siparis.',done:false,note:''},
+        {id:'d7',title:'Fotograf / Video ekibi',hint:'Portfolyo inceleyin, dis cekim istiyorsaniz belirtin.',done:false,note:''},
+        {id:'d8',title:'Muzik / DJ secimi',hint:'Canli muzik mi DJ mi? Playlist hazirlarin.',done:false,note:''},
+        {id:'d9',title:'Cicek & dekorasyon',hint:'Mekan dekorasyonu, gelin cicegi, yaka cicegi.',done:false,note:''},
+        {id:'d10',title:'Menu secimi',hint:'Yemekli ise tadim yapmayi unutmayin. Ozel diyet ihtiyaclari.',done:false,note:''},
+        {id:'d11',title:'Kuafor & makyaj',hint:'Prova makyaji yaptirin, sac modeli belirleyin.',done:false,note:''},
+        {id:'d12',title:'Alyans secimi',hint:'Kuyumculardan fiyat alin, isim/tarih yazdirmak icin sure.',done:false,note:''},
+        {id:'d13',title:'Kina gecesi organizasyonu',hint:'Mekan, kina malzemeleri, muzik, davetliler.',done:false,note:''},
+        {id:'d14',title:'Davetli listesi (dugun)',hint:'Gelin tarafi + damat tarafi, oturma plani.',done:false,note:''},
+        {id:'d15',title:'Son kontroller & prova',hint:'Tum tedarikci onaylari, mekan provasi, akis plani.',done:false,note:''},
+    ]},
+    {id:'balayi',name:'Balayi & Son',ci:2,dates:'Dugun sonrasi',steps:[
+        {id:'b1',title:'Balayi destinasyonu arastir',hint:'Ic veya dis? Butce ve sure belirle.',done:false,note:''},
+        {id:'b2',title:'Otel & ucak rezervasyonu',hint:'Erken rezervasyon = uygun fiyat.',done:false,note:''},
+        {id:'b3',title:'Pasaport / Vize (gerekiyorsa)',hint:'Yurt disi ise en az 2 ay onceden basvurun.',done:false,note:''},
+        {id:'b4',title:'Balayi butcesi',hint:'Konaklama, ulasim, yemek, aktiviteler.',done:false,note:''},
+    ]}
 ];
 
 const DEFAULT_VENUES = [
@@ -350,217 +391,332 @@ const DEFAULT_VENUES = [
     {id:7,name:'MSM Erikce',instagram:'https://www.instagram.com/msmerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''}
 ];
 
-// ===================== STATE =====================
-function load(k,d){try{const v=localStorage.getItem('wr_'+k);return v?JSON.parse(v):d}catch{return d}}
-function save(k,v){localStorage.setItem('wr_'+k,JSON.stringify(v))}
+// ═══════════════ STATE ═══════════════
+function load(k,d){try{const v=localStorage.getItem('wr2_'+k);return v?JSON.parse(v):d}catch{return d}}
+function save(k,v){localStorage.setItem('wr2_'+k,JSON.stringify(v))}
 
-let phases = load('phases', null);
-if (!phases) { phases = JSON.parse(JSON.stringify(DEFAULT_PHASES)); save('phases', phases); }
-let venues = load('venues', DEFAULT_VENUES);
+let phases      = load('phases', null);
+if(!phases){phases=JSON.parse(JSON.stringify(DEFAULT_PHASES));save('phases',phases)}
+let venues      = load('venues', DEFAULT_VENUES);
 let budgetItems = load('budget_items', []);
 let totalBudget = load('total_budget', 0);
 let weddingDate = load('wedding_date', '2026-09-01');
-let notes = load('notes', []);
+let notes       = load('notes', []);
+let newPhaseCI  = 1;
 
-// ===================== COUNTDOWNS =====================
+// ═══════════════ TABS ═══════════════
+function switchTab(tab){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+    document.getElementById('screen-'+tab).classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+    if(tab==='venues')renderVenues();
+    if(tab==='budget')renderBudget();
+    if(tab==='notes') renderNotes();
+}
+
+// ═══════════════ ROADMAP ═══════════════
 function updateCountdowns(){
-    const now = new Date();
-    const nd = Math.ceil((new Date(NISAN_DATE)-now)/(1000*60*60*24));
-    const wd = Math.ceil((new Date(weddingDate)-now)/(1000*60*60*24));
-    document.getElementById('cd-nisan').textContent = nd > 0 ? nd : (nd === 0 ? 'Bugun!' : 'Gecti');
-    document.getElementById('cd-dugun').textContent = wd > 0 ? wd : (wd === 0 ? 'Bugun!' : '?');
+    const now=new Date();
+    const nd=Math.ceil((new Date(NISAN_DATE)-now)/864e5);
+    const wd=Math.ceil((new Date(weddingDate)-now)/864e5);
+    document.getElementById('cd-nisan').textContent=nd>0?nd:(nd===0?'Bugun!':'Gecti');
+    document.getElementById('cd-dugun').textContent=wd>0?wd:(wd===0?'Bugun!':'?');
 }
 
-// ===================== RENDER =====================
-function render(){
+function renderRoadmap(){
     updateCountdowns();
-    const container = document.getElementById('roadmap');
-    let html = '';
-    let totalSteps = 0, totalDone = 0;
-    let foundActive = false;
+    const container=document.getElementById('roadmap');
+    let html='';
+    let totalSteps=0,totalDone=0,foundActive=false;
 
-    phases.forEach((phase, pi) => {
-        const done = phase.steps.filter(s=>s.done).length;
-        const total = phase.steps.length;
-        totalSteps += total;
-        totalDone += done;
-        const pct = total > 0 ? Math.round(done/total*100) : 0;
-        const allDone = done === total;
-        const isOpen = !allDone || pi === phases.length - 1;
+    phases.forEach((phase,pi)=>{
+        const done=phase.steps.filter(s=>s.done).length;
+        const total=phase.steps.length;
+        totalSteps+=total; totalDone+=done;
+        const pct=total>0?Math.round(done/total*100):0;
+        const allDone=done===total&&total>0;
+        const ci=phase.ci||0;
 
-        html += '<div class="phase ' + phase.phaseClass + (allDone?' completed':'') + (isOpen?' open':'') + '" data-phase="'+pi+'">';
-        html += '<div class="phase-header" onclick="togglePhase('+pi+')">';
-        html += '<div class="phase-dot">'+(allDone?'&#10003;':(pi+1))+'</div>';
-        html += '<div class="phase-info">';
-        html += '<div class="phase-name">'+phase.name+'</div>';
-        html += '<div class="phase-dates">'+phase.dates+'</div>';
-        html += '<div class="phase-progress"><div class="phase-progress-bar"><div class="phase-progress-fill" style="width:'+pct+'%"></div></div><span class="phase-progress-text">'+done+'/'+total+'</span></div>';
-        html += '</div>';
-        html += '<div class="phase-chevron">&#9654;</div>';
-        html += '</div>';
+        html+=`<div class="phase pc-${ci}${allDone?' completed':''} open" data-phase="${pi}">`;
+        // Phase header
+        html+=`<div class="phase-header" onclick="togglePhase(${pi})">`;
+        html+=`<div class="phase-dot">${allDone?'&#10003;':(pi+1)}</div>`;
+        html+=`<div class="phase-info">`;
+        html+=`<div class="phase-name">${phase.name}</div>`;
+        if(phase.dates)html+=`<div class="phase-dates">${phase.dates}</div>`;
+        html+=`<div class="phase-progress"><div class="phase-progress-bar"><div class="phase-progress-fill" style="width:${pct}%"></div></div><span class="phase-progress-text">${done}/${total}</span></div>`;
+        html+=`</div>`;
+        html+=`<div class="phase-actions"><button class="phase-del-btn" onclick="event.stopPropagation();deletePhase(${pi})" title="Kategoriyi sil">&#128465;</button></div>`;
+        html+=`<div class="phase-chevron">&#9654;</div>`;
+        html+=`</div>`;
 
-        html += '<div class="phase-steps">';
-
-        phase.steps.forEach((step, si) => {
-            const isActive = !step.done && !foundActive;
-            if (isActive) foundActive = true;
-
-            html += '<div class="step'+(step.done?' done':'')+(isActive?' active':'')+'" data-phase="'+pi+'" data-step="'+si+'">';
-            html += '<div class="step-line"><div class="step-circle'+(step.done?' done':'')+'" onclick="toggleStep('+pi+','+si+')"></div>';
-            if (si < phase.steps.length-1) html += '<div class="step-connector"></div>';
-            html += '</div>';
-
-            html += '<div class="step-card">';
-            html += '<div class="step-main" onclick="expandStep('+pi+','+si+')">';
-            html += '<div class="step-title">'+step.title+'</div>';
-            html += '<div class="step-expand">&#9654;</div>';
-            html += '</div>';
-
-            html += '<div class="step-detail">';
-            if (step.hint) html += '<div class="step-hint">'+step.hint+'</div>';
-
-            // Special: venues carousel
-            if (step.type === 'venues') {
-                html += renderVenueCarousel();
-            }
-
-            html += '<textarea class="step-note" placeholder="Not ekle..." onchange="saveStepNote('+pi+','+si+',this.value)">'+escHtml(step.note||'')+'</textarea>';
-            html += '</div>'; // step-detail
-            html += '</div>'; // step-card
-            html += '</div>'; // step
+        // Steps
+        html+=`<div class="phase-steps">`;
+        phase.steps.forEach((step,si)=>{
+            const isActive=!step.done&&!foundActive;
+            if(isActive)foundActive=true;
+            const isLast=si===phase.steps.length-1;
+            html+=`<div class="step${step.done?' done':''}${isActive?' active':''}" data-phase="${pi}" data-step="${si}">`;
+            html+=`<div class="step-left">`;
+            html+=`<div class="drag-handle" data-pi="${pi}" data-si="${si}">&#8801;</div>`;
+            html+=`<div class="step-circle${step.done?' done':''}" onclick="toggleStep(${pi},${si})"></div>`;
+            if(!isLast)html+=`<div class="step-connector"></div>`;
+            html+=`</div>`;
+            html+=`<div class="step-card">`;
+            html+=`<div class="step-main" onclick="expandStep(this)"><div class="step-title">${step.title}</div><div class="step-expand">&#9654;</div></div>`;
+            html+=`<div class="step-detail">`;
+            if(step.hint)html+=`<div class="step-hint">${step.hint}</div>`;
+            html+=`<textarea class="step-note" placeholder="Not ekle..." onchange="saveStepNote(${pi},${si},this.value)">${esc(step.note||'')}</textarea>`;
+            html+=`<button class="step-del-btn" onclick="deleteStep(${pi},${si})">Gorevi sil</button>`;
+            html+=`</div></div></div>`;
         });
 
-        html += '</div>'; // phase-steps
-        html += '</div>'; // phase
+        // Add step row
+        html+=`<div class="add-step-row">`;
+        html+=`<input class="add-step-input" type="text" placeholder="+ Yeni gorev ekle..." id="new-step-${pi}" onkeydown="if(event.key==='Enter')addStep(${pi})">`;
+        html+=`<button class="add-step-btn" onclick="addStep(${pi})">Ekle</button>`;
+        html+=`</div>`;
+        html+=`</div></div>`;
     });
 
-    container.innerHTML = html;
+    // Add phase button
+    html+=`<button class="add-phase-btn" onclick="openPhaseModal()">+ Yeni Kategori Ekle</button>`;
 
-    // Overall progress
-    const overallPct = totalSteps > 0 ? Math.round(totalDone/totalSteps*100) : 0;
-    document.getElementById('overall-fill').style.width = overallPct+'%';
-    document.getElementById('overall-pct').textContent = overallPct+'%';
+    container.innerHTML=html;
 
-    // Auto scroll to active
+    // Update overall progress
+    const op=totalSteps>0?Math.round(totalDone/totalSteps*100):0;
+    document.getElementById('overall-fill').style.width=op+'%';
+    document.getElementById('overall-pct').textContent=op+'%';
+
+    // Attach drag handlers
+    document.querySelectorAll('.drag-handle').forEach(h=>attachDrag(h));
+
+    // Auto-scroll to first active step
     setTimeout(()=>{
-        const active = document.querySelector('.step.active');
-        if(active) active.scrollIntoView({behavior:'smooth',block:'center'});
-    }, 300);
+        const a=document.querySelector('.step.active');
+        if(a)a.scrollIntoView({behavior:'smooth',block:'center'});
+    },300);
 }
 
-function renderVenueCarousel(){
-    let h = '<div class="venue-scroll">';
-    venues.forEach(v => {
-        h += '<div class="v-card'+(v.favorite?' fav':'')+'">';
-        h += '<button class="v-fav" onclick="event.stopPropagation();toggleFav('+v.id+')">'+(v.favorite?'&#9733;':'&#9734;')+'</button>';
-        h += '<div class="v-name">'+v.name+'</div>';
-        h += '<div class="v-tags">';
-        v.features.forEach(f => {
-            const cls = /acik|bahce|park/i.test(f)?'green':'';
-            h += '<span class="v-tag '+cls+'">'+f+'</span>';
-        });
-        h += '</div>';
-        h += '<div class="v-row"><span>Fiyat:</span><input placeholder="?" value="'+escHtml(v.price||'')+'" onchange="updVenue('+v.id+',\'price\',this.value)"></div>';
-        h += '<div class="v-row"><span>Kapasite:</span><input placeholder="?" value="'+escHtml(v.capacity||'')+'" onchange="updVenue('+v.id+',\'capacity\',this.value)"></div>';
-        h += '<div class="v-row"><span>Iletisim:</span><input placeholder="Tel ekle" value="'+escHtml(v.contact||'')+'" onchange="updVenue('+v.id+',\'contact\',this.value)"></div>';
-        h += '<textarea class="v-note" placeholder="Not..." onchange="updVenue('+v.id+',\'notes\',this.value)">'+escHtml(v.notes||'')+'</textarea>';
-        h += '<div class="v-actions">';
-        if(v.instagram) h += '<a href="'+v.instagram+'" target="_blank" class="ig">Instagram</a>';
-        h += '<button onclick="removeVenue('+v.id+')">Sil</button>';
-        h += '</div></div>';
-    });
-    h += '<div class="v-card" style="display:flex;align-items:center;justify-content:center;min-height:200px;border:2px dashed var(--gray-200);cursor:pointer" onclick="openVenueModal()"><div style="text-align:center;color:var(--gray-400)"><div style="font-size:28px">+</div><div style="font-size:12px;margin-top:4px">Mekan Ekle</div></div></div>';
-    h += '</div>';
-    return h;
-}
-
-// ===================== INTERACTIONS =====================
 function togglePhase(pi){
-    const el = document.querySelectorAll('.phase')[pi];
-    if(el) el.classList.toggle('open');
+    const els=document.querySelectorAll('.phase');
+    if(els[pi])els[pi].classList.toggle('open');
+}
+function toggleStep(pi,si){
+    phases[pi].steps[si].done=!phases[pi].steps[si].done;
+    save('phases',phases);renderRoadmap();
+}
+function expandStep(btn){btn.closest('.step').classList.toggle('expanded')}
+function saveStepNote(pi,si,val){phases[pi].steps[si].note=val;save('phases',phases)}
+
+function addStep(pi){
+    const inp=document.getElementById('new-step-'+pi);
+    const title=inp.value.trim();
+    if(!title)return;
+    phases[pi].steps.push({id:'u'+Date.now(),title,hint:'',done:false,note:''});
+    save('phases',phases);renderRoadmap();
+}
+function deleteStep(pi,si){
+    if(!confirm('Bu gorevi silmek istediginize emin misiniz?'))return;
+    phases[pi].steps.splice(si,1);
+    save('phases',phases);renderRoadmap();
+}
+function deletePhase(pi){
+    if(!confirm('"'+phases[pi].name+'" kategorisini silmek istediginize emin misiniz?'))return;
+    phases.splice(pi,1);
+    save('phases',phases);renderRoadmap();
 }
 
-function toggleStep(pi, si){
-    phases[pi].steps[si].done = !phases[pi].steps[si].done;
-    save('phases', phases);
-    render();
+// Add Phase Modal
+function openPhaseModal(){document.getElementById('modal-phase-overlay').classList.add('active')}
+function selectColor(ci){
+    newPhaseCI=ci;
+    document.querySelectorAll('.color-opt').forEach(el=>{
+        el.classList.toggle('selected',parseInt(el.dataset.ci)===ci);
+    });
+}
+function addPhase(){
+    const name=document.getElementById('np-name').value.trim();
+    if(!name)return;
+    phases.push({
+        id:'p'+Date.now(),
+        name,
+        ci:newPhaseCI,
+        dates:document.getElementById('np-dates').value.trim(),
+        steps:[]
+    });
+    save('phases',phases);
+    document.getElementById('modal-phase-overlay').classList.remove('active');
+    document.getElementById('np-name').value='';
+    document.getElementById('np-dates').value='';
+    renderRoadmap();
 }
 
-function expandStep(pi, si){
-    const steps = document.querySelectorAll('.step[data-phase="'+pi+'"][data-step="'+si+'"]');
-    steps.forEach(s => s.classList.toggle('expanded'));
+// ═══════════════ DRAG & DROP ═══════════════
+let drag={active:false,ghost:null,pi:-1,si:-1,startY:0,currentY:0,targetSi:-1,stepH:0};
+
+function attachDrag(handle){
+    handle.addEventListener('pointerdown',onDragStart,{passive:false});
 }
 
-function saveStepNote(pi, si, val){
-    phases[pi].steps[si].note = val;
-    save('phases', phases);
+function onDragStart(e){
+    e.preventDefault();
+    const pi=parseInt(e.currentTarget.dataset.pi);
+    const si=parseInt(e.currentTarget.dataset.si);
+    const stepEl=e.currentTarget.closest('.step');
+    const rect=stepEl.getBoundingClientRect();
+
+    // Create ghost
+    const ghost=stepEl.querySelector('.step-card').cloneNode(true);
+    ghost.className='drag-ghost';
+    ghost.style.width=rect.width-36+'px';
+    ghost.style.height=rect.height+'px';
+    ghost.style.left=(rect.left+36)+'px';
+    ghost.style.top=rect.top+'px';
+    document.body.appendChild(ghost);
+
+    stepEl.classList.add('dragging');
+
+    drag={
+        active:true,ghost,pi,si,
+        startY:e.clientY,
+        offsetY:e.clientY-rect.top,
+        stepEl,
+        targetSi:si
+    };
+
+    document.addEventListener('pointermove',onDragMove,{passive:false});
+    document.addEventListener('pointerup',onDragEnd);
+    document.addEventListener('pointercancel',onDragEnd);
 }
 
-// Venues
-function toggleFav(id){const v=venues.find(x=>x.id===id);if(v){v.favorite=!v.favorite;save('venues',venues);render()}}
+function onDragMove(e){
+    if(!drag.active)return;
+    e.preventDefault();
+
+    const y=e.clientY;
+    drag.ghost.style.top=(y-drag.offsetY)+'px';
+
+    // Find where to insert
+    const stepsInPhase=Array.from(document.querySelectorAll(`.step[data-phase="${drag.pi}"]`));
+    let newTarget=drag.si;
+
+    stepsInPhase.forEach((el,i)=>{
+        if(i===drag.si)return;
+        const r=el.getBoundingClientRect();
+        const mid=r.top+r.height/2;
+        if(y>mid)newTarget=i;
+    });
+
+    // Clamp
+    newTarget=Math.max(0,Math.min(newTarget,stepsInPhase.length-1));
+
+    if(newTarget!==drag.targetSi){
+        drag.targetSi=newTarget;
+        // Visual shift
+        stepsInPhase.forEach((el,i)=>{
+            el.style.transform='';
+        });
+        if(newTarget!==drag.si){
+            const direction=newTarget>drag.si?1:-1;
+            stepsInPhase.forEach((el,i)=>{
+                if(direction>0&&i>drag.si&&i<=newTarget)el.style.transform='translateY(-32px)';
+                if(direction<0&&i>=newTarget&&i<drag.si)el.style.transform='translateY(32px)';
+            });
+        }
+    }
+}
+
+function onDragEnd(e){
+    if(!drag.active)return;
+    drag.ghost.remove();
+    drag.stepEl.classList.remove('dragging');
+
+    // Clear transforms
+    document.querySelectorAll('.step').forEach(el=>el.style.transform='');
+
+    const{pi,si,targetSi}=drag;
+    drag.active=false;
+
+    document.removeEventListener('pointermove',onDragMove);
+    document.removeEventListener('pointerup',onDragEnd);
+    document.removeEventListener('pointercancel',onDragEnd);
+
+    if(targetSi!==si){
+        const steps=phases[pi].steps;
+        const[moved]=steps.splice(si,1);
+        steps.splice(targetSi,0,moved);
+        save('phases',phases);
+    }
+    renderRoadmap();
+}
+
+// ═══════════════ VENUES ═══════════════
+function renderVenues(){
+    const grid=document.getElementById('venue-grid');
+    if(venues.length===0){grid.innerHTML='<div class="empty-hint">Henuz mekan eklenmedi</div>';return}
+    const sorted=[...venues].sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
+    grid.innerHTML=sorted.map(v=>{
+        const tagHtml=v.features.map(f=>{
+            const cls=/acik|bahce|park/i.test(f)?'green':/balo|ozel/i.test(f)?'purple':'';
+            return`<span class="vc-tag ${cls}">${f}</span>`;
+        }).join('');
+        return`<div class="venue-card${v.favorite?' fav':''}" id="vc-${v.id}">
+            <div class="vc-top">
+                <button class="vc-fav" onclick="toggleFav(${v.id})">${v.favorite?'&#9733;':'&#9734;'}</button>
+                <div class="vc-name">${v.name}</div>
+                <div class="vc-tags">${tagHtml}</div>
+            </div>
+            <button class="vc-expand-btn" onclick="toggleVenueExpand(${v.id})">Detaylar &amp; Notlar <span class="vc-expand-arrow">&#9660;</span></button>
+            <div class="vc-detail">
+                <div class="vc-row"><span>Fiyat</span><input placeholder="Bilgi yok" value="${esc(v.price||'')}" onchange="updVenue(${v.id},'price',this.value)"></div>
+                <div class="vc-row"><span>Kapasite</span><input placeholder="? kisi" value="${esc(v.capacity||'')}" onchange="updVenue(${v.id},'capacity',this.value)"></div>
+                <div class="vc-row"><span>Iletisim</span><input placeholder="Telefon" value="${esc(v.contact||'')}" onchange="updVenue(${v.id},'contact',this.value)"></div>
+                <textarea class="vc-note" placeholder="Notlar, izlenimler..." onchange="updVenue(${v.id},'notes',this.value)">${esc(v.notes||'')}</textarea>
+                <div class="vc-actions">
+                    ${v.instagram?`<a href="${v.instagram}" target="_blank" class="ig">Instagram</a>`:''}
+                    <button class="del" onclick="removeVenue(${v.id})">Sil</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+function toggleVenueExpand(id){document.getElementById('vc-'+id)?.classList.toggle('expanded')}
+function toggleFav(id){const v=venues.find(x=>x.id===id);if(v){v.favorite=!v.favorite;save('venues',venues);renderVenues()}}
 function updVenue(id,f,val){const v=venues.find(x=>x.id===id);if(v){v[f]=val;save('venues',venues)}}
-function removeVenue(id){if(confirm('Silmek istediginize emin misiniz?')){venues=venues.filter(v=>v.id!==id);save('venues',venues);render()}}
-function openVenueModal(){document.getElementById('modal-overlay').classList.add('active');document.getElementById('modal-venue').style.display='block'}
+function removeVenue(id){if(confirm('Bu mekani silmek istediginize emin misiniz?')){venues=venues.filter(v=>v.id!==id);save('venues',venues);renderVenues()}}
+function openVenueModal(){document.getElementById('modal-venue-overlay').classList.add('active')}
 function addVenue(){
     const name=document.getElementById('nv-name').value.trim();
     if(!name)return;
     venues.push({id:Date.now(),name,instagram:document.getElementById('nv-ig').value.trim(),features:document.getElementById('nv-feat').value.split(',').map(s=>s.trim()).filter(Boolean),notes:'',favorite:false,price:'',capacity:'',contact:''});
-    save('venues',venues);render();
-    document.getElementById('modal-overlay').classList.remove('active');
+    save('venues',venues);renderVenues();
+    document.getElementById('modal-venue-overlay').classList.remove('active');
     document.getElementById('nv-name').value='';document.getElementById('nv-ig').value='';document.getElementById('nv-feat').value='';
 }
 
-// Notes panel
-function toggleNotesPanel(){
-    const p=document.getElementById('notes-panel');
-    const o=document.getElementById('panel-overlay');
-    document.getElementById('budget-panel').classList.remove('open');
-    p.classList.toggle('open');
-    o.classList.toggle('active',p.classList.contains('open'));
-    if(p.classList.contains('open'))renderNotes();
-}
-function renderNotes(){
-    const c=document.getElementById('notes-body');
-    if(notes.length===0){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Henuz not yok</div>';return}
-    c.innerHTML=notes.map((n,i)=>'<div class="note-item"><button class="n-del" onclick="delNote('+i+')">&times;</button><div class="n-date">'+n.date+'</div><div class="n-text">'+escHtml(n.text)+'</div></div>').join('');
-}
-function addNote(){
-    const t=document.getElementById('note-input').value.trim();
-    if(!t)return;
-    notes.unshift({text:t,date:new Date().toLocaleDateString('tr-TR')});
-    save('notes',notes);document.getElementById('note-input').value='';renderNotes();
-}
-function delNote(i){notes.splice(i,1);save('notes',notes);renderNotes()}
-
-// Budget panel
-function toggleBudgetPanel(){
-    const p=document.getElementById('budget-panel');
-    const o=document.getElementById('panel-overlay');
-    document.getElementById('notes-panel').classList.remove('open');
-    p.classList.toggle('open');
-    o.classList.toggle('active',p.classList.contains('open'));
-    if(p.classList.contains('open'))renderBudget();
-}
+// ═══════════════ BUDGET ═══════════════
+function setTotalBudget(){const v=parseInt(document.getElementById('total-budget-input').value);if(v>0){totalBudget=v;save('total_budget',totalBudget);renderBudget()}}
 function renderBudget(){
-    const c=document.getElementById('bp-body');
     document.getElementById('total-budget-input').value=totalBudget||'';
     const spent=budgetItems.reduce((s,i)=>s+(i.status==='paid'?i.amount:0),0);
     const planned=budgetItems.reduce((s,i)=>s+i.amount,0);
     const rem=totalBudget-planned;
-    let h='';
-    if(totalBudget>0){
-        h+='<div class="bp-summary"><div class="bp-stat t"><div class="amt">'+fmt(totalBudget)+'</div><div class="lbl">Butce</div></div><div class="bp-stat s"><div class="amt">'+fmt(spent)+'</div><div class="lbl">Odenen</div></div><div class="bp-stat r"><div class="amt">'+fmt(rem)+'</div><div class="lbl">Kalan</div></div></div>';
-    }
-    if(budgetItems.length===0){
-        h+='<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Henuz harcama yok</div>';
-    }else{
-        budgetItems.forEach((it,i)=>{
-            h+='<div class="bp-item"><div><div style="font-weight:500">'+it.name+'</div><div style="font-size:11px;color:var(--gray-400)">'+(it.status==='paid'?'Odendi':'Planli')+'</div></div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600;'+(it.status==='paid'?'color:var(--green)':'')+'">' +fmt(it.amount)+'</span><button onclick="rmBudget('+i+')">&times;</button></div></div>';
-        });
-    }
-    c.innerHTML=h;
+    document.getElementById('budget-totals').innerHTML=totalBudget>0
+        ?`<div class="bt-card total"><div class="bt-amt">${fmt(totalBudget)}</div><div class="bt-lbl">Toplam</div></div>
+           <div class="bt-card spent"><div class="bt-amt">${fmt(spent)}</div><div class="bt-lbl">Odenen</div></div>
+           <div class="bt-card rem"><div class="bt-amt">${fmt(rem)}</div><div class="bt-lbl">Kalan</div></div>`
+        :'<div style="grid-column:1/-1;text-align:center;font-size:13px;color:var(--gray-400);padding:4px">Toplam butce belirleyin</div>';
+    const c=document.getElementById('budget-items-container');
+    if(!budgetItems.length){c.innerHTML='<div class="empty-hint">Henuz harcama eklenmedi</div>';return}
+    c.innerHTML=budgetItems.map((it,i)=>`
+        <div class="bi-card">
+            <div><div class="bi-name">${it.name}</div><div class="bi-status">${it.status==='paid'?'Odendi':'Planli'}</div></div>
+            <div class="bi-right"><span class="bi-amount${it.status==='paid'?' paid':''}">${fmt(it.amount)}</span><button class="bi-del" onclick="rmBudget(${i})">&times;</button></div>
+        </div>`).join('');
 }
-function setTotalBudget(){const v=parseInt(document.getElementById('total-budget-input').value);if(v>0){totalBudget=v;save('total_budget',totalBudget);renderBudget()}}
 function addBudgetItem(){
     const n=document.getElementById('bi-name').value.trim();
     const a=parseInt(document.getElementById('bi-amount').value);
@@ -572,16 +728,28 @@ function addBudgetItem(){
 function rmBudget(i){budgetItems.splice(i,1);save('budget_items',budgetItems);renderBudget()}
 function fmt(n){return n.toLocaleString('tr-TR')+' TL'}
 
-function closeAllPanels(){
-    document.getElementById('notes-panel').classList.remove('open');
-    document.getElementById('budget-panel').classList.remove('open');
-    document.getElementById('panel-overlay').classList.remove('active');
+// ═══════════════ NOTES ═══════════════
+function renderNotes(){
+    const c=document.getElementById('notes-list');
+    if(!notes.length){c.innerHTML='<div class="empty-hint">Henuz not eklenmedi</div>';return}
+    c.innerHTML=notes.map((n,i)=>`
+        <div class="note-card">
+            <div class="note-card-top"><span class="note-date">${n.date}</span><button class="note-del" onclick="delNote(${i})">&times;</button></div>
+            <div class="note-body">${esc(n.text)}</div>
+        </div>`).join('');
 }
+function addNote(){
+    const t=document.getElementById('note-input').value.trim();
+    if(!t)return;
+    notes.unshift({text:t,date:new Date().toLocaleDateString('tr-TR')});
+    save('notes',notes);document.getElementById('note-input').value='';renderNotes();
+}
+function delNote(i){notes.splice(i,1);save('notes',notes);renderNotes()}
 
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-// Init
-render();
+// ═══════════════ INIT ═══════════════
+renderRoadmap();
 </script>
 </body>
 </html>
