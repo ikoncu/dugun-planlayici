@@ -3,1131 +3,585 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Düğün Organizasyon Planlayıcı</title>
+    <title>Dugun Yol Haritasi</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #b8860b;
-            --primary-light: #daa520;
-            --primary-bg: #fdf8ef;
-            --white: #ffffff;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-500: #6b7280;
-            --gray-700: #374151;
-            --gray-900: #111827;
-            --green: #059669;
-            --green-bg: #ecfdf5;
-            --red: #dc2626;
-            --red-bg: #fef2f2;
-            --blue: #2563eb;
-            --blue-bg: #eff6ff;
-            --orange: #ea580c;
-            --orange-bg: #fff7ed;
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
+            --green:#059669;--green-bg:#ecfdf5;--green-light:#34d399;
+            --red:#dc2626;--red-bg:#fef2f2;
+            --blue:#2563eb;--blue-bg:#eff6ff;
+            --orange:#ea580c;--orange-bg:#fff7ed;
+            --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+            --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
+            --gray-700:#374151;--gray-900:#111827;
+            --white:#fff;
+            --phase1:#8b5cf6;--phase1-bg:#f5f3ff;
+            --phase2:#b8860b;--phase2-bg:#fdf8ef;
+            --phase3:#0891b2;--phase3-bg:#ecfeff;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: var(--gray-50);
-            color: var(--gray-900);
-            min-height: 100vh;
-        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;padding-bottom:80px}
+
         /* Header */
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            padding: 20px 16px 16px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-        .header .subtitle { font-size: 13px; opacity: 0.9; }
-        .countdown { font-size: 14px; margin-top: 8px; background: rgba(255,255,255,0.2); border-radius: 8px; padding: 6px 12px; display: inline-block; }
-        .countdown strong { font-size: 18px; }
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:20px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+        .header h1{font-size:22px;font-weight:700;letter-spacing:0.5px}
+        .countdowns{display:flex;justify-content:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+        .cd-box{background:rgba(255,255,255,0.1);border-radius:10px;padding:8px 14px;backdrop-filter:blur(10px);min-width:120px}
+        .cd-box .cd-num{font-size:22px;font-weight:800;color:var(--gold-light)}
+        .cd-box .cd-label{font-size:11px;opacity:0.8;margin-top:1px}
+        .overall-progress{margin-top:12px;display:flex;align-items:center;gap:10px;justify-content:center}
+        .progress-bar-mini{width:150px;height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden}
+        .progress-fill-mini{height:100%;background:var(--gold-light);border-radius:3px;transition:width 0.5s}
+        .progress-pct{font-size:13px;font-weight:600;color:var(--gold-light)}
 
-        /* Tab Navigation */
-        .tabs {
-            display: flex;
-            background: var(--white);
-            border-bottom: 1px solid var(--gray-200);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            position: sticky;
-            top: 0;
-            z-index: 99;
-        }
-        .tabs::-webkit-scrollbar { display: none; }
-        .tab-btn {
-            flex: none;
-            padding: 12px 16px;
-            border: none;
-            background: none;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gray-500);
-            cursor: pointer;
-            white-space: nowrap;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-        .tab-btn:hover { color: var(--primary); }
+        /* Roadmap container */
+        .roadmap{max-width:640px;margin:0 auto;padding:24px 16px;position:relative}
 
-        /* Tab Content */
-        .tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
-        .tab-content.active { display: block; }
+        /* Vertical line */
+        .roadmap::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:3px;background:var(--gray-200);z-index:0}
 
-        /* Cards */
-        .card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid var(--gray-100);
-        }
-        .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        /* Phase */
+        .phase{position:relative;margin-bottom:32px}
+        .phase-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;cursor:pointer;position:relative;z-index:1;transition:all 0.2s}
+        .phase-header:hover{transform:translateX(4px)}
+        .phase-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;z-index:2;position:relative}
+        .phase-info{flex:1}
+        .phase-name{font-size:17px;font-weight:700}
+        .phase-dates{font-size:12px;opacity:0.7;margin-top:2px}
+        .phase-progress{display:flex;align-items:center;gap:6px;margin-top:6px}
+        .phase-progress-bar{flex:1;height:5px;background:rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;max-width:120px}
+        .phase-progress-fill{height:100%;border-radius:3px;transition:width 0.4s}
+        .phase-progress-text{font-size:11px;font-weight:600}
+        .phase-chevron{font-size:18px;transition:transform 0.3s;flex-shrink:0}
+        .phase.open .phase-chevron{transform:rotate(90deg)}
 
-        /* Dashboard Stats */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-        .stat-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid var(--gray-100);
-        }
-        .stat-number { font-size: 24px; font-weight: 700; color: var(--primary); }
-        .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+        /* Phase colors */
+        .phase-1 .phase-header{background:var(--phase1-bg);color:var(--phase1)}
+        .phase-1 .phase-dot{background:var(--phase1)}
+        .phase-1 .phase-progress-fill{background:var(--phase1)}
+        .phase-2 .phase-header{background:var(--phase2-bg);color:var(--phase2)}
+        .phase-2 .phase-dot{background:var(--phase2)}
+        .phase-2 .phase-progress-fill{background:var(--phase2)}
+        .phase-3 .phase-header{background:var(--phase3-bg);color:var(--phase3)}
+        .phase-3 .phase-dot{background:var(--phase3)}
+        .phase-3 .phase-progress-fill{background:var(--phase3)}
 
-        /* Checklist */
-        .checklist-category { margin-bottom: 16px; }
-        .category-header {
-            font-size: 14px;
-            font-weight: 600;
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .category-header .badge {
-            font-size: 11px;
-            background: rgba(255,255,255,0.8);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        .cat-resmi { background: var(--blue-bg); color: var(--blue); }
-        .cat-mekan { background: var(--orange-bg); color: var(--orange); }
-        .cat-organizasyon { background: var(--primary-bg); color: var(--primary); }
-        .cat-kisisel { background: var(--green-bg); color: var(--green); }
-        .cat-diger { background: var(--gray-100); color: var(--gray-700); }
+        /* Completed phase */
+        .phase.completed .phase-header{opacity:0.6}
 
-        .check-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            transition: background 0.15s;
-            cursor: pointer;
-        }
-        .check-item:hover { background: var(--gray-50); }
-        .check-item.done { opacity: 0.5; }
-        .check-item.done .check-text { text-decoration: line-through; }
-        .check-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--primary);
-            flex-shrink: 0;
-            margin-top: 1px;
-            cursor: pointer;
-        }
-        .check-text { font-size: 14px; line-height: 1.4; }
-        .check-note { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+        /* Steps */
+        .phase-steps{overflow:hidden;max-height:0;transition:max-height 0.4s ease;padding-left:16px}
+        .phase.open .phase-steps{max-height:5000px}
 
-        /* Venue Cards */
-        .venue-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid var(--gray-100);
-            position: relative;
-        }
-        .venue-card.favorite { border-color: var(--primary-light); border-width: 2px; }
-        .venue-name { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-        .venue-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .venue-tag {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 6px;
-            background: var(--gray-100);
-            color: var(--gray-700);
-            font-weight: 500;
-        }
-        .venue-tag.green { background: var(--green-bg); color: var(--green); }
-        .venue-tag.orange { background: var(--orange-bg); color: var(--orange); }
-        .venue-tag.blue { background: var(--blue-bg); color: var(--blue); }
-        .venue-details { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
-        .venue-details .detail-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--gray-50); }
-        .venue-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .venue-actions button, .venue-actions a {
-            font-size: 12px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--gray-200);
-            background: var(--white);
-            cursor: pointer;
-            text-decoration: none;
-            color: var(--gray-700);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .venue-actions .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
-        .venue-actions button:hover, .venue-actions a:hover { background: var(--gray-50); }
-        .venue-actions .btn-primary:hover { background: var(--primary-light); }
+        /* Step card */
+        .step{display:flex;gap:10px;margin:8px 0;position:relative}
+        .step-line{position:relative;display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0}
+        .step-circle{width:20px;height:20px;border-radius:50%;border:2px solid var(--gray-300);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;z-index:1;flex-shrink:0}
+        .step-circle:hover{transform:scale(1.15)}
+        .step-circle.done{background:var(--green);border-color:var(--green)}
+        .step-circle.done::after{content:'';width:6px;height:10px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px}
+        .step-connector{flex:1;width:2px;background:var(--gray-200);margin:2px 0}
+        .step.done .step-connector{background:var(--green-light)}
 
-        .venue-notes {
-            width: 100%;
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 8px 10px;
-            font-size: 13px;
-            resize: vertical;
-            min-height: 60px;
-            margin-top: 8px;
-            font-family: inherit;
-        }
+        .step-card{flex:1;background:var(--white);border-radius:12px;border:1px solid var(--gray-100);overflow:hidden;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+        .step-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+        .step.done .step-card{opacity:0.55}
+        .step.active .step-card{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,134,11,0.15),0 4px 12px rgba(184,134,11,0.1)}
 
-        .fav-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            padding: 4px;
-            line-height: 1;
-        }
+        .step-main{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:10px}
+        .step-title{font-size:14px;font-weight:500;flex:1;line-height:1.3}
+        .step.done .step-title{text-decoration:line-through;color:var(--gray-400)}
+        .step-expand{font-size:14px;color:var(--gray-400);transition:transform 0.2s}
+        .step.expanded .step-expand{transform:rotate(90deg)}
 
-        /* Budget */
-        .budget-summary {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .budget-stat {
-            text-align: center;
-            padding: 12px 8px;
-            border-radius: 10px;
-            background: var(--white);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-        .budget-stat .amount { font-size: 18px; font-weight: 700; }
-        .budget-stat .label { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
-        .budget-stat.total .amount { color: var(--primary); }
-        .budget-stat.spent .amount { color: var(--red); }
-        .budget-stat.remaining .amount { color: var(--green); }
+        /* Step detail panel */
+        .step-detail{display:none;padding:0 14px 14px;border-top:1px solid var(--gray-100)}
+        .step.expanded .step-detail{display:block}
+        .step-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:50px;font-family:inherit;margin-top:8px}
+        .step-note:focus{outline:none;border-color:var(--gold)}
+        .step-hint{font-size:12px;color:var(--gray-500);margin-top:6px;line-height:1.5}
+        .step-deadline{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px}
+        .step-deadline input{border:1px solid var(--gray-200);border-radius:6px;padding:4px 8px;font-size:13px;font-family:inherit}
 
-        .budget-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--gray-100);
-        }
-        .budget-item:last-child { border-bottom: none; }
-        .budget-item-name { font-size: 14px; }
-        .budget-item-amount { font-size: 14px; font-weight: 600; }
-        .budget-item-amount.paid { color: var(--green); }
+        /* Venue carousel (special step) */
+        .venue-scroll{display:flex;gap:12px;overflow-x:auto;padding:12px 0 4px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+        .venue-scroll::-webkit-scrollbar{height:4px}
+        .venue-scroll::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:2px}
+        .v-card{min-width:260px;max-width:280px;background:var(--gray-50);border-radius:10px;padding:14px;border:1px solid var(--gray-100);scroll-snap-align:start;flex-shrink:0;position:relative}
+        .v-card.fav{border-color:var(--gold);background:var(--gold-bg)}
+        .v-name{font-size:15px;font-weight:600;margin-bottom:8px;padding-right:28px}
+        .v-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+        .v-tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gray-100);color:var(--gray-700);font-weight:500}
+        .v-tag.green{background:var(--green-bg);color:var(--green)}
+        .v-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--gray-500)}
+        .v-row input{border:none;text-align:right;width:100px;font-size:12px;background:transparent;font-family:inherit}
+        .v-row input:focus{outline:none;color:var(--gray-900)}
+        .v-note{width:100%;border:1px solid var(--gray-200);border-radius:6px;padding:6px 8px;font-size:12px;resize:none;height:40px;margin-top:6px;font-family:inherit}
+        .v-actions{display:flex;gap:6px;margin-top:8px}
+        .v-actions a,.v-actions button{font-size:11px;padding:4px 8px;border-radius:5px;border:1px solid var(--gray-200);background:var(--white);text-decoration:none;color:var(--gray-700);cursor:pointer}
+        .v-actions a.ig{background:#833AB4;color:white;border-color:#833AB4}
+        .v-fav{position:absolute;top:10px;right:10px;background:none;border:none;font-size:20px;cursor:pointer}
 
-        /* Forms */
-        .form-group { margin-bottom: 12px; }
-        .form-group label { font-size: 13px; font-weight: 500; color: var(--gray-700); display: block; margin-bottom: 4px; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
+        /* Budget mini */
+        .budget-mini{margin-top:10px}
+        .budget-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-50);font-size:13px}
+        .budget-row:last-child{border:none}
+        .budget-total{font-weight:600;font-size:14px;margin-top:6px;text-align:right;color:var(--gold)}
 
-        /* Buttons */
-        .btn {
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-light); }
-        .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
-        .btn-secondary:hover { background: var(--gray-200); }
-        .btn-danger { background: var(--red-bg); color: var(--red); }
-        .btn-sm { padding: 6px 10px; font-size: 12px; }
-        .btn-block { width: 100%; justify-content: center; }
-
-        /* Timeline */
-        .timeline-item {
-            display: flex;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--gray-100);
-        }
-        .timeline-date {
-            font-size: 12px;
-            color: var(--gray-500);
-            min-width: 70px;
-            text-align: right;
-            padding-top: 2px;
-        }
-        .timeline-content { flex: 1; }
-        .timeline-title { font-size: 14px; font-weight: 500; }
-        .timeline-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
-
-        /* Notes */
-        .note-item {
-            background: var(--white);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            border-left: 4px solid var(--primary);
-        }
-        .note-item .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .note-item .note-date { font-size: 11px; color: var(--gray-500); }
-        .note-item .note-body { font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-        .note-item .note-delete { background: none; border: none; color: var(--gray-300); cursor: pointer; font-size: 18px; padding: 0 4px; }
-        .note-item .note-delete:hover { color: var(--red); }
-
-        /* Progress Bar */
-        .progress-bar { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin: 8px 0; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 4px; transition: width 0.3s; }
-
-        /* Empty State */
-        .empty-state { text-align: center; padding: 30px; color: var(--gray-500); font-size: 14px; }
+        /* Floating buttons */
+        .fab-group{position:fixed;bottom:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:50}
+        .fab{width:48px;height:48px;border-radius:50%;border:none;color:white;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
+        .fab:hover{transform:scale(1.1)}
+        .fab-note{background:var(--gold)}
+        .fab-budget{background:var(--green)}
 
         /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            align-items: flex-end;
-            justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: var(--white);
-            border-radius: 16px 16px 0 0;
-            padding: 20px 16px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp 0.3s;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray-500); }
+        .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center}
+        .modal-overlay.active{display:flex}
+        .modal{background:var(--white);border-radius:16px 16px 0 0;padding:20px 16px 30px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;animation:slideUp 0.3s}
+        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .modal-title{font-size:17px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-500)}
+        .form-group{margin-bottom:12px}
+        .form-group label{font-size:13px;font-weight:500;color:var(--gray-700);display:block;margin-bottom:4px}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--gold)}
+        .btn{padding:10px 16px;border-radius:8px;border:none;font-size:14px;font-weight:500;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+        .btn-primary{background:var(--gold);color:white}
+        .btn-primary:hover{background:var(--gold-light)}
 
-        /* Floating Action Button */
-        .fab {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            font-size: 26px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(184,134,11,0.4);
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .fab:hover { background: var(--primary-light); transform: scale(1.05); }
+        /* Notes panel */
+        .notes-panel{position:fixed;top:0;right:-100%;width:100%;max-width:360px;height:100%;background:var(--white);z-index:150;transition:right 0.3s;box-shadow:-4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}
+        .notes-panel.open{right:0}
+        .notes-header{padding:16px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center}
+        .notes-header h3{font-size:16px}
+        .notes-body{flex:1;overflow-y:auto;padding:12px}
+        .notes-input{padding:12px;border-top:1px solid var(--gray-100)}
+        .notes-input textarea{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;font-size:13px;resize:none;height:60px;font-family:inherit}
+        .notes-input textarea:focus{outline:none;border-color:var(--gold)}
+        .note-item{background:var(--gray-50);border-radius:8px;padding:10px;margin-bottom:8px;position:relative}
+        .note-item .n-date{font-size:11px;color:var(--gray-400)}
+        .note-item .n-text{font-size:13px;margin-top:4px;white-space:pre-wrap;line-height:1.4}
+        .note-item .n-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:16px}
+        .note-item .n-del:hover{color:var(--red)}
+        .note-add-btn{margin-top:6px;padding:8px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;cursor:pointer;width:100%}
 
-        /* Responsive */
-        @media (min-width: 600px) {
-            .header h1 { font-size: 24px; }
-            .stats-grid { grid-template-columns: repeat(4, 1fr); }
-        }
+        /* Budget panel */
+        .budget-panel{position:fixed;top:0;right:-100%;width:100%;max-width:360px;height:100%;background:var(--white);z-index:150;transition:right 0.3s;box-shadow:-4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}
+        .budget-panel.open{right:0}
+        .bp-header{padding:16px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center}
+        .bp-header h3{font-size:16px}
+        .bp-body{flex:1;overflow-y:auto;padding:12px}
+        .bp-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+        .bp-stat{text-align:center;padding:10px 6px;border-radius:8px;background:var(--gray-50)}
+        .bp-stat .amt{font-size:16px;font-weight:700}
+        .bp-stat .lbl{font-size:10px;color:var(--gray-500);margin-top:2px}
+        .bp-stat.t .amt{color:var(--gold)}
+        .bp-stat.s .amt{color:var(--red)}
+        .bp-stat.r .amt{color:var(--green)}
+        .bp-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-50);font-size:13px}
+        .bp-item button{background:none;border:none;color:var(--gray-300);cursor:pointer}
+        .bp-input{padding:12px;border-top:1px solid var(--gray-100)}
 
-        /* Comparison table */
-        .comparison-toggle { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .compare-chip {
-            font-size: 12px; padding: 5px 10px; border-radius: 20px;
-            border: 1px solid var(--gray-200); background: var(--white);
-            cursor: pointer; transition: all 0.2s;
-        }
-        .compare-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        /* Overlay for panels */
+        .panel-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:140}
+        .panel-overlay.active{display:block}
 
-        /* Wedding date setter */
-        .date-setter { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-        .date-setter input { flex: 1; }
+        /* Active step pulse */
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,134,11,0.2)}50%{box-shadow:0 0 0 6px rgba(184,134,11,0)}}
+        .step.active .step-circle{animation:pulse 2s infinite;border-color:var(--gold);background:var(--gold-bg)}
 
-        /* Smooth scroll behavior */
-        html { scroll-behavior: smooth; }
+        /* "You are here" marker */
+        .here-marker{text-align:center;padding:6px 0;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1px;margin:4px 0 4px 34px}
+        .here-marker span{background:var(--gold-bg);padding:3px 10px;border-radius:10px}
 
-        /* Priority badge */
-        .priority-badge {
-            font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
-        }
-        .priority-high { background: var(--red-bg); color: var(--red); }
-        .priority-medium { background: var(--orange-bg); color: var(--orange); }
+        @media(min-width:600px){.roadmap{padding:32px 24px}.roadmap::before{left:36px}.step-line{width:32px}}
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>Dugun Planlayici</h1>
-    <div class="subtitle">Hayalinizdeki dugune adim adim</div>
-    <div class="countdown" id="countdown">
-        Dugun tarihini belirleyin
+    <h1>Dugun Yol Haritasi</h1>
+    <div class="countdowns">
+        <div class="cd-box">
+            <div class="cd-num" id="cd-nisan">--</div>
+            <div class="cd-label">gun / nisana</div>
+        </div>
+        <div class="cd-box">
+            <div class="cd-num" id="cd-dugun">--</div>
+            <div class="cd-label">gun / dugune</div>
+        </div>
+    </div>
+    <div class="overall-progress">
+        <div class="progress-bar-mini"><div class="progress-fill-mini" id="overall-fill" style="width:0%"></div></div>
+        <span class="progress-pct" id="overall-pct">0%</span>
     </div>
 </div>
 
-<div class="tabs">
-    <button class="tab-btn active" data-tab="dashboard">Ana Sayfa</button>
-    <button class="tab-btn" data-tab="checklist">Gorev Listesi</button>
-    <button class="tab-btn" data-tab="venues">Mekanlar</button>
-    <button class="tab-btn" data-tab="budget">Butce</button>
-    <button class="tab-btn" data-tab="timeline">Zaman Cizelgesi</button>
-    <button class="tab-btn" data-tab="notes">Notlar</button>
+<div class="roadmap" id="roadmap"></div>
+
+<!-- Floating Buttons -->
+<div class="fab-group">
+    <button class="fab fab-budget" onclick="toggleBudgetPanel()" title="Butce">&#8378;</button>
+    <button class="fab fab-note" onclick="toggleNotesPanel()" title="Notlar">&#9998;</button>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="tab-content active">
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number" id="stat-total-tasks">0</div>
-            <div class="stat-label">Toplam Gorev</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="stat-done-tasks">0</div>
-            <div class="stat-label">Tamamlanan</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="stat-venues">7</div>
-            <div class="stat-label">Mekan Secenegi</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="stat-budget">-</div>
-            <div class="stat-label">Butce</div>
-        </div>
+<!-- Notes Panel -->
+<div class="panel-overlay" id="panel-overlay" onclick="closeAllPanels()"></div>
+<div class="notes-panel" id="notes-panel">
+    <div class="notes-header">
+        <h3>Notlar</h3>
+        <button class="modal-close" onclick="toggleNotesPanel()">&times;</button>
     </div>
-
-    <div class="card">
-        <div class="card-title">Dugun Tarihi Ayarla</div>
-        <div class="date-setter">
-            <input type="date" id="wedding-date-input">
-            <button class="btn btn-primary btn-sm" onclick="setWeddingDate()">Kaydet</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Genel Ilerleme</div>
-        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-500);">
-            <span id="progress-text">0%</span>
-            <span id="progress-count">0/0</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Acil Yapilacaklar</div>
-        <div id="urgent-tasks"></div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Hatirlatmalar</div>
-        <div style="font-size: 14px; line-height: 1.7; color: var(--gray-700);">
-            <div style="padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
-                <strong style="color: var(--red);">&#9888;</strong> Saglik raporu almayi unutmayin (nikah icin zorunlu)
-            </div>
-            <div style="padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
-                <strong style="color: var(--orange);">&#128197;</strong> Mekan rezervasyonunu en az 2-3 ay once yapin
-            </div>
-            <div style="padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
-                <strong style="color: var(--blue);">&#128221;</strong> Nikah basvurusu icin nufus mudurlugune basvurun
-            </div>
-            <div style="padding: 8px 0;">
-                <strong style="color: var(--green);">&#128176;</strong> Kapora odeme takvimini takip edin
-            </div>
-        </div>
+    <div class="notes-body" id="notes-body"></div>
+    <div class="notes-input">
+        <textarea id="note-input" placeholder="Not yazin..."></textarea>
+        <button class="note-add-btn" onclick="addNote()">Kaydet</button>
     </div>
 </div>
 
-<!-- CHECKLIST -->
-<div id="checklist" class="tab-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 600;">Gorev Listesi</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal('add-task')">+ Gorev Ekle</button>
+<!-- Budget Panel -->
+<div class="budget-panel" id="budget-panel">
+    <div class="bp-header">
+        <h3>Butce Takibi</h3>
+        <button class="modal-close" onclick="toggleBudgetPanel()">&times;</button>
     </div>
-
-    <div id="checklist-container"></div>
-</div>
-
-<!-- VENUES -->
-<div id="venues" class="tab-content">
-    <div style="margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Mekan Karsilastirma</h2>
-        <p style="font-size: 13px; color: var(--gray-500);">Mekanlari inceleyin, not edin ve favorinizi secin</p>
-    </div>
-
-    <div id="venues-container"></div>
-
-    <button class="btn btn-secondary btn-block" onclick="openModal('add-venue')" style="margin-top: 12px;">+ Yeni Mekan Ekle</button>
-</div>
-
-<!-- BUDGET -->
-<div id="budget" class="tab-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 600;">Butce Takibi</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal('add-budget')">+ Kalem Ekle</button>
-    </div>
-
-    <div class="card" style="margin-bottom: 16px;">
-        <div class="form-group" style="margin-bottom: 0;">
-            <label>Toplam Butce (TL)</label>
-            <div style="display: flex; gap: 8px;">
-                <input type="number" id="total-budget-input" placeholder="Ornegin: 500000">
-                <button class="btn btn-primary btn-sm" onclick="setTotalBudget()">Kaydet</button>
-            </div>
+    <div class="bp-body" id="bp-body"></div>
+    <div class="bp-input">
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+            <input type="text" id="bi-name" placeholder="Kalem adi" style="flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
+            <input type="number" id="bi-amount" placeholder="Tutar" style="width:90px;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
         </div>
-    </div>
-
-    <div class="budget-summary" id="budget-summary"></div>
-
-    <div class="card">
-        <div class="card-title">Harcamalar</div>
-        <div id="budget-items"></div>
-        <div class="empty-state" id="budget-empty">Henuz harcama eklenmedi</div>
-    </div>
-</div>
-
-<!-- TIMELINE -->
-<div id="timeline" class="tab-content">
-    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Zaman Cizelgesi</h2>
-    <div class="card">
-        <div id="timeline-container">
-            <div class="timeline-item">
-                <div class="timeline-date">6+ Ay Once</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Butce Belirleme</div>
-                    <div class="timeline-desc">Toplam butcenizi belirleyin ve kalemlere bolun</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">5-6 Ay</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Mekan Arastirmasi & Rezervasyon</div>
-                    <div class="timeline-desc">Mekanlari gezin, fiyat alin ve kapora odeyin</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">4-5 Ay</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Organizator Secimi</div>
-                    <div class="timeline-desc">Dugun organizatoru ile anlasma yapin</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">3-4 Ay</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Davetiye & Kiyafet</div>
-                    <div class="timeline-desc">Davetiye tasarimi, gelinlik/damatlk secimi</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2-3 Ay</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Nikah Basvurusu</div>
-                    <div class="timeline-desc">Saglik raporu alin, nufus mudurlugune basvurun</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">1-2 Ay</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Detay Planlama</div>
-                    <div class="timeline-desc">Menu, cicek, muzik, fotograf/video detaylari</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2-4 Hafta</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Son Kontroller</div>
-                    <div class="timeline-desc">Davetli listesi onayi, oturma plani, prova</div>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">1 Hafta</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">Son Hazirliklar</div>
-                    <div class="timeline-desc">Tum tedarikci onaylari, kina gecesi, son detaylar</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- NOTES -->
-<div id="notes" class="tab-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 600;">Notlar</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal('add-note')">+ Not Ekle</button>
-    </div>
-    <div id="notes-container"></div>
-    <div class="empty-state" id="notes-empty">Henuz not eklenmedi</div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-    <!-- Add Task Modal -->
-    <div class="modal" id="modal-add-task" style="display:none">
-        <div class="modal-title">
-            Yeni Gorev Ekle
-            <button class="modal-close" onclick="closeModalForce()">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Gorev Adi</label>
-            <input type="text" id="task-name" placeholder="Ornegin: Mekan kaporasi ode">
-        </div>
-        <div class="form-group">
-            <label>Kategori</label>
-            <select id="task-category">
-                <option value="resmi">Resmi Islemler</option>
-                <option value="mekan">Mekan & Salon</option>
-                <option value="organizasyon">Organizasyon</option>
-                <option value="kisisel">Kisisel Hazirlik</option>
-                <option value="diger">Diger</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Oncelik</label>
-            <select id="task-priority">
-                <option value="high">Yuksek</option>
-                <option value="medium">Orta</option>
-                <option value="low">Normal</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Not (Opsiyonel)</label>
-            <textarea id="task-note" rows="2" placeholder="Ek bilgi..."></textarea>
-        </div>
-        <button class="btn btn-primary btn-block" onclick="addTask()">Gorev Ekle</button>
-    </div>
-
-    <!-- Add Note Modal -->
-    <div class="modal" id="modal-add-note" style="display:none">
-        <div class="modal-title">
-            Yeni Not
-            <button class="modal-close" onclick="closeModalForce()">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Not</label>
-            <textarea id="note-text" rows="5" placeholder="Notunuzu yazin..."></textarea>
-        </div>
-        <button class="btn btn-primary btn-block" onclick="addNote()">Kaydet</button>
-    </div>
-
-    <!-- Add Budget Modal -->
-    <div class="modal" id="modal-add-budget" style="display:none">
-        <div class="modal-title">
-            Butce Kalemi Ekle
-            <button class="modal-close" onclick="closeModalForce()">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Kalem Adi</label>
-            <input type="text" id="budget-name" placeholder="Ornegin: Mekan kaporasi">
-        </div>
-        <div class="form-group">
-            <label>Tutar (TL)</label>
-            <input type="number" id="budget-amount" placeholder="0">
-        </div>
-        <div class="form-group">
-            <label>Durum</label>
-            <select id="budget-status">
+        <div style="display:flex;gap:6px">
+            <select id="bi-status" style="flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
                 <option value="planned">Planli</option>
                 <option value="paid">Odendi</option>
             </select>
+            <button class="note-add-btn" style="width:auto;padding:8px 14px;margin:0" onclick="addBudgetItem()">Ekle</button>
         </div>
-        <button class="btn btn-primary btn-block" onclick="addBudgetItem()">Ekle</button>
+        <div style="margin-top:8px">
+            <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">Toplam Butce (TL)</div>
+            <div style="display:flex;gap:6px">
+                <input type="number" id="total-budget-input" placeholder="500000" style="flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px">
+                <button class="note-add-btn" style="width:auto;padding:8px 14px;margin:0" onclick="setTotalBudget()">Kaydet</button>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- Add Venue Modal -->
-    <div class="modal" id="modal-add-venue" style="display:none">
-        <div class="modal-title">
-            Yeni Mekan Ekle
-            <button class="modal-close" onclick="closeModalForce()">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Mekan Adi</label>
-            <input type="text" id="venue-name-input">
-        </div>
-        <div class="form-group">
-            <label>Instagram Linki</label>
-            <input type="url" id="venue-ig-input" placeholder="https://instagram.com/...">
-        </div>
-        <div class="form-group">
-            <label>Ozellikler (virgul ile ayirin)</label>
-            <input type="text" id="venue-features-input" placeholder="Acik hava, Yemekli, Alkolu">
-        </div>
-        <button class="btn btn-primary btn-block" onclick="addVenue()">Ekle</button>
+<!-- Add Venue Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this){this.classList.remove('active')}">
+    <div class="modal" id="modal-venue" style="display:none">
+        <div class="modal-title">Yeni Mekan Ekle <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('active')">&times;</button></div>
+        <div class="form-group"><label>Mekan Adi</label><input type="text" id="nv-name"></div>
+        <div class="form-group"><label>Instagram</label><input type="url" id="nv-ig" placeholder="https://instagram.com/..."></div>
+        <div class="form-group"><label>Ozellikler (virgul ile)</label><input type="text" id="nv-feat" placeholder="Acik hava, Yemekli"></div>
+        <button class="btn btn-primary" onclick="addVenue()">Ekle</button>
     </div>
 </div>
 
 <script>
-// ============= DATA =============
-const DEFAULT_TASKS = [
-    { id: 1, name: 'Saglik raporu al (nikah icin zorunlu)', category: 'resmi', priority: 'high', note: 'Aile hekiminden veya devlet hastanesinden alinir', done: false },
-    { id: 2, name: 'Nufus mudurlugune nikah basvurusu yap', category: 'resmi', priority: 'high', note: 'Nufus cuzdani fotokopisi, vesikalik foto, saglik raporu gerekli', done: false },
-    { id: 3, name: 'Nikah tarihi ve yeri belirle', category: 'resmi', priority: 'high', note: '', done: false },
-    { id: 4, name: 'Nikah sahitleri belirle (2 sahit gerekli)', category: 'resmi', priority: 'medium', note: '', done: false },
-    { id: 5, name: 'Dugun mekanlarini ara ve gez', category: 'mekan', priority: 'high', note: 'Instagram sayfalarini incele, telefonla ara', done: false },
-    { id: 6, name: 'Mekan fiyat teklifleri al', category: 'mekan', priority: 'high', note: 'Kisi basi, paket fiyatlari, acik hava/kapali alan secenekleri', done: false },
-    { id: 7, name: 'Mekan rezervasyonu ve kapora', category: 'mekan', priority: 'high', note: 'Sozlesmeyi dikkatlice oku', done: false },
-    { id: 8, name: 'Dugun organizatoru ile gorusme', category: 'organizasyon', priority: 'high', note: 'En az 2-3 organizatorle gorusun', done: false },
-    { id: 9, name: 'Organizator ile anlasma yap', category: 'organizasyon', priority: 'medium', note: '', done: false },
-    { id: 10, name: 'Davetli listesi olustur', category: 'organizasyon', priority: 'medium', note: 'Gelin tarafi + damat tarafi ayri listeler', done: false },
-    { id: 11, name: 'Davetiye tasarimi ve siparisi', category: 'organizasyon', priority: 'medium', note: '', done: false },
-    { id: 12, name: 'Menu secimi (yemekli ise)', category: 'organizasyon', priority: 'medium', note: 'Tadim yapmayi unutmayin', done: false },
-    { id: 13, name: 'Fotograf ve video ekibi sec', category: 'organizasyon', priority: 'medium', note: 'Portfolyolarini inceleyin', done: false },
-    { id: 14, name: 'Muzik / DJ secimi', category: 'organizasyon', priority: 'medium', note: '', done: false },
-    { id: 15, name: 'Cicek ve dekorasyon plani', category: 'organizasyon', priority: 'medium', note: '', done: false },
-    { id: 16, name: 'Gelinlik / Damatlk secimi', category: 'kisisel', priority: 'high', note: '', done: false },
-    { id: 17, name: 'Kuafor ve makyaj randevusu', category: 'kisisel', priority: 'medium', note: 'Prova makyaji yaptirin', done: false },
-    { id: 18, name: 'Alyans secimi', category: 'kisisel', priority: 'medium', note: '', done: false },
-    { id: 19, name: 'Kina gecesi organizasyonu', category: 'organizasyon', priority: 'medium', note: '', done: false },
-    { id: 20, name: 'Balayi plani', category: 'kisisel', priority: 'low', note: '', done: false },
+// ===================== DATA =====================
+const NISAN_DATE = '2026-05-16';
+
+const DEFAULT_PHASES = [
+    {
+        id: 'nisan',
+        name: 'Nisan Hazirliklari',
+        phaseClass: 'phase-1',
+        dates: 'Simdi \u2192 16 Mayis 2026',
+        deadline: '2026-05-16',
+        steps: [
+            {id:'n1',title:'Saglik raporu al',hint:'Nikah icin zorunlu. Aile hekiminden veya devlet hastanesinden alinir.',done:false,note:''},
+            {id:'n2',title:'Nisan mekani belirle',hint:'Restoran, otel veya ev? Kisi sayisina gore karar ver.',done:false,note:''},
+            {id:'n3',title:'Nisan yuzugu al',hint:'Tek tas veya alyans? Butceye dikkat.',done:false,note:''},
+            {id:'n4',title:'Nisan kiyafetleri',hint:'Gelin & damat nisan kiyafetleri, kuafor randevusu.',done:false,note:''},
+            {id:'n5',title:'Davetli listesi (nisan)',hint:'Yakin aile + yakin arkadaslar. Kisi sayisini netlesrir.',done:false,note:''},
+            {id:'n6',title:'Nisan organizasyonu',hint:'Soz kesme detaylari, cicek, pasta, fotograf.',done:false,note:''},
+            {id:'n7',title:'Dugun mekani arastirmasi baslat',hint:'Mekanlari simdi arastirmaya basla, erken rezervasyon avantajli.',done:false,note:'',type:'venues'},
+        ]
+    },
+    {
+        id: 'dugun',
+        name: 'Dugun Hazirliklari',
+        phaseClass: 'phase-2',
+        dates: 'Mayis \u2192 Agustos/Eylul 2026',
+        deadline: '2026-09-01',
+        steps: [
+            {id:'d1',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi dikkatlice oku, kapora odemesini yap.',done:false,note:''},
+            {id:'d2',title:'Nikah basvurusu (nufus mudurlugu)',hint:'Nufus cuzdani fotokopisi, vesikalik, saglik raporu gerekli.',done:false,note:''},
+            {id:'d3',title:'Dugun organizatoru sec',hint:'En az 2-3 organizatorle gorusun, referans isteyin.',done:false,note:''},
+            {id:'d4',title:'Nikah sahitleri belirle',hint:'2 sahit gerekli, TC kimlik numaralari hazir olsun.',done:false,note:''},
+            {id:'d5',title:'Gelinlik / Damatlk',hint:'En az 3 ay once siparis verin, provayi unutmayin.',done:false,note:''},
+            {id:'d6',title:'Davetiye tasarimi & siparisi',hint:'Dijital veya basili? Davetli sayisina gore siparis.',done:false,note:''},
+            {id:'d7',title:'Fotograf / Video ekibi',hint:'Portfolyo inceleyin, dis cekim istiyorsaniz belirtin.',done:false,note:''},
+            {id:'d8',title:'Muzik / DJ secimi',hint:'Canli muzik mi DJ mi? Playlist hazirlarin.',done:false,note:''},
+            {id:'d9',title:'Cicek & dekorasyon',hint:'Mekan dekorasyonu, gelin cicegi, yaka cicegi.',done:false,note:''},
+            {id:'d10',title:'Menu secimi',hint:'Yemekli ise tadim yapmayi unutmayin. Ozel diyet ihtiyaclari.',done:false,note:''},
+            {id:'d11',title:'Kuafor & makyaj',hint:'Prova makyaji yaptirin, sac modeli belirleyin.',done:false,note:''},
+            {id:'d12',title:'Alyans secimi',hint:'Kuyumculardan fiyat alin, isim/tarih yazdirmak icin sure.',done:false,note:''},
+            {id:'d13',title:'Kina gecesi organizasyonu',hint:'Mekan, kina malzemeleri, muzik, davetliler.',done:false,note:''},
+            {id:'d14',title:'Davetli listesi (dugun)',hint:'Gelin tarafi + damat tarafi, oturma plani.',done:false,note:''},
+            {id:'d15',title:'Son kontroller & prova',hint:'Tum tedarikci onaylari, mekan provasi, akis plani.',done:false,note:''},
+        ]
+    },
+    {
+        id: 'balayi',
+        name: 'Balayi & Son',
+        phaseClass: 'phase-3',
+        dates: 'Dugun sonrasi',
+        deadline: '2026-10-01',
+        steps: [
+            {id:'b1',title:'Balayi destinasyonu arastir',hint:'Ic veya dis? Butce ve sure belirle.',done:false,note:''},
+            {id:'b2',title:'Otel & ucak rezervasyonu',hint:'Erken rezervasyon = uygun fiyat.',done:false,note:''},
+            {id:'b3',title:'Pasaport / Vize (gerekiyorsa)',hint:'Yurt disi ise en az 2 ay onceden basvurun.',done:false,note:''},
+            {id:'b4',title:'Balayi butcesi',hint:'Konaklama, ulasim, yemek, aktiviteler.',done:false,note:''},
+        ]
+    }
 ];
 
 const DEFAULT_VENUES = [
-    {
-        id: 1, name: 'Selale Plaza Dugun Salonu',
-        instagram: 'https://www.instagram.com/selaleplazadugunsalonu/',
-        features: ['Salon'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    },
-    {
-        id: 2, name: 'Pembe Kosk Balo Salon',
-        instagram: 'https://www.instagram.com/pembekoskbalosalon/',
-        features: ['Balo Salonu'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    },
-    {
-        id: 3, name: 'Marina Gaziantep BKM',
-        instagram: 'https://www.instagram.com/marinagaziantepbkm/',
-        features: ['Salon'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    },
-    {
-        id: 4, name: 'Vadi Garden Gaziantep',
-        instagram: 'https://www.instagram.com/vadigardengaziantep/',
-        features: ['Bahce', 'Acik Hava'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    },
-    {
-        id: 5, name: 'Livas Park Dugun',
-        instagram: 'https://www.instagram.com/livasparkdugun/',
-        features: ['Park', 'Acik Hava'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    },
-    {
-        id: 6, name: 'Ceremony Erikce',
-        instagram: 'https://www.instagram.com/ceremonyerikce/',
-        features: ['Salon'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    },
-    {
-        id: 7, name: 'MSM Erikce',
-        instagram: 'https://www.instagram.com/msmerikce/',
-        features: ['Salon'],
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    }
+    {id:1,name:'Selale Plaza Dugun Salonu',instagram:'https://www.instagram.com/selaleplazadugunsalonu/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:2,name:'Pembe Kosk Balo Salon',instagram:'https://www.instagram.com/pembekoskbalosalon/',features:['Balo Salonu'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:3,name:'Marina Gaziantep BKM',instagram:'https://www.instagram.com/marinagaziantepbkm/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:4,name:'Vadi Garden Gaziantep',instagram:'https://www.instagram.com/vadigardengaziantep/',features:['Bahce','Acik Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:5,name:'Livas Park Dugun',instagram:'https://www.instagram.com/livasparkdugun/',features:['Park','Acik Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:6,name:'Ceremony Erikce',instagram:'https://www.instagram.com/ceremonyerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:7,name:'MSM Erikce',instagram:'https://www.instagram.com/msmerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''}
 ];
 
-// ============= STATE =============
-function loadData(key, defaultVal) {
-    try {
-        const d = localStorage.getItem('wedding_' + key);
-        return d ? JSON.parse(d) : defaultVal;
-    } catch { return defaultVal; }
-}
-function saveData(key, val) {
-    localStorage.setItem('wedding_' + key, JSON.stringify(val));
-}
+// ===================== STATE =====================
+function load(k,d){try{const v=localStorage.getItem('wr_'+k);return v?JSON.parse(v):d}catch{return d}}
+function save(k,v){localStorage.setItem('wr_'+k,JSON.stringify(v))}
 
-let tasks = loadData('tasks', DEFAULT_TASKS);
-let venues = loadData('venues', DEFAULT_VENUES);
-let budgetItems = loadData('budget_items', []);
-let totalBudget = loadData('total_budget', 0);
-let weddingDate = loadData('wedding_date', null);
-let notesList = loadData('notes', []);
+let phases = load('phases', null);
+if (!phases) { phases = JSON.parse(JSON.stringify(DEFAULT_PHASES)); save('phases', phases); }
+let venues = load('venues', DEFAULT_VENUES);
+let budgetItems = load('budget_items', []);
+let totalBudget = load('total_budget', 0);
+let weddingDate = load('wedding_date', '2026-09-01');
+let notes = load('notes', []);
 
-// ============= TAB NAVIGATION =============
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-    });
-});
-
-// ============= COUNTDOWN =============
-function updateCountdown() {
-    const el = document.getElementById('countdown');
-    if (!weddingDate) {
-        el.innerHTML = 'Dugun tarihini belirleyin &#8593;';
-        return;
-    }
-    const diff = new Date(weddingDate) - new Date();
-    if (diff <= 0) {
-        el.innerHTML = 'Dugun gunu geldi! &#127881;';
-        return;
-    }
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    el.innerHTML = 'Dugune <strong>' + days + '</strong> gun kaldi';
+// ===================== COUNTDOWNS =====================
+function updateCountdowns(){
+    const now = new Date();
+    const nd = Math.ceil((new Date(NISAN_DATE)-now)/(1000*60*60*24));
+    const wd = Math.ceil((new Date(weddingDate)-now)/(1000*60*60*24));
+    document.getElementById('cd-nisan').textContent = nd > 0 ? nd : (nd === 0 ? 'Bugun!' : 'Gecti');
+    document.getElementById('cd-dugun').textContent = wd > 0 ? wd : (wd === 0 ? 'Bugun!' : '?');
 }
 
-function setWeddingDate() {
-    const val = document.getElementById('wedding-date-input').value;
-    if (val) {
-        weddingDate = val;
-        saveData('wedding_date', weddingDate);
-        updateCountdown();
-    }
-}
-
-// ============= CHECKLIST =============
-const categoryNames = {
-    resmi: 'Resmi Islemler',
-    mekan: 'Mekan & Salon',
-    organizasyon: 'Organizasyon',
-    kisisel: 'Kisisel Hazirlik',
-    diger: 'Diger'
-};
-
-function renderChecklist() {
-    const container = document.getElementById('checklist-container');
-    const categories = {};
-    tasks.forEach(t => {
-        if (!categories[t.category]) categories[t.category] = [];
-        categories[t.category].push(t);
-    });
-
+// ===================== RENDER =====================
+function render(){
+    updateCountdowns();
+    const container = document.getElementById('roadmap');
     let html = '';
-    for (const cat of Object.keys(categoryNames)) {
-        const items = categories[cat];
-        if (!items || items.length === 0) continue;
-        const done = items.filter(i => i.done).length;
-        html += '<div class="checklist-category">';
-        html += '<div class="category-header cat-' + cat + '">' + categoryNames[cat] + ' <span class="badge">' + done + '/' + items.length + '</span></div>';
-        items.forEach(item => {
-            const priorityHtml = item.priority === 'high' ? '<span class="priority-badge priority-high">Acil</span>' :
-                                 item.priority === 'medium' ? '<span class="priority-badge priority-medium">Orta</span>' : '';
-            html += '<div class="check-item ' + (item.done ? 'done' : '') + '">';
-            html += '<input type="checkbox" ' + (item.done ? 'checked' : '') + ' onchange="toggleTask(' + item.id + ')">';
-            html += '<div><div class="check-text">' + item.name + priorityHtml + '</div>';
-            if (item.note) html += '<div class="check-note">' + item.note + '</div>';
-            html += '</div></div>';
-        });
+    let totalSteps = 0, totalDone = 0;
+    let foundActive = false;
+
+    phases.forEach((phase, pi) => {
+        const done = phase.steps.filter(s=>s.done).length;
+        const total = phase.steps.length;
+        totalSteps += total;
+        totalDone += done;
+        const pct = total > 0 ? Math.round(done/total*100) : 0;
+        const allDone = done === total;
+        const isOpen = !allDone || pi === phases.length - 1;
+
+        html += '<div class="phase ' + phase.phaseClass + (allDone?' completed':'') + (isOpen?' open':'') + '" data-phase="'+pi+'">';
+        html += '<div class="phase-header" onclick="togglePhase('+pi+')">';
+        html += '<div class="phase-dot">'+(allDone?'&#10003;':(pi+1))+'</div>';
+        html += '<div class="phase-info">';
+        html += '<div class="phase-name">'+phase.name+'</div>';
+        html += '<div class="phase-dates">'+phase.dates+'</div>';
+        html += '<div class="phase-progress"><div class="phase-progress-bar"><div class="phase-progress-fill" style="width:'+pct+'%"></div></div><span class="phase-progress-text">'+done+'/'+total+'</span></div>';
         html += '</div>';
-    }
-    container.innerHTML = html;
-    updateStats();
-}
-
-function toggleTask(id) {
-    const task = tasks.find(t => t.id === id);
-    if (task) { task.done = !task.done; saveData('tasks', tasks); renderChecklist(); }
-}
-
-function addTask() {
-    const name = document.getElementById('task-name').value.trim();
-    if (!name) return;
-    const newTask = {
-        id: Date.now(),
-        name,
-        category: document.getElementById('task-category').value,
-        priority: document.getElementById('task-priority').value,
-        note: document.getElementById('task-note').value.trim(),
-        done: false
-    };
-    tasks.push(newTask);
-    saveData('tasks', tasks);
-    renderChecklist();
-    closeModalForce();
-    document.getElementById('task-name').value = '';
-    document.getElementById('task-note').value = '';
-}
-
-// ============= VENUES =============
-function renderVenues() {
-    const container = document.getElementById('venues-container');
-    let html = '';
-    venues.forEach(v => {
-        html += '<div class="venue-card ' + (v.favorite ? 'favorite' : '') + '">';
-        html += '<button class="fav-btn" onclick="toggleFavorite(' + v.id + ')">' + (v.favorite ? '&#9733;' : '&#9734;') + '</button>';
-        html += '<div class="venue-name">' + v.name + '</div>';
-        html += '<div class="venue-tags">';
-        v.features.forEach(f => {
-            const cls = f.toLowerCase().includes('acik') || f.toLowerCase().includes('bahce') || f.toLowerCase().includes('park') ? 'green' :
-                        f.toLowerCase().includes('alkol') ? 'orange' : '';
-            html += '<span class="venue-tag ' + cls + '">' + f + '</span>';
-        });
+        html += '<div class="phase-chevron">&#9654;</div>';
         html += '</div>';
 
-        html += '<div class="venue-details">';
-        html += '<div class="detail-row"><span>Fiyat:</span><span><input type="text" style="border:none;text-align:right;width:120px;font-size:13px;font-weight:600;" placeholder="Bilgi yok" value="' + (v.price || '') + '" onchange="updateVenueField(' + v.id + ',\'price\',this.value)"></span></div>';
-        html += '<div class="detail-row"><span>Kapasite:</span><span><input type="text" style="border:none;text-align:right;width:120px;font-size:13px;" placeholder="Bilgi yok" value="' + (v.capacity || '') + '" onchange="updateVenueField(' + v.id + ',\'capacity\',this.value)"></span></div>';
-        html += '<div class="detail-row"><span>Iletisim:</span><span><input type="text" style="border:none;text-align:right;width:150px;font-size:13px;" placeholder="Tel no ekle" value="' + (v.contact || '') + '" onchange="updateVenueField(' + v.id + ',\'contact\',this.value)"></span></div>';
-        html += '</div>';
+        html += '<div class="phase-steps">';
 
-        html += '<textarea class="venue-notes" placeholder="Notlarinizi yayin..." onchange="updateVenueField(' + v.id + ',\'notes\',this.value)">' + (v.notes || '') + '</textarea>';
+        phase.steps.forEach((step, si) => {
+            const isActive = !step.done && !foundActive;
+            if (isActive) foundActive = true;
 
-        html += '<div class="venue-actions">';
-        html += '<a href="' + v.instagram + '" target="_blank" class="btn-primary" style="background:var(--primary);color:white;border-color:var(--primary);">Instagram</a>';
-        html += '<button onclick="removeVenue(' + v.id + ')" style="color:var(--red);border-color:var(--red-bg);">Sil</button>';
-        html += '</div>';
-        html += '</div>';
-    });
-    container.innerHTML = html;
-}
-
-function toggleFavorite(id) {
-    const v = venues.find(x => x.id === id);
-    if (v) { v.favorite = !v.favorite; saveData('venues', venues); renderVenues(); }
-}
-
-function updateVenueField(id, field, value) {
-    const v = venues.find(x => x.id === id);
-    if (v) { v[field] = value; saveData('venues', venues); }
-}
-
-function removeVenue(id) {
-    if (confirm('Bu mekani silmek istediginize emin misiniz?')) {
-        venues = venues.filter(v => v.id !== id);
-        saveData('venues', venues);
-        renderVenues();
-    }
-}
-
-function addVenue() {
-    const name = document.getElementById('venue-name-input').value.trim();
-    if (!name) return;
-    venues.push({
-        id: Date.now(),
-        name,
-        instagram: document.getElementById('venue-ig-input').value.trim(),
-        features: document.getElementById('venue-features-input').value.split(',').map(s => s.trim()).filter(Boolean),
-        notes: '', favorite: false, price: '', capacity: '', contact: ''
-    });
-    saveData('venues', venues);
-    renderVenues();
-    closeModalForce();
-    document.getElementById('venue-name-input').value = '';
-    document.getElementById('venue-ig-input').value = '';
-    document.getElementById('venue-features-input').value = '';
-}
-
-// ============= BUDGET =============
-function setTotalBudget() {
-    const val = parseInt(document.getElementById('total-budget-input').value);
-    if (val > 0) { totalBudget = val; saveData('total_budget', totalBudget); renderBudget(); }
-}
-
-function renderBudget() {
-    document.getElementById('total-budget-input').value = totalBudget || '';
-    const summaryEl = document.getElementById('budget-summary');
-    const itemsEl = document.getElementById('budget-items');
-    const emptyEl = document.getElementById('budget-empty');
-
-    const spent = budgetItems.reduce((s, i) => s + (i.status === 'paid' ? i.amount : 0), 0);
-    const planned = budgetItems.reduce((s, i) => s + i.amount, 0);
-    const remaining = totalBudget - planned;
-
-    if (totalBudget > 0) {
-        summaryEl.innerHTML =
-            '<div class="budget-stat total"><div class="amount">' + formatMoney(totalBudget) + '</div><div class="label">Toplam Butce</div></div>' +
-            '<div class="budget-stat spent"><div class="amount">' + formatMoney(spent) + '</div><div class="label">Odenen</div></div>' +
-            '<div class="budget-stat remaining"><div class="amount">' + formatMoney(remaining) + '</div><div class="label">Kalan</div></div>';
-    } else {
-        summaryEl.innerHTML = '';
-    }
-
-    if (budgetItems.length === 0) {
-        itemsEl.innerHTML = '';
-        emptyEl.style.display = 'block';
-    } else {
-        emptyEl.style.display = 'none';
-        let html = '';
-        budgetItems.forEach((item, i) => {
-            html += '<div class="budget-item">';
-            html += '<div><div class="budget-item-name">' + item.name + '</div><div style="font-size:11px;color:var(--gray-500);">' + (item.status === 'paid' ? 'Odendi' : 'Planli') + '</div></div>';
-            html += '<div style="display:flex;align-items:center;gap:8px;"><span class="budget-item-amount ' + (item.status === 'paid' ? 'paid' : '') + '">' + formatMoney(item.amount) + '</span>';
-            html += '<button onclick="removeBudgetItem(' + i + ')" style="background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:16px;">&times;</button></div>';
+            html += '<div class="step'+(step.done?' done':'')+(isActive?' active':'')+'" data-phase="'+pi+'" data-step="'+si+'">';
+            html += '<div class="step-line"><div class="step-circle'+(step.done?' done':'')+'" onclick="toggleStep('+pi+','+si+')"></div>';
+            if (si < phase.steps.length-1) html += '<div class="step-connector"></div>';
             html += '</div>';
+
+            html += '<div class="step-card">';
+            html += '<div class="step-main" onclick="expandStep('+pi+','+si+')">';
+            html += '<div class="step-title">'+step.title+'</div>';
+            html += '<div class="step-expand">&#9654;</div>';
+            html += '</div>';
+
+            html += '<div class="step-detail">';
+            if (step.hint) html += '<div class="step-hint">'+step.hint+'</div>';
+
+            // Special: venues carousel
+            if (step.type === 'venues') {
+                html += renderVenueCarousel();
+            }
+
+            html += '<textarea class="step-note" placeholder="Not ekle..." onchange="saveStepNote('+pi+','+si+',this.value)">'+escHtml(step.note||'')+'</textarea>';
+            html += '</div>'; // step-detail
+            html += '</div>'; // step-card
+            html += '</div>'; // step
         });
-        itemsEl.innerHTML = html;
-    }
-    updateStats();
-}
 
-function formatMoney(n) {
-    return n.toLocaleString('tr-TR') + ' TL';
-}
-
-function addBudgetItem() {
-    const name = document.getElementById('budget-name').value.trim();
-    const amount = parseInt(document.getElementById('budget-amount').value);
-    if (!name || !amount) return;
-    budgetItems.push({ name, amount, status: document.getElementById('budget-status').value });
-    saveData('budget_items', budgetItems);
-    renderBudget();
-    closeModalForce();
-    document.getElementById('budget-name').value = '';
-    document.getElementById('budget-amount').value = '';
-}
-
-function removeBudgetItem(i) {
-    budgetItems.splice(i, 1);
-    saveData('budget_items', budgetItems);
-    renderBudget();
-}
-
-// ============= NOTES =============
-function renderNotes() {
-    const container = document.getElementById('notes-container');
-    const emptyEl = document.getElementById('notes-empty');
-    if (notesList.length === 0) {
-        container.innerHTML = '';
-        emptyEl.style.display = 'block';
-        return;
-    }
-    emptyEl.style.display = 'none';
-    let html = '';
-    notesList.forEach((n, i) => {
-        html += '<div class="note-item">';
-        html += '<div class="note-header"><span class="note-date">' + n.date + '</span><button class="note-delete" onclick="deleteNote(' + i + ')">&times;</button></div>';
-        html += '<div class="note-body">' + escapeHtml(n.text) + '</div>';
-        html += '</div>';
+        html += '</div>'; // phase-steps
+        html += '</div>'; // phase
     });
+
     container.innerHTML = html;
+
+    // Overall progress
+    const overallPct = totalSteps > 0 ? Math.round(totalDone/totalSteps*100) : 0;
+    document.getElementById('overall-fill').style.width = overallPct+'%';
+    document.getElementById('overall-pct').textContent = overallPct+'%';
+
+    // Auto scroll to active
+    setTimeout(()=>{
+        const active = document.querySelector('.step.active');
+        if(active) active.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 300);
 }
 
-function addNote() {
-    const text = document.getElementById('note-text').value.trim();
-    if (!text) return;
-    notesList.unshift({ text, date: new Date().toLocaleDateString('tr-TR') });
-    saveData('notes', notesList);
-    renderNotes();
-    closeModalForce();
-    document.getElementById('note-text').value = '';
+function renderVenueCarousel(){
+    let h = '<div class="venue-scroll">';
+    venues.forEach(v => {
+        h += '<div class="v-card'+(v.favorite?' fav':'')+'">';
+        h += '<button class="v-fav" onclick="event.stopPropagation();toggleFav('+v.id+')">'+(v.favorite?'&#9733;':'&#9734;')+'</button>';
+        h += '<div class="v-name">'+v.name+'</div>';
+        h += '<div class="v-tags">';
+        v.features.forEach(f => {
+            const cls = /acik|bahce|park/i.test(f)?'green':'';
+            h += '<span class="v-tag '+cls+'">'+f+'</span>';
+        });
+        h += '</div>';
+        h += '<div class="v-row"><span>Fiyat:</span><input placeholder="?" value="'+escHtml(v.price||'')+'" onchange="updVenue('+v.id+',\'price\',this.value)"></div>';
+        h += '<div class="v-row"><span>Kapasite:</span><input placeholder="?" value="'+escHtml(v.capacity||'')+'" onchange="updVenue('+v.id+',\'capacity\',this.value)"></div>';
+        h += '<div class="v-row"><span>Iletisim:</span><input placeholder="Tel ekle" value="'+escHtml(v.contact||'')+'" onchange="updVenue('+v.id+',\'contact\',this.value)"></div>';
+        h += '<textarea class="v-note" placeholder="Not..." onchange="updVenue('+v.id+',\'notes\',this.value)">'+escHtml(v.notes||'')+'</textarea>';
+        h += '<div class="v-actions">';
+        if(v.instagram) h += '<a href="'+v.instagram+'" target="_blank" class="ig">Instagram</a>';
+        h += '<button onclick="removeVenue('+v.id+')">Sil</button>';
+        h += '</div></div>';
+    });
+    h += '<div class="v-card" style="display:flex;align-items:center;justify-content:center;min-height:200px;border:2px dashed var(--gray-200);cursor:pointer" onclick="openVenueModal()"><div style="text-align:center;color:var(--gray-400)"><div style="font-size:28px">+</div><div style="font-size:12px;margin-top:4px">Mekan Ekle</div></div></div>';
+    h += '</div>';
+    return h;
 }
 
-function deleteNote(i) {
-    notesList.splice(i, 1);
-    saveData('notes', notesList);
-    renderNotes();
+// ===================== INTERACTIONS =====================
+function togglePhase(pi){
+    const el = document.querySelectorAll('.phase')[pi];
+    if(el) el.classList.toggle('open');
 }
 
-function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toggleStep(pi, si){
+    phases[pi].steps[si].done = !phases[pi].steps[si].done;
+    save('phases', phases);
+    render();
 }
 
-// ============= STATS =============
-function updateStats() {
-    const total = tasks.length;
-    const done = tasks.filter(t => t.done).length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-    document.getElementById('stat-total-tasks').textContent = total;
-    document.getElementById('stat-done-tasks').textContent = done;
-    document.getElementById('stat-venues').textContent = venues.length;
-    document.getElementById('stat-budget').textContent = totalBudget > 0 ? formatMoney(totalBudget) : '-';
-
-    document.getElementById('progress-text').textContent = pct + '%';
-    document.getElementById('progress-count').textContent = done + '/' + total;
-    document.getElementById('progress-fill').style.width = pct + '%';
-
-    // Urgent tasks on dashboard
-    const urgentEl = document.getElementById('urgent-tasks');
-    const urgent = tasks.filter(t => !t.done && t.priority === 'high').slice(0, 5);
-    if (urgent.length === 0) {
-        urgentEl.innerHTML = '<div style="font-size:14px;color:var(--green);">Tum acil gorevler tamamlandi!</div>';
-    } else {
-        urgentEl.innerHTML = urgent.map(t =>
-            '<div style="padding:6px 0;font-size:14px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;gap:8px;">' +
-            '<span style="color:var(--red);font-size:10px;">&#9679;</span> ' + t.name + '</div>'
-        ).join('');
-    }
+function expandStep(pi, si){
+    const steps = document.querySelectorAll('.step[data-phase="'+pi+'"][data-step="'+si+'"]');
+    steps.forEach(s => s.classList.toggle('expanded'));
 }
 
-// ============= MODAL =============
-function openModal(type) {
-    document.getElementById('modal-overlay').classList.add('active');
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-    document.getElementById('modal-' + type).style.display = 'block';
+function saveStepNote(pi, si, val){
+    phases[pi].steps[si].note = val;
+    save('phases', phases);
 }
 
-function closeModal(e) {
-    if (e.target === document.getElementById('modal-overlay')) {
-        closeModalForce();
-    }
-}
-
-function closeModalForce() {
+// Venues
+function toggleFav(id){const v=venues.find(x=>x.id===id);if(v){v.favorite=!v.favorite;save('venues',venues);render()}}
+function updVenue(id,f,val){const v=venues.find(x=>x.id===id);if(v){v[f]=val;save('venues',venues)}}
+function removeVenue(id){if(confirm('Silmek istediginize emin misiniz?')){venues=venues.filter(v=>v.id!==id);save('venues',venues);render()}}
+function openVenueModal(){document.getElementById('modal-overlay').classList.add('active');document.getElementById('modal-venue').style.display='block'}
+function addVenue(){
+    const name=document.getElementById('nv-name').value.trim();
+    if(!name)return;
+    venues.push({id:Date.now(),name,instagram:document.getElementById('nv-ig').value.trim(),features:document.getElementById('nv-feat').value.split(',').map(s=>s.trim()).filter(Boolean),notes:'',favorite:false,price:'',capacity:'',contact:''});
+    save('venues',venues);render();
     document.getElementById('modal-overlay').classList.remove('active');
+    document.getElementById('nv-name').value='';document.getElementById('nv-ig').value='';document.getElementById('nv-feat').value='';
 }
 
-// ============= INIT =============
-function init() {
-    if (weddingDate) document.getElementById('wedding-date-input').value = weddingDate;
-    updateCountdown();
-    renderChecklist();
-    renderVenues();
-    renderBudget();
-    renderNotes();
+// Notes panel
+function toggleNotesPanel(){
+    const p=document.getElementById('notes-panel');
+    const o=document.getElementById('panel-overlay');
+    document.getElementById('budget-panel').classList.remove('open');
+    p.classList.toggle('open');
+    o.classList.toggle('active',p.classList.contains('open'));
+    if(p.classList.contains('open'))renderNotes();
+}
+function renderNotes(){
+    const c=document.getElementById('notes-body');
+    if(notes.length===0){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Henuz not yok</div>';return}
+    c.innerHTML=notes.map((n,i)=>'<div class="note-item"><button class="n-del" onclick="delNote('+i+')">&times;</button><div class="n-date">'+n.date+'</div><div class="n-text">'+escHtml(n.text)+'</div></div>').join('');
+}
+function addNote(){
+    const t=document.getElementById('note-input').value.trim();
+    if(!t)return;
+    notes.unshift({text:t,date:new Date().toLocaleDateString('tr-TR')});
+    save('notes',notes);document.getElementById('note-input').value='';renderNotes();
+}
+function delNote(i){notes.splice(i,1);save('notes',notes);renderNotes()}
+
+// Budget panel
+function toggleBudgetPanel(){
+    const p=document.getElementById('budget-panel');
+    const o=document.getElementById('panel-overlay');
+    document.getElementById('notes-panel').classList.remove('open');
+    p.classList.toggle('open');
+    o.classList.toggle('active',p.classList.contains('open'));
+    if(p.classList.contains('open'))renderBudget();
+}
+function renderBudget(){
+    const c=document.getElementById('bp-body');
+    document.getElementById('total-budget-input').value=totalBudget||'';
+    const spent=budgetItems.reduce((s,i)=>s+(i.status==='paid'?i.amount:0),0);
+    const planned=budgetItems.reduce((s,i)=>s+i.amount,0);
+    const rem=totalBudget-planned;
+    let h='';
+    if(totalBudget>0){
+        h+='<div class="bp-summary"><div class="bp-stat t"><div class="amt">'+fmt(totalBudget)+'</div><div class="lbl">Butce</div></div><div class="bp-stat s"><div class="amt">'+fmt(spent)+'</div><div class="lbl">Odenen</div></div><div class="bp-stat r"><div class="amt">'+fmt(rem)+'</div><div class="lbl">Kalan</div></div></div>';
+    }
+    if(budgetItems.length===0){
+        h+='<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Henuz harcama yok</div>';
+    }else{
+        budgetItems.forEach((it,i)=>{
+            h+='<div class="bp-item"><div><div style="font-weight:500">'+it.name+'</div><div style="font-size:11px;color:var(--gray-400)">'+(it.status==='paid'?'Odendi':'Planli')+'</div></div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600;'+(it.status==='paid'?'color:var(--green)':'')+'">' +fmt(it.amount)+'</span><button onclick="rmBudget('+i+')">&times;</button></div></div>';
+        });
+    }
+    c.innerHTML=h;
+}
+function setTotalBudget(){const v=parseInt(document.getElementById('total-budget-input').value);if(v>0){totalBudget=v;save('total_budget',totalBudget);renderBudget()}}
+function addBudgetItem(){
+    const n=document.getElementById('bi-name').value.trim();
+    const a=parseInt(document.getElementById('bi-amount').value);
+    if(!n||!a)return;
+    budgetItems.push({name:n,amount:a,status:document.getElementById('bi-status').value});
+    save('budget_items',budgetItems);renderBudget();
+    document.getElementById('bi-name').value='';document.getElementById('bi-amount').value='';
+}
+function rmBudget(i){budgetItems.splice(i,1);save('budget_items',budgetItems);renderBudget()}
+function fmt(n){return n.toLocaleString('tr-TR')+' TL'}
+
+function closeAllPanels(){
+    document.getElementById('notes-panel').classList.remove('open');
+    document.getElementById('budget-panel').classList.remove('open');
+    document.getElementById('panel-overlay').classList.remove('active');
 }
 
-init();
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// Init
+render();
 </script>
 </body>
 </html>
