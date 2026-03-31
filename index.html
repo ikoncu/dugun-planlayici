@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Düğün Organizasyon Planlayıcı</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #b8860b;
+            --primary-light: #daa520;
+            --primary-bg: #fdf8ef;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --green: #059669;
+            --green-bg: #ecfdf5;
+            --red: #dc2626;
+            --red-bg: #fef2f2;
+            --blue: #2563eb;
+            --blue-bg: #eff6ff;
+            --orange: #ea580c;
+            --orange-bg: #fff7ed;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            min-height: 100vh;
+        }
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 20px 16px 16px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .header .subtitle { font-size: 13px; opacity: 0.9; }
+        .countdown { font-size: 14px; margin-top: 8px; background: rgba(255,255,255,0.2); border-radius: 8px; padding: 6px 12px; display: inline-block; }
+        .countdown strong { font-size: 18px; }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: none;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-500);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+        .tab-btn:hover { color: var(--primary); }
+
+        /* Tab Content */
+        .tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+        .tab-content.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--gray-100);
+        }
+        .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        /* Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--gray-100);
+        }
+        .stat-number { font-size: 24px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+        /* Checklist */
+        .checklist-category { margin-bottom: 16px; }
+        .category-header {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category-header .badge {
+            font-size: 11px;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .cat-resmi { background: var(--blue-bg); color: var(--blue); }
+        .cat-mekan { background: var(--orange-bg); color: var(--orange); }
+        .cat-organizasyon { background: var(--primary-bg); color: var(--primary); }
+        .cat-kisisel { background: var(--green-bg); color: var(--green); }
+        .cat-diger { background: var(--gray-100); color: var(--gray-700); }
+
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+        .check-item:hover { background: var(--gray-50); }
+        .check-item.done { opacity: 0.5; }
+        .check-item.done .check-text { text-decoration: line-through; }
+        .check-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+            margin-top: 1px;
+            cursor: pointer;
+        }
+        .check-text { font-size: 14px; line-height: 1.4; }
+        .check-note { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+        /* Venue Cards */
+        .venue-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--gray-100);
+            position: relative;
+        }
+        .venue-card.favorite { border-color: var(--primary-light); border-width: 2px; }
+        .venue-name { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+        .venue-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .venue-tag {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+        .venue-tag.green { background: var(--green-bg); color: var(--green); }
+        .venue-tag.orange { background: var(--orange-bg); color: var(--orange); }
+        .venue-tag.blue { background: var(--blue-bg); color: var(--blue); }
+        .venue-details { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+        .venue-details .detail-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--gray-50); }
+        .venue-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .venue-actions button, .venue-actions a {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--gray-200);
+            background: var(--white);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--gray-700);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .venue-actions .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .venue-actions button:hover, .venue-actions a:hover { background: var(--gray-50); }
+        .venue-actions .btn-primary:hover { background: var(--primary-light); }
+
+        .venue-notes {
+            width: 100%;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 60px;
+            margin-top: 8px;
+            font-family: inherit;
+        }
+
+        .fav-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        /* Budget */
+        .budget-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .budget-stat {
+            text-align: center;
+            padding: 12px 8px;
+            border-radius: 10px;
+            background: var(--white);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .budget-stat .amount { font-size: 18px; font-weight: 700; }
+        .budget-stat .label { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+        .budget-stat.total .amount { color: var(--primary); }
+        .budget-stat.spent .amount { color: var(--red); }
+        .budget-stat.remaining .amount { color: var(--green); }
+
+        .budget-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .budget-item:last-child { border-bottom: none; }
+        .budget-item-name { font-size: 14px; }
+        .budget-item-amount { font-size: 14px; font-weight: 600; }
+        .budget-item-amount.paid { color: var(--green); }
+
+        /* Forms */
+        .form-group { margin-bottom: 12px; }
+        .form-group label { font-size: 13px; font-weight: 500; color: var(--gray-700); display: block; margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-secondary { background: var(--gray-100); color: var(--gray-700); }
+        .btn-secondary:hover { background: var(--gray-200); }
+        .btn-danger { background: var(--red-bg); color: var(--red); }
+        .btn-sm { padding: 6px 10px; font-size: 12px; }
+        .btn-block { width: 100%; justify-content: center; }
+
+        /* Timeline */
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: var(--gray-500);
+            min-width: 70px;
+            text-align: right;
+            padding-top: 2px;
+        }
+        .timeline-content { flex: 1; }
+        .timeline-title { font-size: 14px; font-weight: 500; }
+        .timeline-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+        /* Notes */
+        .note-item {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--primary);
+        }
+        .note-item .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .note-item .note-date { font-size: 11px; color: var(--gray-500); }
+        .note-item .note-body { font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+        .note-item .note-delete { background: none; border: none; color: var(--gray-300); cursor: pointer; font-size: 18px; padding: 0 4px; }
+        .note-item .note-delete:hover { color: var(--red); }
+
+        /* Progress Bar */
+        .progress-bar { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 4px; transition: width 0.3s; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 30px; color: var(--gray-500); font-size: 14px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--white);
+            border-radius: 16px 16px 0 0;
+            padding: 20px 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray-500); }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(184,134,11,0.4);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fab:hover { background: var(--primary-light); transform: scale(1.05); }
+
+        /* Responsive */
+        @media (min-width: 600px) {
+            .header h1 { font-size: 24px; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* Comparison table */
+        .comparison-toggle { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .compare-chip {
+            font-size: 12px; padding: 5px 10px; border-radius: 20px;
+            border: 1px solid var(--gray-200); background: var(--white);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .compare-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Wedding date setter */
+        .date-setter { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .date-setter input { flex: 1; }
+
+        /* Smooth scroll behavior */
+        html { scroll-behavior: smooth; }
+
+        /* Priority badge */
+        .priority-badge {
+            font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+        }
+        .priority-high { background: var(--red-bg); color: var(--red); }
+        .priority-medium { background: var(--orange-bg); color: var(--orange); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Dugun Planlayici</h1>
+    <div class="subtitle">Hayalinizdeki dugune adim adim</div>
+    <div class="countdown" id="countdown">
+        Dugun tarihini belirleyin
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Ana Sayfa</button>
+    <button class="tab-btn" data-tab="checklist">Gorev Listesi</button>
+    <button class="tab-btn" data-tab="venues">Mekanlar</button>
+    <button class="tab-btn" data-tab="budget">Butce</button>
+    <button class="tab-btn" data-tab="timeline">Zaman Cizelgesi</button>
+    <button class="tab-btn" data-tab="notes">Notlar</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="tab-content active">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="stat-total-tasks">0</div>
+            <div class="stat-label">Toplam Gorev</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-done-tasks">0</div>
+            <div class="stat-label">Tamamlanan</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-venues">7</div>
+            <div class="stat-label">Mekan Secenegi</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="stat-budget">-</div>
+            <div class="stat-label">Butce</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Dugun Tarihi Ayarla</div>
+        <div class="date-setter">
+            <input type="date" id="wedding-date-input">
+            <button class="btn btn-primary btn-sm" onclick="setWeddingDate()">Kaydet</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Genel Ilerleme</div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-500);">
+            <span id="progress-text">0%</span>
+            <span id="progress-count">0/0</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Acil Yapilacaklar</div>
+        <div id="urgent-tasks"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Hatirlatmalar</div>
+        <div style="font-size: 14px; line-height: 1.7; color: var(--gray-700);">
+            <div style="padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
+                <strong style="color: var(--red);">&#9888;</strong> Saglik raporu almayi unutmayin (nikah icin zorunlu)
+            </div>
+            <div style="padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
+                <strong style="color: var(--orange);">&#128197;</strong> Mekan rezervasyonunu en az 2-3 ay once yapin
+            </div>
+            <div style="padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
+                <strong style="color: var(--blue);">&#128221;</strong> Nikah basvurusu icin nufus mudurlugune basvurun
+            </div>
+            <div style="padding: 8px 0;">
+                <strong style="color: var(--green);">&#128176;</strong> Kapora odeme takvimini takip edin
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHECKLIST -->
+<div id="checklist" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 600;">Gorev Listesi</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-task')">+ Gorev Ekle</button>
+    </div>
+
+    <div id="checklist-container"></div>
+</div>
+
+<!-- VENUES -->
+<div id="venues" class="tab-content">
+    <div style="margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Mekan Karsilastirma</h2>
+        <p style="font-size: 13px; color: var(--gray-500);">Mekanlari inceleyin, not edin ve favorinizi secin</p>
+    </div>
+
+    <div id="venues-container"></div>
+
+    <button class="btn btn-secondary btn-block" onclick="openModal('add-venue')" style="margin-top: 12px;">+ Yeni Mekan Ekle</button>
+</div>
+
+<!-- BUDGET -->
+<div id="budget" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 600;">Butce Takibi</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-budget')">+ Kalem Ekle</button>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label>Toplam Butce (TL)</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="number" id="total-budget-input" placeholder="Ornegin: 500000">
+                <button class="btn btn-primary btn-sm" onclick="setTotalBudget()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="budget-summary" id="budget-summary"></div>
+
+    <div class="card">
+        <div class="card-title">Harcamalar</div>
+        <div id="budget-items"></div>
+        <div class="empty-state" id="budget-empty">Henuz harcama eklenmedi</div>
+    </div>
+</div>
+
+<!-- TIMELINE -->
+<div id="timeline" class="tab-content">
+    <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Zaman Cizelgesi</h2>
+    <div class="card">
+        <div id="timeline-container">
+            <div class="timeline-item">
+                <div class="timeline-date">6+ Ay Once</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Butce Belirleme</div>
+                    <div class="timeline-desc">Toplam butcenizi belirleyin ve kalemlere bolun</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">5-6 Ay</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Mekan Arastirmasi & Rezervasyon</div>
+                    <div class="timeline-desc">Mekanlari gezin, fiyat alin ve kapora odeyin</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">4-5 Ay</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Organizator Secimi</div>
+                    <div class="timeline-desc">Dugun organizatoru ile anlasma yapin</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">3-4 Ay</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Davetiye & Kiyafet</div>
+                    <div class="timeline-desc">Davetiye tasarimi, gelinlik/damatlk secimi</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2-3 Ay</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Nikah Basvurusu</div>
+                    <div class="timeline-desc">Saglik raporu alin, nufus mudurlugune basvurun</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">1-2 Ay</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Detay Planlama</div>
+                    <div class="timeline-desc">Menu, cicek, muzik, fotograf/video detaylari</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2-4 Hafta</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Son Kontroller</div>
+                    <div class="timeline-desc">Davetli listesi onayi, oturma plani, prova</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">1 Hafta</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">Son Hazirliklar</div>
+                    <div class="timeline-desc">Tum tedarikci onaylari, kina gecesi, son detaylar</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTES -->
+<div id="notes" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 600;">Notlar</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-note')">+ Not Ekle</button>
+    </div>
+    <div id="notes-container"></div>
+    <div class="empty-state" id="notes-empty">Henuz not eklenmedi</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <!-- Add Task Modal -->
+    <div class="modal" id="modal-add-task" style="display:none">
+        <div class="modal-title">
+            Yeni Gorev Ekle
+            <button class="modal-close" onclick="closeModalForce()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Gorev Adi</label>
+            <input type="text" id="task-name" placeholder="Ornegin: Mekan kaporasi ode">
+        </div>
+        <div class="form-group">
+            <label>Kategori</label>
+            <select id="task-category">
+                <option value="resmi">Resmi Islemler</option>
+                <option value="mekan">Mekan & Salon</option>
+                <option value="organizasyon">Organizasyon</option>
+                <option value="kisisel">Kisisel Hazirlik</option>
+                <option value="diger">Diger</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Oncelik</label>
+            <select id="task-priority">
+                <option value="high">Yuksek</option>
+                <option value="medium">Orta</option>
+                <option value="low">Normal</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Not (Opsiyonel)</label>
+            <textarea id="task-note" rows="2" placeholder="Ek bilgi..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addTask()">Gorev Ekle</button>
+    </div>
+
+    <!-- Add Note Modal -->
+    <div class="modal" id="modal-add-note" style="display:none">
+        <div class="modal-title">
+            Yeni Not
+            <button class="modal-close" onclick="closeModalForce()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Not</label>
+            <textarea id="note-text" rows="5" placeholder="Notunuzu yazin..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addNote()">Kaydet</button>
+    </div>
+
+    <!-- Add Budget Modal -->
+    <div class="modal" id="modal-add-budget" style="display:none">
+        <div class="modal-title">
+            Butce Kalemi Ekle
+            <button class="modal-close" onclick="closeModalForce()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Kalem Adi</label>
+            <input type="text" id="budget-name" placeholder="Ornegin: Mekan kaporasi">
+        </div>
+        <div class="form-group">
+            <label>Tutar (TL)</label>
+            <input type="number" id="budget-amount" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label>Durum</label>
+            <select id="budget-status">
+                <option value="planned">Planli</option>
+                <option value="paid">Odendi</option>
+            </select>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addBudgetItem()">Ekle</button>
+    </div>
+
+    <!-- Add Venue Modal -->
+    <div class="modal" id="modal-add-venue" style="display:none">
+        <div class="modal-title">
+            Yeni Mekan Ekle
+            <button class="modal-close" onclick="closeModalForce()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Mekan Adi</label>
+            <input type="text" id="venue-name-input">
+        </div>
+        <div class="form-group">
+            <label>Instagram Linki</label>
+            <input type="url" id="venue-ig-input" placeholder="https://instagram.com/...">
+        </div>
+        <div class="form-group">
+            <label>Ozellikler (virgul ile ayirin)</label>
+            <input type="text" id="venue-features-input" placeholder="Acik hava, Yemekli, Alkolu">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addVenue()">Ekle</button>
+    </div>
+</div>
+
+<script>
+// ============= DATA =============
+const DEFAULT_TASKS = [
+    { id: 1, name: 'Saglik raporu al (nikah icin zorunlu)', category: 'resmi', priority: 'high', note: 'Aile hekiminden veya devlet hastanesinden alinir', done: false },
+    { id: 2, name: 'Nufus mudurlugune nikah basvurusu yap', category: 'resmi', priority: 'high', note: 'Nufus cuzdani fotokopisi, vesikalik foto, saglik raporu gerekli', done: false },
+    { id: 3, name: 'Nikah tarihi ve yeri belirle', category: 'resmi', priority: 'high', note: '', done: false },
+    { id: 4, name: 'Nikah sahitleri belirle (2 sahit gerekli)', category: 'resmi', priority: 'medium', note: '', done: false },
+    { id: 5, name: 'Dugun mekanlarini ara ve gez', category: 'mekan', priority: 'high', note: 'Instagram sayfalarini incele, telefonla ara', done: false },
+    { id: 6, name: 'Mekan fiyat teklifleri al', category: 'mekan', priority: 'high', note: 'Kisi basi, paket fiyatlari, acik hava/kapali alan secenekleri', done: false },
+    { id: 7, name: 'Mekan rezervasyonu ve kapora', category: 'mekan', priority: 'high', note: 'Sozlesmeyi dikkatlice oku', done: false },
+    { id: 8, name: 'Dugun organizatoru ile gorusme', category: 'organizasyon', priority: 'high', note: 'En az 2-3 organizatorle gorusun', done: false },
+    { id: 9, name: 'Organizator ile anlasma yap', category: 'organizasyon', priority: 'medium', note: '', done: false },
+    { id: 10, name: 'Davetli listesi olustur', category: 'organizasyon', priority: 'medium', note: 'Gelin tarafi + damat tarafi ayri listeler', done: false },
+    { id: 11, name: 'Davetiye tasarimi ve siparisi', category: 'organizasyon', priority: 'medium', note: '', done: false },
+    { id: 12, name: 'Menu secimi (yemekli ise)', category: 'organizasyon', priority: 'medium', note: 'Tadim yapmayi unutmayin', done: false },
+    { id: 13, name: 'Fotograf ve video ekibi sec', category: 'organizasyon', priority: 'medium', note: 'Portfolyolarini inceleyin', done: false },
+    { id: 14, name: 'Muzik / DJ secimi', category: 'organizasyon', priority: 'medium', note: '', done: false },
+    { id: 15, name: 'Cicek ve dekorasyon plani', category: 'organizasyon', priority: 'medium', note: '', done: false },
+    { id: 16, name: 'Gelinlik / Damatlk secimi', category: 'kisisel', priority: 'high', note: '', done: false },
+    { id: 17, name: 'Kuafor ve makyaj randevusu', category: 'kisisel', priority: 'medium', note: 'Prova makyaji yaptirin', done: false },
+    { id: 18, name: 'Alyans secimi', category: 'kisisel', priority: 'medium', note: '', done: false },
+    { id: 19, name: 'Kina gecesi organizasyonu', category: 'organizasyon', priority: 'medium', note: '', done: false },
+    { id: 20, name: 'Balayi plani', category: 'kisisel', priority: 'low', note: '', done: false },
+];
+
+const DEFAULT_VENUES = [
+    {
+        id: 1, name: 'Selale Plaza Dugun Salonu',
+        instagram: 'https://www.instagram.com/selaleplazadugunsalonu/',
+        features: ['Salon'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    },
+    {
+        id: 2, name: 'Pembe Kosk Balo Salon',
+        instagram: 'https://www.instagram.com/pembekoskbalosalon/',
+        features: ['Balo Salonu'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    },
+    {
+        id: 3, name: 'Marina Gaziantep BKM',
+        instagram: 'https://www.instagram.com/marinagaziantepbkm/',
+        features: ['Salon'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    },
+    {
+        id: 4, name: 'Vadi Garden Gaziantep',
+        instagram: 'https://www.instagram.com/vadigardengaziantep/',
+        features: ['Bahce', 'Acik Hava'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    },
+    {
+        id: 5, name: 'Livas Park Dugun',
+        instagram: 'https://www.instagram.com/livasparkdugun/',
+        features: ['Park', 'Acik Hava'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    },
+    {
+        id: 6, name: 'Ceremony Erikce',
+        instagram: 'https://www.instagram.com/ceremonyerikce/',
+        features: ['Salon'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    },
+    {
+        id: 7, name: 'MSM Erikce',
+        instagram: 'https://www.instagram.com/msmerikce/',
+        features: ['Salon'],
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    }
+];
+
+// ============= STATE =============
+function loadData(key, defaultVal) {
+    try {
+        const d = localStorage.getItem('wedding_' + key);
+        return d ? JSON.parse(d) : defaultVal;
+    } catch { return defaultVal; }
+}
+function saveData(key, val) {
+    localStorage.setItem('wedding_' + key, JSON.stringify(val));
+}
+
+let tasks = loadData('tasks', DEFAULT_TASKS);
+let venues = loadData('venues', DEFAULT_VENUES);
+let budgetItems = loadData('budget_items', []);
+let totalBudget = loadData('total_budget', 0);
+let weddingDate = loadData('wedding_date', null);
+let notesList = loadData('notes', []);
+
+// ============= TAB NAVIGATION =============
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ============= COUNTDOWN =============
+function updateCountdown() {
+    const el = document.getElementById('countdown');
+    if (!weddingDate) {
+        el.innerHTML = 'Dugun tarihini belirleyin &#8593;';
+        return;
+    }
+    const diff = new Date(weddingDate) - new Date();
+    if (diff <= 0) {
+        el.innerHTML = 'Dugun gunu geldi! &#127881;';
+        return;
+    }
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    el.innerHTML = 'Dugune <strong>' + days + '</strong> gun kaldi';
+}
+
+function setWeddingDate() {
+    const val = document.getElementById('wedding-date-input').value;
+    if (val) {
+        weddingDate = val;
+        saveData('wedding_date', weddingDate);
+        updateCountdown();
+    }
+}
+
+// ============= CHECKLIST =============
+const categoryNames = {
+    resmi: 'Resmi Islemler',
+    mekan: 'Mekan & Salon',
+    organizasyon: 'Organizasyon',
+    kisisel: 'Kisisel Hazirlik',
+    diger: 'Diger'
+};
+
+function renderChecklist() {
+    const container = document.getElementById('checklist-container');
+    const categories = {};
+    tasks.forEach(t => {
+        if (!categories[t.category]) categories[t.category] = [];
+        categories[t.category].push(t);
+    });
+
+    let html = '';
+    for (const cat of Object.keys(categoryNames)) {
+        const items = categories[cat];
+        if (!items || items.length === 0) continue;
+        const done = items.filter(i => i.done).length;
+        html += '<div class="checklist-category">';
+        html += '<div class="category-header cat-' + cat + '">' + categoryNames[cat] + ' <span class="badge">' + done + '/' + items.length + '</span></div>';
+        items.forEach(item => {
+            const priorityHtml = item.priority === 'high' ? '<span class="priority-badge priority-high">Acil</span>' :
+                                 item.priority === 'medium' ? '<span class="priority-badge priority-medium">Orta</span>' : '';
+            html += '<div class="check-item ' + (item.done ? 'done' : '') + '">';
+            html += '<input type="checkbox" ' + (item.done ? 'checked' : '') + ' onchange="toggleTask(' + item.id + ')">';
+            html += '<div><div class="check-text">' + item.name + priorityHtml + '</div>';
+            if (item.note) html += '<div class="check-note">' + item.note + '</div>';
+            html += '</div></div>';
+        });
+        html += '</div>';
+    }
+    container.innerHTML = html;
+    updateStats();
+}
+
+function toggleTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) { task.done = !task.done; saveData('tasks', tasks); renderChecklist(); }
+}
+
+function addTask() {
+    const name = document.getElementById('task-name').value.trim();
+    if (!name) return;
+    const newTask = {
+        id: Date.now(),
+        name,
+        category: document.getElementById('task-category').value,
+        priority: document.getElementById('task-priority').value,
+        note: document.getElementById('task-note').value.trim(),
+        done: false
+    };
+    tasks.push(newTask);
+    saveData('tasks', tasks);
+    renderChecklist();
+    closeModalForce();
+    document.getElementById('task-name').value = '';
+    document.getElementById('task-note').value = '';
+}
+
+// ============= VENUES =============
+function renderVenues() {
+    const container = document.getElementById('venues-container');
+    let html = '';
+    venues.forEach(v => {
+        html += '<div class="venue-card ' + (v.favorite ? 'favorite' : '') + '">';
+        html += '<button class="fav-btn" onclick="toggleFavorite(' + v.id + ')">' + (v.favorite ? '&#9733;' : '&#9734;') + '</button>';
+        html += '<div class="venue-name">' + v.name + '</div>';
+        html += '<div class="venue-tags">';
+        v.features.forEach(f => {
+            const cls = f.toLowerCase().includes('acik') || f.toLowerCase().includes('bahce') || f.toLowerCase().includes('park') ? 'green' :
+                        f.toLowerCase().includes('alkol') ? 'orange' : '';
+            html += '<span class="venue-tag ' + cls + '">' + f + '</span>';
+        });
+        html += '</div>';
+
+        html += '<div class="venue-details">';
+        html += '<div class="detail-row"><span>Fiyat:</span><span><input type="text" style="border:none;text-align:right;width:120px;font-size:13px;font-weight:600;" placeholder="Bilgi yok" value="' + (v.price || '') + '" onchange="updateVenueField(' + v.id + ',\'price\',this.value)"></span></div>';
+        html += '<div class="detail-row"><span>Kapasite:</span><span><input type="text" style="border:none;text-align:right;width:120px;font-size:13px;" placeholder="Bilgi yok" value="' + (v.capacity || '') + '" onchange="updateVenueField(' + v.id + ',\'capacity\',this.value)"></span></div>';
+        html += '<div class="detail-row"><span>Iletisim:</span><span><input type="text" style="border:none;text-align:right;width:150px;font-size:13px;" placeholder="Tel no ekle" value="' + (v.contact || '') + '" onchange="updateVenueField(' + v.id + ',\'contact\',this.value)"></span></div>';
+        html += '</div>';
+
+        html += '<textarea class="venue-notes" placeholder="Notlarinizi yayin..." onchange="updateVenueField(' + v.id + ',\'notes\',this.value)">' + (v.notes || '') + '</textarea>';
+
+        html += '<div class="venue-actions">';
+        html += '<a href="' + v.instagram + '" target="_blank" class="btn-primary" style="background:var(--primary);color:white;border-color:var(--primary);">Instagram</a>';
+        html += '<button onclick="removeVenue(' + v.id + ')" style="color:var(--red);border-color:var(--red-bg);">Sil</button>';
+        html += '</div>';
+        html += '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function toggleFavorite(id) {
+    const v = venues.find(x => x.id === id);
+    if (v) { v.favorite = !v.favorite; saveData('venues', venues); renderVenues(); }
+}
+
+function updateVenueField(id, field, value) {
+    const v = venues.find(x => x.id === id);
+    if (v) { v[field] = value; saveData('venues', venues); }
+}
+
+function removeVenue(id) {
+    if (confirm('Bu mekani silmek istediginize emin misiniz?')) {
+        venues = venues.filter(v => v.id !== id);
+        saveData('venues', venues);
+        renderVenues();
+    }
+}
+
+function addVenue() {
+    const name = document.getElementById('venue-name-input').value.trim();
+    if (!name) return;
+    venues.push({
+        id: Date.now(),
+        name,
+        instagram: document.getElementById('venue-ig-input').value.trim(),
+        features: document.getElementById('venue-features-input').value.split(',').map(s => s.trim()).filter(Boolean),
+        notes: '', favorite: false, price: '', capacity: '', contact: ''
+    });
+    saveData('venues', venues);
+    renderVenues();
+    closeModalForce();
+    document.getElementById('venue-name-input').value = '';
+    document.getElementById('venue-ig-input').value = '';
+    document.getElementById('venue-features-input').value = '';
+}
+
+// ============= BUDGET =============
+function setTotalBudget() {
+    const val = parseInt(document.getElementById('total-budget-input').value);
+    if (val > 0) { totalBudget = val; saveData('total_budget', totalBudget); renderBudget(); }
+}
+
+function renderBudget() {
+    document.getElementById('total-budget-input').value = totalBudget || '';
+    const summaryEl = document.getElementById('budget-summary');
+    const itemsEl = document.getElementById('budget-items');
+    const emptyEl = document.getElementById('budget-empty');
+
+    const spent = budgetItems.reduce((s, i) => s + (i.status === 'paid' ? i.amount : 0), 0);
+    const planned = budgetItems.reduce((s, i) => s + i.amount, 0);
+    const remaining = totalBudget - planned;
+
+    if (totalBudget > 0) {
+        summaryEl.innerHTML =
+            '<div class="budget-stat total"><div class="amount">' + formatMoney(totalBudget) + '</div><div class="label">Toplam Butce</div></div>' +
+            '<div class="budget-stat spent"><div class="amount">' + formatMoney(spent) + '</div><div class="label">Odenen</div></div>' +
+            '<div class="budget-stat remaining"><div class="amount">' + formatMoney(remaining) + '</div><div class="label">Kalan</div></div>';
+    } else {
+        summaryEl.innerHTML = '';
+    }
+
+    if (budgetItems.length === 0) {
+        itemsEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+    } else {
+        emptyEl.style.display = 'none';
+        let html = '';
+        budgetItems.forEach((item, i) => {
+            html += '<div class="budget-item">';
+            html += '<div><div class="budget-item-name">' + item.name + '</div><div style="font-size:11px;color:var(--gray-500);">' + (item.status === 'paid' ? 'Odendi' : 'Planli') + '</div></div>';
+            html += '<div style="display:flex;align-items:center;gap:8px;"><span class="budget-item-amount ' + (item.status === 'paid' ? 'paid' : '') + '">' + formatMoney(item.amount) + '</span>';
+            html += '<button onclick="removeBudgetItem(' + i + ')" style="background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:16px;">&times;</button></div>';
+            html += '</div>';
+        });
+        itemsEl.innerHTML = html;
+    }
+    updateStats();
+}
+
+function formatMoney(n) {
+    return n.toLocaleString('tr-TR') + ' TL';
+}
+
+function addBudgetItem() {
+    const name = document.getElementById('budget-name').value.trim();
+    const amount = parseInt(document.getElementById('budget-amount').value);
+    if (!name || !amount) return;
+    budgetItems.push({ name, amount, status: document.getElementById('budget-status').value });
+    saveData('budget_items', budgetItems);
+    renderBudget();
+    closeModalForce();
+    document.getElementById('budget-name').value = '';
+    document.getElementById('budget-amount').value = '';
+}
+
+function removeBudgetItem(i) {
+    budgetItems.splice(i, 1);
+    saveData('budget_items', budgetItems);
+    renderBudget();
+}
+
+// ============= NOTES =============
+function renderNotes() {
+    const container = document.getElementById('notes-container');
+    const emptyEl = document.getElementById('notes-empty');
+    if (notesList.length === 0) {
+        container.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+    emptyEl.style.display = 'none';
+    let html = '';
+    notesList.forEach((n, i) => {
+        html += '<div class="note-item">';
+        html += '<div class="note-header"><span class="note-date">' + n.date + '</span><button class="note-delete" onclick="deleteNote(' + i + ')">&times;</button></div>';
+        html += '<div class="note-body">' + escapeHtml(n.text) + '</div>';
+        html += '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function addNote() {
+    const text = document.getElementById('note-text').value.trim();
+    if (!text) return;
+    notesList.unshift({ text, date: new Date().toLocaleDateString('tr-TR') });
+    saveData('notes', notesList);
+    renderNotes();
+    closeModalForce();
+    document.getElementById('note-text').value = '';
+}
+
+function deleteNote(i) {
+    notesList.splice(i, 1);
+    saveData('notes', notesList);
+    renderNotes();
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============= STATS =============
+function updateStats() {
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById('stat-total-tasks').textContent = total;
+    document.getElementById('stat-done-tasks').textContent = done;
+    document.getElementById('stat-venues').textContent = venues.length;
+    document.getElementById('stat-budget').textContent = totalBudget > 0 ? formatMoney(totalBudget) : '-';
+
+    document.getElementById('progress-text').textContent = pct + '%';
+    document.getElementById('progress-count').textContent = done + '/' + total;
+    document.getElementById('progress-fill').style.width = pct + '%';
+
+    // Urgent tasks on dashboard
+    const urgentEl = document.getElementById('urgent-tasks');
+    const urgent = tasks.filter(t => !t.done && t.priority === 'high').slice(0, 5);
+    if (urgent.length === 0) {
+        urgentEl.innerHTML = '<div style="font-size:14px;color:var(--green);">Tum acil gorevler tamamlandi!</div>';
+    } else {
+        urgentEl.innerHTML = urgent.map(t =>
+            '<div style="padding:6px 0;font-size:14px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;gap:8px;">' +
+            '<span style="color:var(--red);font-size:10px;">&#9679;</span> ' + t.name + '</div>'
+        ).join('');
+    }
+}
+
+// ============= MODAL =============
+function openModal(type) {
+    document.getElementById('modal-overlay').classList.add('active');
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    document.getElementById('modal-' + type).style.display = 'block';
+}
+
+function closeModal(e) {
+    if (e.target === document.getElementById('modal-overlay')) {
+        closeModalForce();
+    }
+}
+
+function closeModalForce() {
+    document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// ============= INIT =============
+function init() {
+    if (weddingDate) document.getElementById('wedding-date-input').value = weddingDate;
+    updateCountdown();
+    renderChecklist();
+    renderVenues();
+    renderBudget();
+    renderNotes();
+}
+
+init();
+</script>
+</body>
+</html>
