@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dugun Planlayici — Akilli Asistan</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
+            --green:#059669;--green-bg:#ecfdf5;
+            --red:#dc2626;--red-bg:#fef2f2;
+            --blue:#2563eb;--blue-bg:#eff6ff;
+            --purple:#7c3aed;--purple-bg:#f5f3ff;
+            --orange:#ea580c;--orange-bg:#fff7ed;
+            --cyan:#0891b2;--cyan-bg:#ecfeff;
+            --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+            --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
+            --gray-600:#4b5563;--gray-700:#374151;--gray-900:#111827;
+            --white:#fff;--shadow:0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md:0 4px 12px rgba(0,0,0,0.1);
+        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;-webkit-tap-highlight-color:transparent}
+
+        /* LOGIN */
+        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+        .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
+        .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
+        .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+        .google-btn svg{width:20px;height:20px;flex-shrink:0}
+
+        /* HEADER */
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:12px 16px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+        .header-row{display:flex;align-items:center;justify-content:space-between}
+        .header h1{font-size:17px;font-weight:700}
+        .header-links{display:flex;gap:8px;align-items:center}
+        .header-links a,.header-links button{color:rgba(255,255,255,0.7);font-size:12px;text-decoration:none;background:rgba(255,255,255,0.1);border:none;padding:5px 10px;border-radius:8px;cursor:pointer}
+        .header-links a:hover,.header-links button:hover{color:white;background:rgba(255,255,255,0.2)}
+        .countdown-strip{display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+        .cd-chip{background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;white-space:nowrap;font-size:11px;flex-shrink:0}
+        .cd-chip b{color:var(--gold-light);font-size:13px}
+
+        /* CATEGORY TABS */
+        .cat-tabs{display:flex;overflow-x:auto;gap:6px;padding:10px 16px;background:white;border-bottom:1px solid var(--gray-100);-webkit-overflow-scrolling:touch;position:sticky;top:56px;z-index:90}
+        .cat-tab{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--gray-200);background:white;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;gap:5px}
+        .cat-tab.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
+        .cat-tab .cat-count{font-size:10px;background:var(--gray-200);color:var(--gray-600);border-radius:10px;padding:1px 6px;font-weight:600}
+        .cat-tab.active .cat-count{background:var(--gold);color:white}
+
+        /* QUICK ADD */
+        .quick-add{padding:12px 16px;background:white;border-bottom:1px solid var(--gray-100);position:sticky;top:98px;z-index:80}
+        .quick-add-row{display:flex;gap:8px}
+        .quick-add-input{flex:1;border:1.5px solid var(--gray-200);border-radius:12px;padding:10px 14px;font-size:14px;outline:none;transition:border-color 0.2s}
+        .quick-add-input:focus{border-color:var(--gold)}
+        .quick-add-input::placeholder{color:var(--gray-400)}
+        .btn-icon{width:42px;height:42px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all 0.15s}
+        .btn-add{background:var(--gold);color:white}
+        .btn-add:active{transform:scale(0.95)}
+        .btn-mic{background:var(--gray-100);color:var(--gray-600)}
+        .btn-mic.recording{background:var(--red);color:white;animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+        .voice-status{font-size:11px;color:var(--gray-500);padding:4px 0 0;display:none}
+        .voice-status.active{display:block}
+
+        /* TASK LIST */
+        .task-list{padding:8px 16px 100px;max-width:640px;margin:0 auto}
+        .task-group{margin-bottom:16px}
+        .task-group-title{font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;padding:8px 4px 4px;display:flex;align-items:center;gap:6px}
+        .task-group-title .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+        .task-card{background:white;border-radius:12px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:all 0.2s;box-shadow:var(--shadow)}
+        .task-card.done{opacity:0.5}
+        .task-card.done .task-title{text-decoration:line-through}
+        .task-card.urgent{border-left:3px solid var(--red)}
+        .task-card.expanded{box-shadow:var(--shadow-md);border-color:var(--gold)}
+
+        .task-main{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
+        .task-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--gray-300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s}
+        .task-check:hover{border-color:var(--green)}
+        .task-check.checked{background:var(--green);border-color:var(--green);color:white}
+        .task-check.checked::after{content:'✓';font-size:13px;font-weight:700}
+        .task-body{flex:1;min-width:0}
+        .task-title{font-size:14px;font-weight:500;line-height:1.4}
+        .task-hint{font-size:12px;color:var(--gray-500);margin-top:2px;line-height:1.3}
+        .task-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+        .task-tag{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:500}
+        .task-arrow{color:var(--gray-400);font-size:12px;padding:4px;flex-shrink:0;transition:transform 0.2s}
+        .task-card.expanded .task-arrow{transform:rotate(180deg)}
+
+        .task-detail{display:none;padding:0 12px 12px;border-top:1px solid var(--gray-100)}
+        .task-card.expanded .task-detail{display:block}
+        .task-detail-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
+        .task-detail-row label{color:var(--gray-500);min-width:60px;font-size:12px}
+        .task-detail-row input,.task-detail-row select{flex:1;border:1px solid var(--gray-200);border-radius:8px;padding:6px 10px;font-size:13px;outline:none}
+        .task-detail-row input:focus,.task-detail-row select:focus{border-color:var(--gold)}
+        .task-note-area{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:60px;font-family:inherit;outline:none;margin-top:4px}
+        .task-note-area:focus{border-color:var(--gold)}
+        .task-actions{display:flex;gap:6px;margin-top:8px}
+        .task-actions button{padding:6px 12px;border-radius:8px;border:none;font-size:12px;cursor:pointer;font-weight:500}
+        .btn-danger{background:var(--red-bg);color:var(--red)}
+        .btn-secondary{background:var(--gray-100);color:var(--gray-700)}
+        .btn-primary-sm{background:var(--gold-bg);color:var(--gold)}
+
+        /* VENUE CARDS (in mekanlar category) */
+        .venue-info-card{background:white;border-radius:12px;border:1px solid var(--gray-100);margin-bottom:8px;padding:14px;box-shadow:var(--shadow)}
+        .venue-info-card h3{font-size:15px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+        .venue-info-card .vi-row{font-size:13px;color:var(--gray-600);padding:2px 0;display:flex;gap:6px}
+        .venue-info-card .vi-row b{color:var(--gray-900);min-width:70px}
+        .venue-info-card .vi-link{color:var(--blue);text-decoration:none;font-size:12px}
+        .venue-rank{background:var(--gold);color:white;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px}
+
+        /* INFO BANNER */
+        .info-banner{margin:12px 16px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+        .info-banner.warn{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
+        .info-banner.info{background:var(--blue-bg);border:1px solid #bfdbfe;color:#1e40af}
+        .info-banner b{font-weight:600}
+        .info-banner ul{margin:6px 0 0 16px;font-size:12px}
+
+        /* FAB */
+        .fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;box-shadow:0 4px 16px rgba(184,134,11,0.4);cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}
+        .fab:active{transform:scale(0.92)}
+
+        /* MODAL */
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center}
+        .modal-overlay.active{display:flex}
+        .modal-sheet{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:20px 16px 32px;animation:slideUp 0.25s ease}
+        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .modal-handle{width:36px;height:4px;background:var(--gray-300);border-radius:2px;margin:0 auto 16px}
+        .modal-title{font-size:17px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+        .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-400);padding:0 4px}
+        .form-group{margin-bottom:12px}
+        .form-group label{display:block;font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:4px}
+        .form-group input,.form-group select,.form-group textarea{width:100%;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold)}
+        .btn-block{width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+
+        /* PROGRESS OVERVIEW */
+        .progress-overview{padding:12px 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .progress-chip{background:white;border-radius:10px;padding:8px 12px;min-width:100px;flex-shrink:0;border:1px solid var(--gray-100);box-shadow:var(--shadow)}
+        .progress-chip .pc-label{font-size:10px;color:var(--gray-500);font-weight:500}
+        .progress-chip .pc-bar{width:100%;height:4px;background:var(--gray-100);border-radius:2px;margin:4px 0}
+        .progress-chip .pc-fill{height:100%;border-radius:2px;transition:width 0.4s}
+        .progress-chip .pc-nums{font-size:11px;font-weight:600;color:var(--gray-700)}
+
+        /* EMPTY */
+        .empty-state{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:14px}
+
+        /* TEMPLATE LIST */
+        .template-list{padding:0}
+        .template-item{display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--gray-100);cursor:pointer}
+        .template-item:hover{background:var(--gray-50)}
+        .template-item:active{background:var(--gray-100)}
+        .template-icon{font-size:24px;flex-shrink:0}
+        .template-info{flex:1}
+        .template-info h4{font-size:14px;font-weight:600}
+        .template-info p{font-size:12px;color:var(--gray-500)}
+        .template-count{font-size:12px;color:var(--gray-400);font-weight:500}
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-card">
+        <h1>Dugun Asistani</h1>
+        <p>Akilli planlama araci</p>
+        <button class="google-btn" onclick="signIn()">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google ile Giris
+        </button>
+    </div>
+</div>
+
+<div id="app" style="display:none">
+    <div class="header">
+        <div class="header-row">
+            <h1>Dugun Asistani</h1>
+            <div class="header-links">
+                <a href="index.html">Ana Sayfa</a>
+                <button onclick="signOut()">Cikis</button>
+            </div>
+        </div>
+        <div class="countdown-strip" id="countdown-strip"></div>
+    </div>
+
+    <div class="progress-overview" id="progress-overview"></div>
+
+    <div class="cat-tabs" id="cat-tabs"></div>
+
+    <div class="quick-add">
+        <div class="quick-add-row">
+            <input type="text" class="quick-add-input" id="quick-input" placeholder="Gorev ekle..." onkeydown="if(event.key==='Enter')addQuickTask()">
+            <button class="btn-icon btn-mic" id="btn-mic" onclick="toggleVoice()">🎤</button>
+            <button class="btn-icon btn-add" onclick="addQuickTask()">+</button>
+        </div>
+        <div class="voice-status" id="voice-status">Dinleniyor...</div>
+    </div>
+
+    <div id="main-content">
+        <div class="task-list" id="task-list"></div>
+    </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="modal-add" onclick="if(event.target===this)closeModal('modal-add')">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Gorev Ekle <button class="modal-close" onclick="closeModal('modal-add')">&times;</button></div>
+        <div class="form-group"><label>Baslik</label><input type="text" id="f-title" placeholder="Ne yapilacak?"></div>
+        <div class="form-group"><label>Detay / Ipucu</label><input type="text" id="f-hint" placeholder="Opsiyonel aciklama"></div>
+        <div class="form-group"><label>Kategori</label><select id="f-cat"></select></div>
+        <div class="form-group"><label>Oncelik</label>
+            <select id="f-priority">
+                <option value="normal">Normal</option>
+                <option value="urgent">Acil</option>
+                <option value="low">Dusuk</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Son Tarih</label><input type="date" id="f-due"></div>
+        <div class="form-group"><label>Not</label><textarea id="f-note" rows="3" placeholder="Ek notlar..."></textarea></div>
+        <button class="btn-block" onclick="saveNewTask()">Kaydet</button>
+    </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="modal-overlay" id="modal-templates" onclick="if(event.target===this)closeModal('modal-templates')">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Sablon Ekle <button class="modal-close" onclick="closeModal('modal-templates')">&times;</button></div>
+        <div class="template-list" id="template-list"></div>
+    </div>
+</div>
+
+<!-- EDIT TASK MODAL -->
+<div class="modal-overlay" id="modal-edit" onclick="if(event.target===this)closeModal('modal-edit')">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Gorevi Duzenle <button class="modal-close" onclick="closeModal('modal-edit')">&times;</button></div>
+        <div class="form-group"><label>Baslik</label><input type="text" id="e-title"></div>
+        <div class="form-group"><label>Detay</label><input type="text" id="e-hint"></div>
+        <div class="form-group"><label>Kategori</label><select id="e-cat"></select></div>
+        <div class="form-group"><label>Oncelik</label>
+            <select id="e-priority">
+                <option value="normal">Normal</option>
+                <option value="urgent">Acil</option>
+                <option value="low">Dusuk</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Son Tarih</label><input type="date" id="e-due"></div>
+        <div class="form-group"><label>Not</label><textarea id="e-note" rows="3"></textarea></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-block btn-danger" style="flex:1;background:var(--red-bg);color:var(--red)" onclick="deleteEditingTask()">Sil</button>
+            <button class="btn-block" style="flex:2" onclick="saveEditTask()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<button class="fab" onclick="openModal('modal-add')">+</button>
+
+<script>
+// ════════════════════════════════
+// FIREBASE CONFIG (same as main app)
+// ════════════════════════════════
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBwXGAb_p-Hx7D1qmxBBu7viFL1PAQ0m_0",
+    authDomain: "dugun-planlayici-ff34e.firebaseapp.com",
+    projectId: "dugun-planlayici-ff34e",
+    storageBucket: "dugun-planlayici-ff34e.firebasestorage.app",
+    messagingSenderId: "740092604485",
+    appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
+};
+
+// ════════════════════════════════
+// CATEGORIES
+// ════════════════════════════════
+const CATEGORIES = [
+    {id:'all',name:'Tumunu Gor',icon:'📋',color:'var(--gray-600)'},
+    {id:'seyahat',name:'Seyahat',icon:'✈️',color:'var(--blue)',bg:'var(--blue-bg)'},
+    {id:'belgeler',name:'Belgeler',icon:'📄',color:'var(--purple)',bg:'var(--purple-bg)'},
+    {id:'mekanlar',name:'Mekanlar',icon:'🏛️',color:'var(--gold)',bg:'var(--gold-bg)'},
+    {id:'belediye',name:'Belediye',icon:'🏢',color:'var(--cyan)',bg:'var(--cyan-bg)'},
+    {id:'nisan',name:'Nisan',icon:'💍',color:'var(--orange)',bg:'var(--orange-bg)'},
+    {id:'dugun',name:'Dugun',icon:'💒',color:'var(--red)',bg:'var(--red-bg)'},
+    {id:'diger',name:'Diger',icon:'📌',color:'var(--gray-600)',bg:'var(--gray-100)'}
+];
+
+// ════════════════════════════════
+// DEFAULT TASKS (pre-populated from research + existing data)
+// ════════════════════════════════
+const DEFAULT_TASKS = [
+    // SEYAHAT
+    {id:'s1',cat:'seyahat',title:'Ucak bileti al (Istanbul → Gaziantep)',hint:'1 Mayis veya 30 Nisan. Ibrahim + Hilal birlikte.',done:false,priority:'urgent',due:'2026-04-20',note:'Pegasus, THY, AnadoluJet karsilastir. Gidis: 30 Nisan aksam veya 1 Mayis sabah.'},
+    {id:'s2',cat:'seyahat',title:'Konaklama ayarla (Gaziantep, 1-4 Mayis)',hint:'3-4 gece. Otel veya aile yaninda.',done:false,priority:'normal',due:'2026-04-20',note:'Mekan gezileri + belediye turuna yakın konum tercih et.'},
+    {id:'s3',cat:'seyahat',title:'Donus ucak bileti (4 veya 5 Mayis)',hint:'Belediye turu sonrasina gore.',done:false,priority:'normal',due:'2026-04-20',note:''},
+
+    // BELGELER
+    {id:'b1',cat:'belgeler',title:'Saglik raporu randevusu al (Ibrahim)',hint:'Aile hekimi / saglik ocagi — UCRETSIZ',done:false,priority:'urgent',due:'2026-04-15',note:'Testler: Hemogram, Hepatit B/C, HIV, Sifiliz, Talasemi, SMA (ZORUNLU), akciger filmi, idrar.\nSMA testi olmadan nikah KIYILAMAZ.\nRapor 6 ay gecerli.'},
+    {id:'b2',cat:'belgeler',title:'Saglik raporu randevusu al (Hilal)',hint:'Ayni testler — her iki taraf icin gerekli.',done:false,priority:'urgent',due:'2026-04-15',note:''},
+    {id:'b3',cat:'belgeler',title:'TC Kimlik Karti fotokopisi (2 kisi)',hint:'Asli + fotokopi gerekli.',done:false,priority:'normal',due:'2026-04-25',note:''},
+    {id:'b4',cat:'belgeler',title:'Vesikalik fotograf cektir (4-5 adet, 2 kisi)',hint:'Renkli, on cepheden, sivil giysi, son 6 ay.',done:false,priority:'normal',due:'2026-04-25',note:'Biyometrik olmayan kabul ediliyor. Basortulu ise alin+cene+yuz gorunur olmali.'},
+    {id:'b5',cat:'belgeler',title:'Ikametgah belgesi al (e-Devlet)',hint:'Bazi belediyeler istiyor.',done:false,priority:'low',due:'2026-04-28',note:'e-Devlet > Yerlesiim Yeri Belgesi'},
+    {id:'b6',cat:'belgeler',title:'Nufus kayit ornegi',hint:'e-Devlet\'ten alinabilir.',done:false,priority:'low',due:'2026-04-28',note:''},
+
+    // MEKANLAR
+    {id:'m1',cat:'mekanlar',title:'Mekanlarin 1-2-3 Mayis calisma saatlerini dogrula',hint:'1 Mayis resmi tatil! Mutlaka arayin.',done:false,priority:'urgent',due:'2026-04-10',note:'1 Mayis Cuma = Emek ve Dayanisma Gunu (resmi tatil).\n2 Mayis Cumartesi, 3 Mayis Pazar = normal hafta sonu.\nHer mekani arayin, tatilde acik mi sorun.'},
+    {id:'m2',cat:'mekanlar',title:'MSM Erikce — randevu al (1-3 Mayis)',hint:'Tel: 0342 777 76 76 (dahili 2)',done:false,priority:'urgent',due:'2026-04-12',note:'Calisma saatleri: Haftasonu 08:00-23:00, Hafta ici 12:00-00:00\nKapasite: 400 kisi / 100 masa / 200 araclik otopark\nAdres: Gazi Mah. Zubeyde Hanim Blv. No:39, Sehitkamil\nInstagram: @msmerikcedugun\nGunduz gezi randevusu iste.'},
+    {id:'m3',cat:'mekanlar',title:'Ceremony Erikce (Seremoni) — randevu al',hint:'Tel: 0533 255 66 27',done:false,priority:'urgent',due:'2026-04-12',note:'Kapasite: 1200 kisi (350 kapali teras + acik havuz alani)\nAdres: Ibrahimli Mah. 35280 No Cad. No:20, Erikce, Sehitkamil\nInstagram: @ceremonyerikce\nCalisma saatleri online yok — mutlaka arayin.'},
+    {id:'m4',cat:'mekanlar',title:'Selale Plaza Dugun Salonu — randevu al',hint:'Instagram: @selaleplazadugunsalonu',done:false,priority:'normal',due:'2026-04-12',note:'Arayin, 1-3 Mayis icin gezi randevusu isteyin.'},
+    {id:'m5',cat:'mekanlar',title:'Pembe Kosk Balo Salon — randevu al',hint:'Instagram: @pembekoskbalosalon',done:false,priority:'normal',due:'2026-04-12',note:''},
+    {id:'m6',cat:'mekanlar',title:'Marina Gaziantep BKM — randevu al',hint:'Instagram: @marinagaziantepbkm',done:false,priority:'normal',due:'2026-04-12',note:''},
+    {id:'m7',cat:'mekanlar',title:'Vadi Garden Gaziantep — randevu al',hint:'Acik hava / Bahce — Instagram: @vadigardengaziantep',done:false,priority:'normal',due:'2026-04-12',note:''},
+    {id:'m8',cat:'mekanlar',title:'Livas Park Dugun — randevu al',hint:'Park / Acik hava — Instagram: @livasparkdugun',done:false,priority:'normal',due:'2026-04-12',note:''},
+    {id:'m9',cat:'mekanlar',title:'Randevulari ayni gune, gunduz, yakin saatlere denkle',hint:'Ideal: 10:00-17:00 arasi, 1-1.5 saat aralikli.',done:false,priority:'normal',due:'2026-04-15',note:'Oncelik sirasi: MSM Erikce ve Seremoni en onemli.\nKalan 5 mekani bunlarin arasina serpisir.'},
+
+    // BELEDIYE
+    {id:'be1',cat:'belediye',title:'Belediyelerin nikah randevu sistemi var mi arastir',hint:'Sehitkamil, Sahinbey, Buyuksehir.',done:false,priority:'normal',due:'2026-04-15',note:'Online nikah slot sorgulama Gaziantep icin bulunamadi.\nTelefonla sorulmali.\nSahinbey: 444 27 01\nBuyuksehir: ebelediye.gaziantep.bel.tr'},
+    {id:'be2',cat:'belediye',title:'Belediyelere gitmek icin randevu gerekiyor mu? Sor.',hint:'Mesai saatlerinde gitmek yeterli olabilir.',done:false,priority:'normal',due:'2026-04-20',note:'Telefonla sorun — 4 Mayis icin planlaniyor.'},
+    {id:'be3',cat:'belediye',title:'4 Mayis icin izin al (Ibrahim)',hint:'Belediye turları icin is gunu.',done:false,priority:'normal',due:'2026-04-25',note:'4 Mayis 2026 Pazartesi — is gunu, izin alinmali.'},
+    {id:'be4',cat:'belediye',title:'Belediye listesi: Sehitkamil, Sahinbey, Buyuksehir',hint:'+ uzak ilceler (Nurdagi vb.) de gelebilir.',done:false,priority:'low',due:'2026-05-01',note:'Cihan bilgisi: uzak ilce belediyeleri spesifik gun icin gelebilir.\nMehmet bilgisi: Buyuksehir de nikah kiyabiliyor.\nEn pratik: mekanin ilcesindeki belediyeye basvurmak.'},
+
+    // NISAN
+    {id:'ni1',cat:'nisan',title:'Nisan mekani belirle',hint:'Restoran, otel veya ev?',done:false,priority:'normal',due:'2026-04-20',note:'Nisan: 16 Mayis 2026'},
+    {id:'ni2',cat:'nisan',title:'Nisan yuzugu al',hint:'Tek tas veya alyans?',done:false,priority:'normal',due:'2026-05-01',note:''},
+    {id:'ni3',cat:'nisan',title:'Nisan kiyafetleri + kuafor randevusu',hint:'',done:false,priority:'normal',due:'2026-05-05',note:''},
+    {id:'ni4',cat:'nisan',title:'Davetli listesi (nisan)',hint:'Yakin aile + arkadaslar',done:false,priority:'normal',due:'2026-05-01',note:''},
+    {id:'ni5',cat:'nisan',title:'Nisan organizasyonu',hint:'Soz kesme, cicek, pasta, fotograf.',done:false,priority:'normal',due:'2026-05-10',note:''},
+
+    // DUGUN
+    {id:'du1',cat:'dugun',title:'Mekan gezisi sonrasi: karar matrisi olustur',hint:'Yapay zeka tercihlere gore siralama yapacak.',done:false,priority:'normal',due:'2026-05-03',note:'Gezi sonrasi her mekana puan ver.\nKriterler: fiyat, kapasite, acik/kapali, tarih uygunlugu, konum, genel izlenim.\nEn begenilen 5 mekani sirala.'},
+    {id:'du2',cat:'dugun',title:'En iyi mekani belirle + nikah tarihini esle',hint:'Mekan tarihi + belediye memuru = optimum kombinasyon.',done:false,priority:'normal',due:'2026-05-04',note:'1. siradaki mekanin Agustos/Eylul slotuna gore belediyeden memur bul.\nEslesmezse 2. siraya gec.'},
+    {id:'du3',cat:'dugun',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi dikkatlice oku.',done:false,priority:'normal',due:'2026-05-15',note:''},
+    {id:'du4',cat:'dugun',title:'Nikah basvurusu yap (belediye evlendirme dairesi)',hint:'Iki taraf birlikte gitmeli.',done:false,priority:'normal',due:'2026-05-15',note:'Belgeler: TC kimlik, vesikalik, saglik raporu, evlenme beyannamesi.\nYerlesim yeri sarti yok (2020 duzenlemesi).\nEvlilik cuzdani: ~1.202 TL'},
+];
+
+// ════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════
+const TEMPLATES = [
+    {id:'t-balayi',icon:'🏖️',name:'Balayi Planlama',desc:'Destinasyon, otel, ucak, vize',tasks:[
+        {cat:'diger',title:'Balayi destinasyonu arastir',hint:'',priority:'normal',note:''},
+        {cat:'diger',title:'Balayi oteli rezervasyonu',hint:'Erken rezervasyon = uygun fiyat',priority:'normal',note:''},
+        {cat:'diger',title:'Balayi ucak bileti',hint:'',priority:'normal',note:''},
+        {cat:'belgeler',title:'Pasaport / Vize (yurt disi ise)',hint:'2 ay onceden basvur',priority:'normal',note:''},
+        {cat:'diger',title:'Balayi butcesi belirle',hint:'',priority:'normal',note:''},
+    ]},
+    {id:'t-kina',icon:'🎉',name:'Kina Gecesi',desc:'Organizasyon, mekan, davetliler',tasks:[
+        {cat:'dugun',title:'Kina gecesi mekani / evi belirle',hint:'',priority:'normal',note:''},
+        {cat:'dugun',title:'Kina malzemeleri al',hint:'Kina, mum, susleme',priority:'normal',note:''},
+        {cat:'dugun',title:'Kina davetli listesi',hint:'',priority:'normal',note:''},
+        {cat:'dugun',title:'Kina muzik / eglence',hint:'',priority:'normal',note:''},
+    ]},
+    {id:'t-fotograf',icon:'📸',name:'Fotograf & Video',desc:'Dis cekim, dugun fotografi, drone',tasks:[
+        {cat:'dugun',title:'Fotograf / Video ekibi sec',hint:'Portfolyo incele, 2-3 teklif al',priority:'normal',note:''},
+        {cat:'dugun',title:'Dis cekim lokasyonu belirle',hint:'',priority:'normal',note:''},
+        {cat:'dugun',title:'Dis cekim tarihi ayarla',hint:'',priority:'normal',note:''},
+    ]},
+    {id:'t-kiyafet',icon:'👗',name:'Kiyafetler',desc:'Gelinlik, damatlık, kuafor',tasks:[
+        {cat:'dugun',title:'Gelinlik arastir & randevu al',hint:'En az 3 ay once siparis',priority:'normal',note:''},
+        {cat:'dugun',title:'Damatlik sec',hint:'',priority:'normal',note:''},
+        {cat:'dugun',title:'Kuafor & makyaj prova randevusu',hint:'',priority:'normal',note:''},
+        {cat:'dugun',title:'Alyans secimi',hint:'',priority:'normal',note:''},
+    ]}
+];
+
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+let auth, db;
+let currentUser = null;
+let tasks = [];
+let activeCat = 'all';
+let editingTaskId = null;
+let recognition = null;
+let isRecording = false;
+let unsub = null;
+
+// ════════════════════════════════
+// FIREBASE INIT
+// ════════════════════════════════
+firebase.initializeApp(FIREBASE_CONFIG);
+auth = firebase.auth();
+db = firebase.firestore();
+auth.onAuthStateChanged(handleAuth);
+
+function signIn(){
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message));
+}
+function signOut(){
+    if(unsub) unsub();
+    auth.signOut();
+}
+function handleAuth(user){
+    if(user){
+        currentUser = user;
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app').style.display='block';
+        listenTasks();
+    } else {
+        currentUser = null;
+        document.getElementById('login-screen').style.display='flex';
+        document.getElementById('app').style.display='none';
+    }
+}
+
+// ════════════════════════════════
+// FIRESTORE SYNC
+// ════════════════════════════════
+function listenTasks(){
+    unsub = db.collection('shared').doc('planner_tasks').onSnapshot(doc=>{
+        if(doc.exists){
+            tasks = doc.data().list || [];
+        } else {
+            tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+            saveTasks();
+        }
+        renderAll();
+    });
+}
+
+function saveTasks(){
+    db.collection('shared').doc('planner_tasks').set({list:JSON.parse(JSON.stringify(tasks)),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+}
+
+// ════════════════════════════════
+// RENDER
+// ════════════════════════════════
+function renderAll(){
+    renderCountdowns();
+    renderProgress();
+    renderCatTabs();
+    renderTasks();
+}
+
+function renderCountdowns(){
+    const strip = document.getElementById('countdown-strip');
+    const now = new Date();
+    const events = [
+        {label:'Nisan',date:new Date('2026-05-16')},
+        {label:'Antep Gezisi',date:new Date('2026-05-01')},
+        {label:'Kurban Bayrami',date:new Date('2026-05-26')},
+    ];
+    strip.innerHTML = events.map(e=>{
+        const days = Math.ceil((e.date-now)/(1000*60*60*24));
+        return `<div class="cd-chip"><b>${days}</b> gun — ${e.label}</div>`;
+    }).join('');
+}
+
+function renderProgress(){
+    const container = document.getElementById('progress-overview');
+    const cats = CATEGORIES.filter(c=>c.id!=='all');
+    container.innerHTML = cats.map(c=>{
+        const catTasks = tasks.filter(t=>t.cat===c.id);
+        if(!catTasks.length) return '';
+        const done = catTasks.filter(t=>t.done).length;
+        const pct = Math.round(done/catTasks.length*100);
+        return `<div class="progress-chip">
+            <div class="pc-label">${c.icon} ${c.name}</div>
+            <div class="pc-bar"><div class="pc-fill" style="width:${pct}%;background:${c.color}"></div></div>
+            <div class="pc-nums">${done}/${catTasks.length}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderCatTabs(){
+    const container = document.getElementById('cat-tabs');
+    container.innerHTML = CATEGORIES.map(c=>{
+        const count = c.id==='all' ? tasks.filter(t=>!t.done).length : tasks.filter(t=>t.cat===c.id && !t.done).length;
+        return `<button class="cat-tab${activeCat===c.id?' active':''}" onclick="switchCat('${c.id}')">${c.icon} ${c.name} <span class="cat-count">${count}</span></button>`;
+    }).join('');
+}
+
+function switchCat(id){
+    activeCat=id;
+    renderCatTabs();
+    renderTasks();
+}
+
+function renderTasks(){
+    const container = document.getElementById('task-list');
+    let filtered = activeCat==='all' ? [...tasks] : tasks.filter(t=>t.cat===activeCat);
+
+    // Sort: urgent first, then by done, then by due date
+    filtered.sort((a,b)=>{
+        if(a.done!==b.done) return a.done?1:-1;
+        const pOrder = {urgent:0,normal:1,low:2};
+        if((pOrder[a.priority]||1)!==(pOrder[b.priority]||1)) return (pOrder[a.priority]||1)-(pOrder[b.priority]||1);
+        if(a.due && b.due) return a.due.localeCompare(b.due);
+        if(a.due) return -1;
+        if(b.due) return 1;
+        return 0;
+    });
+
+    if(!filtered.length){
+        container.innerHTML='<div class="empty-state">Bu kategoride gorev yok</div>';
+        return;
+    }
+
+    // Group by category if showing all
+    if(activeCat==='all'){
+        const groups = {};
+        filtered.forEach(t=>{
+            if(!groups[t.cat]) groups[t.cat]=[];
+            groups[t.cat].push(t);
+        });
+        container.innerHTML = Object.entries(groups).map(([catId,catTasks])=>{
+            const cat = CATEGORIES.find(c=>c.id===catId)||CATEGORIES[CATEGORIES.length-1];
+            return `<div class="task-group">
+                <div class="task-group-title"><span class="dot" style="background:${cat.color}"></span>${cat.icon} ${cat.name}</div>
+                ${catTasks.map(t=>renderTaskCard(t)).join('')}
+            </div>`;
+        }).join('');
+    } else {
+        container.innerHTML = filtered.map(t=>renderTaskCard(t)).join('');
+    }
+}
+
+function renderTaskCard(t){
+    const cat = CATEGORIES.find(c=>c.id===t.cat);
+    const isUrgent = t.priority==='urgent' && !t.done;
+    const dueStr = t.due ? formatDue(t.due) : '';
+    const overdue = t.due && !t.done && new Date(t.due) < new Date();
+
+    return `<div class="task-card${t.done?' done':''}${isUrgent?' urgent':''}" id="task-${t.id}">
+        <div class="task-main" onclick="toggleTask('${t.id}')">
+            <div class="task-check${t.done?' checked':''}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
+            <div class="task-body">
+                <div class="task-title">${esc(t.title)}</div>
+                ${t.hint?`<div class="task-hint">${esc(t.hint)}</div>`:''}
+                <div class="task-tags">
+                    ${isUrgent?'<span class="task-tag" style="background:var(--red-bg);color:var(--red)">Acil</span>':''}
+                    ${dueStr?`<span class="task-tag" style="background:${overdue?'var(--red-bg);color:var(--red)':'var(--gray-100);color:var(--gray-600)'}">${dueStr}</span>`:''}
+                    ${t.note?'<span class="task-tag" style="background:var(--blue-bg);color:var(--blue)">Not var</span>':''}
+                </div>
+            </div>
+            <span class="task-arrow">▼</span>
+        </div>
+        <div class="task-detail">
+            ${t.note?`<div style="white-space:pre-wrap;font-size:13px;color:var(--gray-700);padding:8px 0;line-height:1.5">${esc(t.note)}</div>`:''}
+            <div class="task-actions">
+                <button class="btn-secondary" onclick="openEditTask('${t.id}')">Duzenle</button>
+                <button class="btn-primary-sm" onclick="duplicateTask('${t.id}')">Kopyala</button>
+                <button class="btn-danger" onclick="deleteTask('${t.id}')">Sil</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function formatDue(d){
+    const date = new Date(d+'T00:00:00');
+    const now = new Date();
+    const diff = Math.ceil((date-now)/(1000*60*60*24));
+    const months = ['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
+    const str = date.getDate()+' '+months[date.getMonth()];
+    if(diff<0) return str+' (gecti!)';
+    if(diff===0) return 'Bugun';
+    if(diff===1) return 'Yarin';
+    if(diff<=7) return diff+' gun';
+    return str;
+}
+
+// ════════════════════════════════
+// TASK ACTIONS
+// ════════════════════════════════
+function toggleTask(id){
+    document.getElementById('task-'+id)?.classList.toggle('expanded');
+}
+
+function toggleDone(id){
+    const t = tasks.find(x=>x.id===id);
+    if(t){t.done=!t.done;saveTasks();}
+}
+
+function deleteTask(id){
+    if(confirm('Bu gorevi silmek istediginize emin misiniz?')){
+        tasks=tasks.filter(t=>t.id!==id);
+        saveTasks();
+    }
+}
+
+function duplicateTask(id){
+    const t = tasks.find(x=>x.id===id);
+    if(t){
+        const nt = {...t, id:'t'+Date.now(), done:false, title:t.title+' (kopya)'};
+        tasks.push(nt);
+        saveTasks();
+    }
+}
+
+function addQuickTask(){
+    const input = document.getElementById('quick-input');
+    const text = input.value.trim();
+    if(!text) return;
+    const cat = activeCat==='all'?'diger':activeCat;
+    tasks.push({
+        id:'t'+Date.now(),
+        cat:cat,
+        title:text,
+        hint:'',
+        done:false,
+        priority:'normal',
+        due:'',
+        note:''
+    });
+    input.value='';
+    saveTasks();
+}
+
+// ════════════════════════════════
+// MODALS
+// ════════════════════════════════
+function openModal(id){
+    document.getElementById(id).classList.add('active');
+    if(id==='modal-add'){
+        populateCatSelect('f-cat');
+        document.getElementById('f-title').value='';
+        document.getElementById('f-hint').value='';
+        document.getElementById('f-priority').value='normal';
+        document.getElementById('f-due').value='';
+        document.getElementById('f-note').value='';
+        const sel = document.getElementById('f-cat');
+        sel.value = activeCat==='all'?'diger':activeCat;
+    }
+    if(id==='modal-templates'){
+        renderTemplates();
+    }
+}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+
+function populateCatSelect(selId){
+    const sel = document.getElementById(selId);
+    sel.innerHTML = CATEGORIES.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+}
+
+function saveNewTask(){
+    const title = document.getElementById('f-title').value.trim();
+    if(!title){alert('Baslik gerekli');return;}
+    tasks.push({
+        id:'t'+Date.now(),
+        cat:document.getElementById('f-cat').value,
+        title:title,
+        hint:document.getElementById('f-hint').value.trim(),
+        done:false,
+        priority:document.getElementById('f-priority').value,
+        due:document.getElementById('f-due').value,
+        note:document.getElementById('f-note').value.trim()
+    });
+    saveTasks();
+    closeModal('modal-add');
+}
+
+function openEditTask(id){
+    const t = tasks.find(x=>x.id===id);
+    if(!t) return;
+    editingTaskId = id;
+    populateCatSelect('e-cat');
+    document.getElementById('e-title').value=t.title;
+    document.getElementById('e-hint').value=t.hint||'';
+    document.getElementById('e-cat').value=t.cat;
+    document.getElementById('e-priority').value=t.priority||'normal';
+    document.getElementById('e-due').value=t.due||'';
+    document.getElementById('e-note').value=t.note||'';
+    openModal('modal-edit');
+}
+
+function saveEditTask(){
+    const t = tasks.find(x=>x.id===editingTaskId);
+    if(!t) return;
+    t.title = document.getElementById('e-title').value.trim();
+    t.hint = document.getElementById('e-hint').value.trim();
+    t.cat = document.getElementById('e-cat').value;
+    t.priority = document.getElementById('e-priority').value;
+    t.due = document.getElementById('e-due').value;
+    t.note = document.getElementById('e-note').value.trim();
+    saveTasks();
+    closeModal('modal-edit');
+}
+
+function deleteEditingTask(){
+    if(confirm('Bu gorevi silmek istediginize emin misiniz?')){
+        tasks=tasks.filter(t=>t.id!==editingTaskId);
+        saveTasks();
+        closeModal('modal-edit');
+    }
+}
+
+// ════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════
+function renderTemplates(){
+    document.getElementById('template-list').innerHTML = TEMPLATES.map(t=>
+        `<div class="template-item" onclick="applyTemplate('${t.id}')">
+            <span class="template-icon">${t.icon}</span>
+            <div class="template-info"><h4>${t.name}</h4><p>${t.desc}</p></div>
+            <span class="template-count">${t.tasks.length} gorev</span>
+        </div>`
+    ).join('');
+}
+
+function applyTemplate(tid){
+    const tmpl = TEMPLATES.find(t=>t.id===tid);
+    if(!tmpl) return;
+    if(!confirm(`"${tmpl.name}" sablonunu eklemek istiyor musunuz? (${tmpl.tasks.length} gorev)`)) return;
+    tmpl.tasks.forEach(t=>{
+        tasks.push({...t, id:'t'+Date.now()+Math.random().toString(36).slice(2,6), done:false, due:''});
+    });
+    saveTasks();
+    closeModal('modal-templates');
+}
+
+// ════════════════════════════════
+// VOICE INPUT
+// ════════════════════════════════
+function toggleVoice(){
+    if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+        alert('Tarayiciniz ses tanima desteklemiyor. Chrome kullanin.');
+        return;
+    }
+    if(isRecording){
+        stopVoice();
+        return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'tr-TR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (e)=>{
+        let transcript = '';
+        for(let i=e.resultIndex;i<e.results.length;i++){
+            transcript += e.results[i][0].transcript;
+        }
+        document.getElementById('quick-input').value = transcript;
+    };
+
+    recognition.onend = ()=>{
+        isRecording = false;
+        document.getElementById('btn-mic').classList.remove('recording');
+        document.getElementById('voice-status').classList.remove('active');
+    };
+
+    recognition.onerror = (e)=>{
+        console.error('Speech error:',e.error);
+        stopVoice();
+    };
+
+    recognition.start();
+    isRecording = true;
+    document.getElementById('btn-mic').classList.add('recording');
+    document.getElementById('voice-status').classList.add('active');
+    document.getElementById('voice-status').textContent = 'Dinleniyor... konusmaya baslayin';
+}
+
+function stopVoice(){
+    if(recognition) recognition.stop();
+    isRecording = false;
+    document.getElementById('btn-mic').classList.remove('recording');
+    document.getElementById('voice-status').classList.remove('active');
+}
+
+// ════════════════════════════════
+// HELPERS
+// ════════════════════════════════
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+</script>
+</body>
+</html>
