@@ -52,6 +52,17 @@
         .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
         .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
         .header-top h1{font-size:18px;font-weight:700}
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;margin-right:8px;opacity:0.8}
+        .hamburger:hover{opacity:1}
+        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
+        .drawer-overlay.open{display:block}
+        .drawer{position:fixed;top:0;left:-280px;width:280px;height:100%;background:white;z-index:301;transition:left 0.25s ease;box-shadow:4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
+        .drawer.open{left:0}
+        .drawer-header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
+        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100);text-decoration:none;color:var(--gray-900);font-size:14px;font-weight:500}
+        .drawer-item:active{background:var(--gray-50)}
+        .drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
+        .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
         .user-menu{display:flex;align-items:center;gap:8px;cursor:pointer;position:relative}
         .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;flex-shrink:0}
         .user-avatar-fallback{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
@@ -307,7 +318,10 @@
 <div id="app">
     <div class="header">
         <div class="header-top">
-            <h1>💍 Dugun Planlayici</h1>
+            <div style="display:flex;align-items:center">
+                <button class="hamburger" onclick="toggleDrawer()">☰</button>
+                <h1>💍 Dugun Planlayici</h1>
+            </div>
             <div class="user-menu" onclick="toggleUserDropdown()">
                 <div id="user-avatar-wrap"></div>
                 <div class="user-dropdown" id="user-dropdown">
@@ -391,17 +405,28 @@
         <button class="tab-item" id="tab-venues" onclick="switchTab('venues')">
             <span class="tab-icon">🏛️</span><span>Mekanlar</span>
         </button>
-        <button class="tab-item" id="tab-budget" onclick="switchTab('budget')">
-            <span class="tab-icon">💰</span><span>Butce</span>
-        </button>
+        <a class="tab-item" href="davetliler.html" style="text-decoration:none">
+            <span class="tab-icon">👥</span><span>Davetliler</span>
+        </a>
         <button class="tab-item" id="tab-notes" onclick="switchTab('notes')">
             <span class="tab-icon">✏️</span><span>Notlar</span>
             <span class="tab-badge" id="tab-mention-badge" style="display:none"></span>
         </button>
-        <a class="tab-item" href="planner.html" style="text-decoration:none">
-            <span class="tab-icon">🧠</span><span>Asistan</span>
-        </a>
     </nav>
+</div>
+
+<!-- DRAWER MENU -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+    <div class="drawer-header">💍 Dugun Planlayici</div>
+    <div class="drawer-section">Sayfalar</div>
+    <a class="drawer-item" href="index.html"><span class="di-icon">🗺️</span>Yol Haritasi</a>
+    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
+    <a class="drawer-item" href="planner.html"><span class="di-icon">🧠</span>Asistan</a>
+    <div class="drawer-section">Yonetim</div>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
+    <a class="drawer-item" href="checklist.html"><span class="di-icon">✅</span>Checklist</a>
 </div>
 
 <!-- @MENTION PICKER -->
@@ -548,6 +573,10 @@ function signInWithGoogle(){
 function doSignOut(){
     auth.signOut();
     document.getElementById('user-dropdown').classList.remove('open');
+}
+function toggleDrawer(){
+    document.getElementById('drawer').classList.toggle('open');
+    document.getElementById('drawer-overlay').classList.toggle('open');
 }
 function toggleUserDropdown(){
     document.getElementById('user-dropdown').classList.toggle('open');

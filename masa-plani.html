@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Masa Plani</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
+            --green:#059669;--green-bg:#ecfdf5;
+            --red:#dc2626;--red-bg:#fef2f2;
+            --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;
+            --g400:#9ca3af;--g500:#6b7280;--g600:#4b5563;--g700:#374151;--g900:#111827;
+        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;-webkit-tap-highlight-color:transparent}
+
+        /* LOGIN */
+        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+        .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
+        .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
+        .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333}
+        .google-btn svg{width:20px;height:20px;flex-shrink:0}
+
+        /* HEADER */
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:10px 16px;position:sticky;top:0;z-index:100}
+        .header-row{display:flex;align-items:center;justify-content:space-between}
+        .header-left{display:flex;align-items:center;gap:10px}
+        .header-left a{color:rgba(255,255,255,0.5);font-size:18px;text-decoration:none}
+        .header h1{font-size:16px;font-weight:600}
+        .header-right{display:flex;gap:6px;align-items:center}
+        .header-right button{color:rgba(255,255,255,0.6);font-size:11px;background:rgba(255,255,255,0.1);border:none;padding:4px 10px;border-radius:6px;cursor:pointer}
+
+        /* LOADING */
+        #loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px}
+        .spinner{width:36px;height:36px;border:3px solid var(--g200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* APP */
+        #app{display:none}
+
+        /* SUMMARY */
+        .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px}
+        .s-card{text-align:center;padding:10px 6px;border-radius:10px;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+        .s-card .s-num{font-size:18px;font-weight:700}
+        .s-card .s-lbl{font-size:9px;color:var(--g500);margin-top:2px;text-transform:uppercase;font-weight:600;letter-spacing:0.3px}
+        .s-card.tables .s-num{color:var(--gold)}
+        .s-card.capacity .s-num{color:#2563eb}
+        .s-card.seated .s-num{color:var(--green)}
+        .s-card.empty .s-num{color:var(--red)}
+
+        /* TABLE GRID */
+        .table-grid{padding:0 12px 16px;max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+
+        /* TABLE CARD */
+        .t-card{background:white;border-radius:12px;border:1px solid var(--g100);box-shadow:0 1px 4px rgba(0,0,0,0.05);overflow:hidden}
+        .t-card.full{border-color:var(--green);border-width:2px}
+        .t-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--gold-bg);border-bottom:1px solid var(--g100)}
+        .t-head-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+        .t-icon{font-size:20px;flex-shrink:0}
+        .t-name-input{font-size:14px;font-weight:600;border:none;background:transparent;width:100%;padding:2px 0;font-family:inherit;color:var(--g900)}
+        .t-name-input:focus{outline:none;border-bottom:1px solid var(--gold)}
+        .t-count{font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+        .t-count.ok{background:var(--green-bg);color:var(--green)}
+        .t-count.partial{background:var(--gold-bg);color:var(--gold)}
+        .t-count.empty{background:var(--g100);color:var(--g500)}
+        .t-cap-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:8px}
+        .t-cap-wrap label{font-size:10px;color:var(--g500)}
+        .t-cap-input{width:36px;text-align:center;border:1px solid var(--g200);border-radius:6px;padding:3px;font-size:12px;font-family:inherit}
+        .t-cap-input:focus{outline:none;border-color:var(--gold)}
+
+        .t-body{padding:8px 14px}
+        .t-guest{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g50)}
+        .t-guest:last-child{border-bottom:none}
+        .t-guest-name{font-size:13px;font-weight:500}
+        .t-guest-rm{background:none;border:none;color:var(--g300);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px}
+        .t-guest-rm:hover{color:var(--red);background:var(--red-bg)}
+        .t-empty-hint{font-size:12px;color:var(--g400);padding:8px 0;text-align:center;font-style:italic}
+
+        .t-foot{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--g100);align-items:center}
+        .t-add-select{flex:1;border:1px solid var(--g200);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit;background:white;color:var(--g700);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
+        .t-add-select:focus{outline:none;border-color:var(--gold)}
+        .t-add-btn{padding:7px 12px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+        .t-add-btn:disabled{opacity:0.4;cursor:default}
+        .t-del-btn{background:none;border:none;color:var(--g300);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px}
+        .t-del-btn:hover{color:var(--red);background:var(--red-bg)}
+        .t-del-btn:disabled{opacity:0.3;cursor:default}
+
+        /* ADD TABLE */
+        .add-table-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:2px dashed var(--g300);border-radius:12px;background:none;cursor:pointer;font-size:13px;color:var(--g500);transition:all 0.2s;margin:0 12px;max-width:calc(700px - 24px)}
+        .add-table-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+        .add-table-wrap{max-width:700px;margin:0 auto;padding:0 12px 16px;display:flex;justify-content:center}
+
+        /* UNASSIGNED */
+        .unassigned-section{max-width:700px;margin:0 auto;padding:0 12px 40px}
+        .ua-header{font-size:13px;font-weight:700;color:var(--g700);padding:12px 4px 8px;display:flex;align-items:center;gap:6px}
+        .ua-header .ua-dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+        .ua-list{display:flex;flex-wrap:wrap;gap:6px}
+        .ua-chip{display:flex;align-items:center;gap:4px;background:white;border:1px solid var(--g200);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:500}
+        .ua-chip .ua-icon{font-size:14px}
+        .ua-empty{font-size:12px;color:var(--g400);padding:8px 4px;font-style:italic}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--g900);color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+    <div class="login-card">
+        <div style="font-size:48px;margin-bottom:16px">🪑</div>
+        <h1>Masa Plani</h1>
+        <p>Dugun oturma duzeni</p>
+        <button class="google-btn" onclick="signIn()">
+            <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Google ile Giris Yap
+        </button>
+    </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--g500)">Yukleniyor...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+    <div class="header">
+        <div class="header-row">
+            <div class="header-left">
+                <a href="index.html">&#8592;</a>
+                <h1>Masa Plani</h1>
+            </div>
+            <div class="header-right">
+                <button onclick="signOut()">Cikis</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+    <div class="table-grid" id="table-grid"></div>
+    <div class="add-table-wrap">
+        <button class="add-table-btn" onclick="addTable()">+ Yeni Masa Ekle</button>
+    </div>
+    <div class="unassigned-section" id="unassigned-section"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBwXGAb_p-Hx7D1qmxBBu7viFL1PAQ0m_0",
+    authDomain: "dugun-planlayici-ff34e.firebaseapp.com",
+    projectId: "dugun-planlayici-ff34e",
+    storageBucket: "dugun-planlayici-ff34e.firebasestorage.app",
+    messagingSenderId: "740092604485",
+    appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let tables = [];
+let guests = [];
+let unsubTables = null;
+let unsubGuests = null;
+
+// ---- AUTH ----
+function signIn() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(e => {
+        console.error('Sign-in error:', e);
+        showToast('Giris basarisiz');
+    });
+}
+
+function signOut() {
+    auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+        startListening();
+    } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'none';
+        stopListening();
+    }
+});
+
+// ---- FIRESTORE LISTENERS ----
+function startListening() {
+    let tablesReady = false, guestsReady = false;
+
+    unsubTables = db.collection('shared').doc('tables').onSnapshot(snap => {
+        const data = snap.data();
+        if (data && data.list) {
+            tables = data.list;
+        } else {
+            tables = generateDefaultTables();
+            saveTables();
+        }
+        tablesReady = true;
+        if (guestsReady) showApp();
+        render();
+    });
+
+    unsubGuests = db.collection('shared').doc('guests').onSnapshot(snap => {
+        const data = snap.data();
+        guests = (data && data.list) ? data.list : [];
+        guestsReady = true;
+        if (tablesReady) showApp();
+        render();
+    });
+}
+
+function stopListening() {
+    if (unsubTables) { unsubTables(); unsubTables = null; }
+    if (unsubGuests) { unsubGuests(); unsubGuests = null; }
+}
+
+function showApp() {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+}
+
+function generateDefaultTables() {
+    const list = [];
+    for (let i = 1; i <= 10; i++) {
+        list.push({ id: 't' + i, name: 'Masa ' + i, capacity: 8 });
+    }
+    return list;
+}
+
+function saveTables() {
+    db.collection('shared').doc('tables').set({
+        list: tables,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+function saveGuests() {
+    db.collection('shared').doc('guests').set({ list: guests });
+}
+
+// ---- RENDER ----
+function render() {
+    renderSummary();
+    renderTables();
+    renderUnassigned();
+}
+
+function guestsAtTable(tableId) {
+    return guests.filter(g => g.table === tableId);
+}
+
+function unassignedGuests() {
+    const tableIds = new Set(tables.map(t => t.id));
+    return guests.filter(g => !g.table || !tableIds.has(g.table));
+}
+
+function renderSummary() {
+    const totalTables = tables.length;
+    const totalCapacity = tables.reduce((s, t) => s + (t.capacity || 8), 0);
+    const totalSeated = guests.filter(g => {
+        const tIds = new Set(tables.map(t => t.id));
+        return g.table && tIds.has(g.table);
+    }).length;
+    const totalEmpty = totalCapacity - totalSeated;
+
+    document.getElementById('summary').innerHTML = `
+        <div class="s-card tables"><div class="s-num">${totalTables}</div><div class="s-lbl">Masa</div></div>
+        <div class="s-card capacity"><div class="s-num">${totalCapacity}</div><div class="s-lbl">Kapasite</div></div>
+        <div class="s-card seated"><div class="s-num">${totalSeated}</div><div class="s-lbl">Oturan</div></div>
+        <div class="s-card empty"><div class="s-num">${totalEmpty < 0 ? 0 : totalEmpty}</div><div class="s-lbl">Bos</div></div>
+    `;
+}
+
+function renderTables() {
+    const grid = document.getElementById('table-grid');
+    const ua = unassignedGuests();
+
+    grid.innerHTML = tables.map((t, idx) => {
+        const seated = guestsAtTable(t.id);
+        const count = seated.length;
+        const cap = t.capacity || 8;
+        const isFull = count >= cap;
+        const countClass = count === 0 ? 'empty' : (isFull ? 'ok' : 'partial');
+
+        const guestRows = seated.length > 0
+            ? seated.map(g => `
+                <div class="t-guest">
+                    <span class="t-guest-name">${esc(g.name || g.title || 'Isimsiz')}</span>
+                    <button class="t-guest-rm" onclick="removeGuestFromTable('${g.id || ''}','${t.id}')" title="Kaldir">&times;</button>
+                </div>
+            `).join('')
+            : '<div class="t-empty-hint">Henuz kimse oturmuyor</div>';
+
+        const options = ua.map(g =>
+            `<option value="${g.id || ''}">${esc(g.name || g.title || 'Isimsiz')}</option>`
+        ).join('');
+
+        const canDelete = count === 0;
+
+        return `
+        <div class="t-card ${isFull ? 'full' : ''}">
+            <div class="t-head">
+                <div class="t-head-left">
+                    <span class="t-icon">🪑</span>
+                    <input class="t-name-input" value="${esc(t.name)}" onchange="renameTable(${idx}, this.value)" />
+                </div>
+                <span class="t-count ${countClass}">${count}/${cap}</span>
+                <div class="t-cap-wrap">
+                    <label>Kap:</label>
+                    <input class="t-cap-input" type="number" min="1" max="50" value="${cap}" onchange="changeCapacity(${idx}, this.value)" />
+                </div>
+            </div>
+            <div class="t-body">${guestRows}</div>
+            <div class="t-foot">
+                <select class="t-add-select" id="sel-${t.id}" ${isFull ? 'disabled' : ''}>
+                    <option value="">Kisi Sec...</option>
+                    ${options}
+                </select>
+                <button class="t-add-btn" onclick="addGuestToTable('${t.id}')" ${isFull ? 'disabled' : ''}>Ekle</button>
+                <button class="t-del-btn" onclick="deleteTable(${idx})" ${canDelete ? '' : 'disabled'} title="${canDelete ? 'Masayi sil' : 'Once misafirleri kaldirin'}">🗑</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderUnassigned() {
+    const ua = unassignedGuests();
+    const section = document.getElementById('unassigned-section');
+
+    if (guests.length === 0) {
+        section.innerHTML = `
+            <div class="ua-header"><span class="ua-dot"></span> Masasiz Davetliler</div>
+            <div class="ua-empty">Henuz davetli eklenmemis. Davetli listesini ana sayfadan ekleyebilirsiniz.</div>
+        `;
+        return;
+    }
+
+    const chips = ua.length > 0
+        ? '<div class="ua-list">' + ua.map(g =>
+            `<div class="ua-chip"><span class="ua-icon">👤</span>${esc(g.name || g.title || 'Isimsiz')}</div>`
+        ).join('') + '</div>'
+        : '<div class="ua-empty">Tum davetliler bir masaya oturdu!</div>';
+
+    section.innerHTML = `
+        <div class="ua-header"><span class="ua-dot"></span> Masasiz Davetliler (${ua.length})</div>
+        ${chips}
+    `;
+}
+
+// ---- ACTIONS ----
+function addGuestToTable(tableId) {
+    const sel = document.getElementById('sel-' + tableId);
+    if (!sel || !sel.value) return;
+    const guestId = sel.value;
+
+    const gi = guests.findIndex(g => g.id === guestId);
+    if (gi === -1) return;
+
+    guests[gi].table = tableId;
+    saveGuests();
+    showToast('Misafir masaya eklendi');
+}
+
+function removeGuestFromTable(guestId, tableId) {
+    const gi = guests.findIndex(g => g.id === guestId && g.table === tableId);
+    if (gi === -1) return;
+
+    delete guests[gi].table;
+    saveGuests();
+    showToast('Misafir masadan kaldirildi');
+}
+
+function addTable() {
+    const maxNum = tables.reduce((mx, t) => {
+        const m = t.id.match(/^t(\d+)$/);
+        return m ? Math.max(mx, parseInt(m[1])) : mx;
+    }, 0);
+    const newId = 't' + (maxNum + 1);
+    tables.push({ id: newId, name: 'Masa ' + (maxNum + 1), capacity: 8 });
+    saveTables();
+    showToast('Yeni masa eklendi');
+}
+
+function deleteTable(idx) {
+    const t = tables[idx];
+    if (!t) return;
+    const seated = guestsAtTable(t.id);
+    if (seated.length > 0) {
+        showToast('Once masadaki misafirleri kaldirin');
+        return;
+    }
+    tables.splice(idx, 1);
+    saveTables();
+    showToast('Masa silindi');
+}
+
+function renameTable(idx, newName) {
+    if (!newName.trim()) return;
+    tables[idx].name = newName.trim();
+    saveTables();
+}
+
+function changeCapacity(idx, val) {
+    const n = parseInt(val);
+    if (isNaN(n) || n < 1) return;
+    tables[idx].capacity = n;
+    saveTables();
+}
+
+// ---- UTILS ----
+function esc(s) {
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>

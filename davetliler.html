@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Davetliler - Dugun Planlayici</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
+            --green:#059669;--green-bg:#ecfdf5;--green-light:#34d399;
+            --red:#dc2626;--red-bg:#fef2f2;
+            --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+            --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
+            --gray-700:#374151;--gray-900:#111827;--white:#fff;
+            --blue:#2563eb;--blue-bg:#eff6ff;
+            --orange:#ea580c;--orange-bg:#fff7ed;
+        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;-webkit-tap-highlight-color:transparent}
+
+        /* LOGIN */
+        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+        .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
+        .login-card .logo{font-size:48px;margin-bottom:16px}
+        .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
+        .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+        .google-btn svg{width:20px;height:20px;flex-shrink:0}
+
+        /* HEADER */
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:12px 16px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+        .header-row{display:flex;align-items:center;gap:12px}
+        .header-back{color:rgba(255,255,255,0.7);font-size:20px;text-decoration:none;display:flex;align-items:center}
+        .header h1{font-size:17px;font-weight:700;flex:1}
+        .header-right{display:flex;gap:6px;align-items:center}
+        .user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;cursor:pointer}
+        .user-avatar-fallback{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;cursor:pointer}
+        .user-dropdown{position:absolute;top:46px;right:12px;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
+        .user-dropdown.open{display:block}
+        .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:var(--gray-900);border-bottom:1px solid var(--gray-100)}
+        .user-dropdown button{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:var(--red)}
+
+        /* DASHBOARD */
+        .dashboard{padding:12px 16px;background:white;border-bottom:1px solid var(--gray-200)}
+        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+        .stat-card{text-align:center;padding:10px 4px;border-radius:10px;background:var(--gray-50);border:1px solid var(--gray-100)}
+        .stat-num{font-size:22px;font-weight:800;line-height:1}
+        .stat-label{font-size:10px;color:var(--gray-500);margin-top:2px;font-weight:500}
+        .stat-card.total .stat-num{color:var(--gray-900)}
+        .stat-card.yes .stat-num{color:var(--green)}
+        .stat-card.yes{border-color:var(--green);background:var(--green-bg)}
+        .stat-card.wait .stat-num{color:var(--orange)}
+        .stat-card.wait{border-color:var(--orange);background:var(--orange-bg)}
+        .stat-card.no .stat-num{color:var(--red)}
+        .stat-card.no{border-color:var(--red);background:var(--red-bg)}
+        .side-breakdown{display:flex;gap:12px;justify-content:center;font-size:12px;color:var(--gray-500)}
+        .side-breakdown span{font-weight:600;color:var(--gray-700)}
+
+        /* SEARCH & FILTER */
+        .search-strip{padding:10px 16px;background:white;border-bottom:1px solid var(--gray-100);position:sticky;top:49px;z-index:90}
+        .search-input{width:100%;border:1.5px solid var(--gray-200);border-radius:10px;padding:9px 12px 9px 36px;font-size:14px;outline:none;background:var(--gray-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 12px center}
+        .search-input:focus{border-color:var(--gold);background-color:white}
+        .filter-row{display:flex;gap:6px;margin-top:8px}
+        .filter-btn{padding:6px 14px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--gray-200);background:white;cursor:pointer;white-space:nowrap}
+        .filter-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
+
+        /* GUEST LIST */
+        #app{display:none;padding-bottom:68px}
+        .glist{padding:8px 12px 120px;max-width:640px;margin:0 auto}
+        .gcard{background:white;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:border-color 0.15s}
+        .gcard.open{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+        .gmain{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
+        .gavatar{width:36px;height:36px;border-radius:50%;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
+        .ginfo{flex:1;min-width:0}
+        .gname{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+        .gside-tag{font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600}
+        .gside-gelin{background:#f0e6ff;color:#7c3aed}
+        .gside-damat{background:var(--blue-bg);color:var(--blue)}
+        .gmeta{font-size:11px;color:var(--gray-500);margin-top:1px;display:flex;gap:8px;flex-wrap:wrap}
+        .grsvp{flex-shrink:0}
+        .rsvp-chip{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:transform 0.1s}
+        .rsvp-chip:active{transform:scale(0.93)}
+        .rsvp-beklemede{background:var(--orange-bg);color:var(--orange)}
+        .rsvp-katilacak{background:var(--green-bg);color:var(--green)}
+        .rsvp-katilmayacak{background:var(--red-bg);color:var(--red)}
+        .garrow{color:var(--gray-300);font-size:10px;flex-shrink:0;transition:transform 0.15s}
+        .gcard.open .garrow{transform:rotate(180deg)}
+
+        .gdetail{display:none;padding:0 12px 10px;border-top:1px solid var(--gray-100)}
+        .gcard.open .gdetail{display:block}
+        .gdetail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:12px}
+        .gd-item{background:var(--gray-50);padding:6px 8px;border-radius:6px}
+        .gd-label{font-size:10px;color:var(--gray-400);font-weight:500}
+        .gd-val{font-weight:600;color:var(--gray-700);margin-top:1px}
+        .gnote{font-size:12px;color:var(--gray-600);background:var(--gray-50);border-radius:6px;padding:6px 8px;margin-top:6px;white-space:pre-wrap;font-style:italic}
+        .gnote:empty{display:none}
+        .gbtns{display:flex;gap:6px;margin-top:8px}
+        .gbtns button{padding:6px 14px;border-radius:6px;border:none;font-size:11px;cursor:pointer;font-weight:500}
+        .gbtn-edit{background:var(--gray-100);color:var(--gray-700)}
+        .gbtn-del{background:var(--red-bg);color:var(--red)}
+
+        /* FAB */
+        .fab{position:fixed;bottom:68px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(184,134,11,0.4);z-index:95;display:flex;align-items:center;justify-content:center;font-weight:300}
+        .fab:active{transform:scale(0.93)}
+
+        /* MODAL */
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center}
+        .modal-bg.show{display:flex}
+        .modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:0 0 24px}
+        .modal-bar{width:36px;height:4px;background:var(--gray-300);border-radius:2px;margin:8px auto 0}
+        .modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--gray-100)}
+        .modal-hdr span{font-size:16px;font-weight:700}
+        .modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-400);padding:0 4px}
+        .modal-body{padding:12px 16px}
+        .field{margin-bottom:12px}
+        .field label{display:block;font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:4px}
+        .field input,.field select,.field textarea{width:100%;border:1.5px solid var(--gray-200);border-radius:8px;padding:9px 12px;font-size:14px;outline:none;font-family:inherit}
+        .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+        .field textarea{resize:vertical;min-height:60px}
+        .field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+        .btn-save{width:100%;padding:12px;border:none;border-radius:10px;background:var(--gold);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+        .btn-save:active{opacity:0.8}
+
+        /* CONFIRM MODAL */
+        .confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;align-items:center;justify-content:center}
+        .confirm-bg.show{display:flex}
+        .confirm-box{background:white;border-radius:16px;padding:24px;max-width:300px;width:90%;text-align:center}
+        .confirm-box p{font-size:14px;margin-bottom:16px;color:var(--gray-700)}
+        .confirm-btns{display:flex;gap:8px;justify-content:center}
+        .confirm-btns button{padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer}
+        .cbtn-cancel{background:var(--gray-100);color:var(--gray-700)}
+        .cbtn-del{background:var(--red);color:white}
+
+        /* BOTTOM NAV */
+        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);display:flex;height:52px;z-index:95}
+        .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:9px;font-weight:500;color:var(--gray-400);text-decoration:none}
+        .bnav .active{color:var(--gold)}
+        .bnav .bicon{font-size:18px}
+
+        /* EMPTY */
+        .empty-msg{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:14px}
+
+        /* LOADING */
+        #loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
+        .spinner{width:36px;height:36px;border:3px solid var(--gray-200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" style="display:flex">
+    <div class="login-card">
+        <div class="logo">💍</div>
+        <h1>Davetli Listesi</h1>
+        <p>Dugun davetlilerini yonetin</p>
+        <button class="google-btn" onclick="signIn()">
+            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
+            Google ile Giris Yap
+        </button>
+    </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--gray-500)">Yukleniyor...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-row">
+            <a href="index.html" class="header-back">&#8592;</a>
+            <h1>Davetliler</h1>
+            <div class="header-right">
+                <div style="position:relative">
+                    <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-name" id="user-name"></div>
+                        <button onclick="signOut()">Cikis Yap</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+        <div class="stats-row">
+            <div class="stat-card total">
+                <div class="stat-num" id="s-total">0</div>
+                <div class="stat-label">Toplam Kisi</div>
+            </div>
+            <div class="stat-card yes">
+                <div class="stat-num" id="s-yes">0</div>
+                <div class="stat-label">Katilacak</div>
+            </div>
+            <div class="stat-card wait">
+                <div class="stat-num" id="s-wait">0</div>
+                <div class="stat-label">Beklemede</div>
+            </div>
+            <div class="stat-card no">
+                <div class="stat-num" id="s-no">0</div>
+                <div class="stat-label">Katilmayacak</div>
+            </div>
+        </div>
+        <div class="side-breakdown">
+            Gelin: <span id="s-gelin">0</span> &nbsp;|&nbsp; Damat: <span id="s-damat">0</span>
+        </div>
+    </div>
+
+    <!-- SEARCH & FILTER -->
+    <div class="search-strip">
+        <input type="text" class="search-input" id="search-input" placeholder="Davetli ara..." oninput="renderList()">
+        <div class="filter-row">
+            <button class="filter-btn active" data-f="all" onclick="setFilter('all',this)">Hepsi</button>
+            <button class="filter-btn" data-f="Gelin" onclick="setFilter('Gelin',this)">Gelin Tarafi</button>
+            <button class="filter-btn" data-f="Damat" onclick="setFilter('Damat',this)">Damat Tarafi</button>
+        </div>
+    </div>
+
+    <!-- GUEST LIST -->
+    <div class="glist" id="glist"></div>
+
+    <!-- FAB -->
+    <button class="fab" id="fab-add" onclick="openAddModal()">+</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav" id="bnav" style="display:none">
+    <a href="index.html"><span class="bicon">&#x1F5FA;&#xFE0F;</span>Harita</a>
+    <a href="index.html#venues"><span class="bicon">&#x1F3DB;&#xFE0F;</span>Mekanlar</a>
+    <a class="active" href="davetliler.html"><span class="bicon">&#x1F465;</span>Davetliler</a>
+    <a href="planner.html"><span class="bicon">&#x1F9E0;</span>Asistan</a>
+</nav>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-bg" id="modal-guest" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <div class="modal-bar"></div>
+        <div class="modal-hdr"><span id="modal-title">Davetli Ekle</span><button class="modal-x" onclick="closeModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="f-id">
+            <div class="field">
+                <label>Ad Soyad</label>
+                <input type="text" id="f-name" placeholder="Ornek: Ahmet Yilmaz">
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label>Taraf</label>
+                    <select id="f-side">
+                        <option value="Gelin">Gelin</option>
+                        <option value="Damat">Damat</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Grup</label>
+                    <input type="text" id="f-group" placeholder="Aile, Arkadas...">
+                </div>
+            </div>
+            <div class="field">
+                <label>Telefon</label>
+                <input type="tel" id="f-phone" placeholder="5XX XXX XX XX">
+            </div>
+            <div class="field-row3">
+                <div class="field">
+                    <label>Yetiskin</label>
+                    <input type="number" id="f-adults" min="0" value="1">
+                </div>
+                <div class="field">
+                    <label>Cocuk</label>
+                    <input type="number" id="f-children" min="0" value="0">
+                </div>
+                <div class="field">
+                    <label>Toplam</label>
+                    <input type="number" id="f-total" min="0" value="1" readonly style="background:var(--gray-50)">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label>Davetiye</label>
+                    <select id="f-invited">
+                        <option value="Gonderilmedi">Gonderilmedi</option>
+                        <option value="Gonderildi">Gonderildi</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>RSVP</label>
+                    <select id="f-rsvp">
+                        <option value="Beklemede">Beklemede</option>
+                        <option value="Katilacak">Katilacak</option>
+                        <option value="Katilmayacak">Katilmayacak</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label>Masa No</label>
+                <input type="text" id="f-table" placeholder="Ornek: 5">
+            </div>
+            <div class="field">
+                <label>Not</label>
+                <textarea id="f-note" placeholder="Ek bilgi..."></textarea>
+            </div>
+            <button class="btn-save" onclick="saveGuest()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-bg" id="confirm-del" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="confirm-box">
+        <p id="confirm-text">Bu davetliyi silmek istediginize emin misiniz?</p>
+        <div class="confirm-btns">
+            <button class="cbtn-cancel" onclick="document.getElementById('confirm-del').classList.remove('show')">Vazgec</button>
+            <button class="cbtn-del" id="cbtn-confirm" onclick="confirmDelete()">Sil</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBwXGAb_p-Hx7D1qmxBBu7viFL1PAQ0m_0",
+    authDomain: "dugun-planlayici-ff34e.firebaseapp.com",
+    projectId: "dugun-planlayici-ff34e",
+    storageBucket: "dugun-planlayici-ff34e.firebasestorage.app",
+    messagingSenderId: "740092604485",
+    appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
+};
+
+const DEFAULT_GUESTS = [
+    {id:'g1',name:'Hilal Yuksel',side:'Gelin',group:'',phone:'546 715 04 15',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g2',name:'Ibrahim Koncu',side:'Damat',group:'',phone:'534 733 60 93',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g3',name:'Sehrazat Capanoglu',side:'Gelin',group:'',phone:'545 912 76 40',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g4',name:'Basri Yuksel',side:'Gelin',group:'',phone:'554 832 96 08',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g5',name:'Sukriye Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g6',name:'Yalcin Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g7',name:'Lisa Winkles',side:'Gelin',group:'',phone:'31 6 46370501',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g8',name:'Ali Ekber Yuksel',side:'Gelin',group:'',phone:'31 6 40815427',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g9',name:'Busra Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g10',name:'Huseyin Koncu',side:'Damat',group:'',phone:'',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g11',name:'Yalcin Koncu Jr.',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g12',name:'Betul Bakir',side:'Gelin',group:'',phone:'546 690 44 52',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g13',name:'Tahsin Bakir',side:'Gelin',group:'',phone:'542 243 52 00',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g14',name:'Cengiz Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g15',name:'Hatice Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g16',name:'Ruveyda Mete',side:'Gelin',group:'',phone:'533 216 92 36',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g17',name:'Alper Mete',side:'Gelin',group:'',phone:'542 721 22 98',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g18',name:'Deniz Bakir',side:'Gelin',group:'',phone:'530 171 34 09',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g19',name:'Esvet Bakir',side:'Gelin',group:'',phone:'532 569 83 44',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g20',name:'Guzin Bakir',side:'Gelin',group:'',phone:'542 797 41 90',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g21',name:'Ensar Bakir',side:'Gelin',group:'',phone:'543 190 94 94',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g22',name:'Nihal Mete',side:'Gelin',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g23',name:'Abdullah Mete',side:'Gelin',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g24',name:'Berna Nalcioglu',side:'Gelin',group:'',phone:'539 587 93 62',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g25',name:'Omur Koclu',side:'Gelin',group:'',phone:'549 365 65 01',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g26',name:'Husamettin Koclu',side:'Gelin',group:'',phone:'532 251 00 44',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g27',name:'Aysel Akar',side:'Gelin',group:'',phone:'532 667 28 51',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g28',name:'Kamuran Pelenk',side:'Gelin',group:'',phone:'537 294 85 51',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g29',name:'Zeynep Akin',side:'Gelin',group:'',phone:'530 397 27 05',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g30',name:'Selen Tekin',side:'Damat',group:'',phone:'507 101 66 61',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g31',name:'Cihan Tekin',side:'Damat',group:'',phone:'507 682 42 32',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g32',name:'Busra Celikhan',side:'Damat',group:'',phone:'538 598 50 27',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g33',name:'Mehmet Celikhan',side:'Damat',group:'',phone:'539 277 57 73',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g34',name:'Berk Ozturk',side:'Damat',group:'',phone:'531 860 48 60',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g35',name:'Suna',side:'Damat',group:'',phone:'536 420 79 23',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g36',name:'Emre Karaoglu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+    {id:'g37',name:'Bengu Yilgur',side:'Gelin',group:'',phone:'537 515 37 03',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
+];
+
+// Firebase init
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const guestRef = db.collection('shared').doc('guests');
+
+let currentUser = null;
+let guests = [];
+let activeFilter = 'all';
+let openCardId = null;
+let deleteTargetId = null;
+let unsubscribe = null;
+
+// Auth
+function signIn(){
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message));
+}
+function signOut(){
+    auth.signOut();
+}
+function toggleDropdown(){
+    document.getElementById('user-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', e=>{
+    const dd = document.getElementById('user-dropdown');
+    if(dd && !e.target.closest('.header-right')) dd.classList.remove('open');
+});
+
+auth.onAuthStateChanged(u=>{
+    if(u){
+        currentUser = u;
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('loading-screen').style.display='flex';
+        // user info
+        const c = document.getElementById('user-avatar-container');
+        if(u.photoURL){
+            c.innerHTML = '<img class="user-avatar" src="'+u.photoURL+'" referrerpolicy="no-referrer">';
+        } else {
+            c.innerHTML = '<div class="user-avatar-fallback">'+(u.displayName||u.email||'?').charAt(0).toUpperCase()+'</div>';
+        }
+        document.getElementById('user-name').textContent = u.displayName||u.email||'';
+        listen();
+    } else {
+        currentUser = null;
+        if(unsubscribe) unsubscribe();
+        document.getElementById('login-screen').style.display='flex';
+        document.getElementById('app').style.display='none';
+        document.getElementById('bnav').style.display='none';
+        document.getElementById('loading-screen').style.display='none';
+    }
+});
+
+// Firestore listen
+function listen(){
+    unsubscribe = guestRef.onSnapshot(snap=>{
+        document.getElementById('loading-screen').style.display='none';
+        document.getElementById('app').style.display='block';
+        document.getElementById('bnav').style.display='flex';
+        if(snap.exists && snap.data().list && snap.data().list.length > 0){
+            guests = snap.data().list;
+        } else {
+            // first run: seed defaults
+            guests = JSON.parse(JSON.stringify(DEFAULT_GUESTS));
+            saveToFirestore();
+        }
+        updateDashboard();
+        renderList();
+    }, err=>{
+        console.error(err);
+        document.getElementById('loading-screen').style.display='none';
+        document.getElementById('app').style.display='block';
+        document.getElementById('bnav').style.display='flex';
+        guests = JSON.parse(JSON.stringify(DEFAULT_GUESTS));
+        updateDashboard();
+        renderList();
+    });
+}
+
+function saveToFirestore(){
+    guestRef.set({list:guests, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+}
+
+// Dashboard
+function updateDashboard(){
+    let totalP=0, yes=0, wait=0, no=0, gelin=0, damat=0;
+    guests.forEach(g=>{
+        totalP += g.total||1;
+        if(g.rsvp==='Katilacak') yes += g.total||1;
+        else if(g.rsvp==='Katilmayacak') no += g.total||1;
+        else wait += g.total||1;
+        if(g.side==='Gelin') gelin += g.total||1;
+        else damat += g.total||1;
+    });
+    document.getElementById('s-total').textContent = totalP;
+    document.getElementById('s-yes').textContent = yes;
+    document.getElementById('s-wait').textContent = wait;
+    document.getElementById('s-no').textContent = no;
+    document.getElementById('s-gelin').textContent = gelin;
+    document.getElementById('s-damat').textContent = damat;
+}
+
+// Filter
+function setFilter(f, btn){
+    activeFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+}
+
+// Render guest list
+function renderList(){
+    const q = (document.getElementById('search-input').value||'').toLowerCase().trim();
+    const container = document.getElementById('glist');
+    let filtered = guests.filter(g=>{
+        if(activeFilter!=='all' && g.side!==activeFilter) return false;
+        if(q && !g.name.toLowerCase().includes(q)) return false;
+        return true;
+    });
+
+    if(filtered.length===0){
+        container.innerHTML = '<div class="empty-msg">Davetli bulunamadi</div>';
+        return;
+    }
+
+    let html = '';
+    filtered.forEach(g=>{
+        const isOpen = openCardId===g.id;
+        const initials = g.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+        const sideClass = g.side==='Gelin'?'gside-gelin':'gside-damat';
+        const rsvpClass = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
+        const rsvpLabel = g.rsvp;
+
+        html += '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'">';
+        html += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
+        html += '<div class="gavatar">'+initials+'</div>';
+        html += '<div class="ginfo">';
+        html += '<div class="gname">'+esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
+        html += '<div class="gmeta">';
+        if(g.phone) html += '<span>'+esc(g.phone)+'</span>';
+        html += '<span>'+g.adults+' yetiskin'+(g.children>0?', '+g.children+' cocuk':'')+'</span>';
+        html += '</div></div>';
+        html += '<div class="grsvp"><button class="rsvp-chip '+rsvpClass+'" onclick="event.stopPropagation();cycleRsvp(\''+g.id+'\')">'+rsvpLabel+'</button></div>';
+        html += '<div class="garrow">&#x25BC;</div>';
+        html += '</div>';
+
+        // Detail
+        html += '<div class="gdetail">';
+        html += '<div class="gdetail-grid">';
+        html += '<div class="gd-item"><div class="gd-label">Davetiye</div><div class="gd-val">'+(g.invited||'Gonderilmedi')+'</div></div>';
+        html += '<div class="gd-item"><div class="gd-label">Masa</div><div class="gd-val">'+(g.table||'-')+'</div></div>';
+        html += '<div class="gd-item"><div class="gd-label">Grup</div><div class="gd-val">'+(g.group||'-')+'</div></div>';
+        html += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kisi</div></div>';
+        html += '</div>';
+        if(g.note) html += '<div class="gnote">'+esc(g.note)+'</div>';
+        html += '<div class="gbtns">';
+        html += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Duzenle</button>';
+        html += '<button class="gbtn-del" onclick="event.stopPropagation();askDelete(\''+g.id+'\')">Sil</button>';
+        html += '</div></div>';
+        html += '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function esc(s){
+    const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;
+}
+
+function toggleCard(id){
+    openCardId = openCardId===id ? null : id;
+    renderList();
+}
+
+// RSVP cycle
+function cycleRsvp(id){
+    const g = guests.find(x=>x.id===id);
+    if(!g) return;
+    if(g.rsvp==='Beklemede') g.rsvp='Katilacak';
+    else if(g.rsvp==='Katilacak') g.rsvp='Katilmayacak';
+    else g.rsvp='Beklemede';
+    saveToFirestore();
+}
+
+// Modal
+function openAddModal(){
+    document.getElementById('modal-title').textContent='Davetli Ekle';
+    document.getElementById('f-id').value='';
+    document.getElementById('f-name').value='';
+    document.getElementById('f-side').value='Gelin';
+    document.getElementById('f-group').value='';
+    document.getElementById('f-phone').value='';
+    document.getElementById('f-adults').value='1';
+    document.getElementById('f-children').value='0';
+    document.getElementById('f-total').value='1';
+    document.getElementById('f-invited').value='Gonderilmedi';
+    document.getElementById('f-rsvp').value='Beklemede';
+    document.getElementById('f-table').value='';
+    document.getElementById('f-note').value='';
+    document.getElementById('modal-guest').classList.add('show');
+}
+
+function openEditModal(id){
+    const g = guests.find(x=>x.id===id);
+    if(!g) return;
+    document.getElementById('modal-title').textContent='Davetli Duzenle';
+    document.getElementById('f-id').value=g.id;
+    document.getElementById('f-name').value=g.name;
+    document.getElementById('f-side').value=g.side;
+    document.getElementById('f-group').value=g.group||'';
+    document.getElementById('f-phone').value=g.phone||'';
+    document.getElementById('f-adults').value=g.adults||1;
+    document.getElementById('f-children').value=g.children||0;
+    document.getElementById('f-total').value=g.total||1;
+    document.getElementById('f-invited').value=g.invited||'Gonderilmedi';
+    document.getElementById('f-rsvp').value=g.rsvp||'Beklemede';
+    document.getElementById('f-table').value=g.table||'';
+    document.getElementById('f-note').value=g.note||'';
+    document.getElementById('modal-guest').classList.add('show');
+}
+
+function closeModal(){
+    document.getElementById('modal-guest').classList.remove('show');
+}
+
+// Auto-calc total
+document.getElementById('f-adults').addEventListener('input', calcTotal);
+document.getElementById('f-children').addEventListener('input', calcTotal);
+function calcTotal(){
+    const a = parseInt(document.getElementById('f-adults').value)||0;
+    const c = parseInt(document.getElementById('f-children').value)||0;
+    document.getElementById('f-total').value = a+c;
+}
+
+function saveGuest(){
+    const id = document.getElementById('f-id').value;
+    const name = document.getElementById('f-name').value.trim();
+    if(!name){alert('Ad soyad gerekli');return;}
+    const adults = parseInt(document.getElementById('f-adults').value)||1;
+    const children = parseInt(document.getElementById('f-children').value)||0;
+    const obj = {
+        id: id || 'g'+Date.now(),
+        name: name,
+        side: document.getElementById('f-side').value,
+        group: document.getElementById('f-group').value.trim(),
+        phone: document.getElementById('f-phone').value.trim(),
+        adults: adults,
+        children: children,
+        total: adults+children,
+        invited: document.getElementById('f-invited').value,
+        rsvp: document.getElementById('f-rsvp').value,
+        table: document.getElementById('f-table').value.trim(),
+        note: document.getElementById('f-note').value.trim()
+    };
+
+    if(id){
+        const idx = guests.findIndex(x=>x.id===id);
+        if(idx>=0) guests[idx]=obj;
+    } else {
+        guests.push(obj);
+    }
+    saveToFirestore();
+    closeModal();
+}
+
+// Delete
+function askDelete(id){
+    deleteTargetId = id;
+    const g = guests.find(x=>x.id===id);
+    document.getElementById('confirm-text').textContent = (g?g.name:'Bu davetli')+' silinsin mi?';
+    document.getElementById('confirm-del').classList.add('show');
+}
+
+function confirmDelete(){
+    if(deleteTargetId){
+        guests = guests.filter(x=>x.id!==deleteTargetId);
+        openCardId = null;
+        saveToFirestore();
+    }
+    deleteTargetId = null;
+    document.getElementById('confirm-del').classList.remove('show');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butce - Dugun Planlayici</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
+            --green:#059669;--green-bg:#ecfdf5;--green-light:#34d399;
+            --red:#dc2626;--red-bg:#fef2f2;
+            --blue:#2563eb;--blue-bg:#eff6ff;
+            --orange:#ea580c;--orange-bg:#fff7ed;
+            --purple:#8b5cf6;--purple-bg:#f5f3ff;
+            --cyan:#0891b2;--cyan-bg:#ecfeff;
+            --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+            --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
+            --gray-600:#4b5563;--gray-700:#374151;--gray-900:#111827;--white:#fff;
+        }
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh}
+
+        /* LOGIN */
+        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+        .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
+        .login-card .logo{font-size:48px;margin-bottom:16px}
+        .login-card h1{color:white;font-size:24px;font-weight:700;margin-bottom:6px}
+        .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:32px}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:transform 0.15s,box-shadow 0.15s}
+        .google-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.2)}
+        .google-btn svg{width:20px;height:20px;flex-shrink:0}
+
+        /* LOADING */
+        #loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
+        .spinner{width:36px;height:36px;border:3px solid var(--gray-200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* APP */
+        #app{display:none}
+
+        /* HEADER */
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+        .header-row{display:flex;align-items:center;gap:12px}
+        .back-btn{background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:4px;opacity:0.8;text-decoration:none}
+        .back-btn:hover{opacity:1}
+        .header-row h1{font-size:18px;font-weight:700;flex:1}
+        .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;cursor:pointer}
+
+        /* SUMMARY CARDS */
+        .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px;max-width:640px;margin:0 auto}
+        .s-card{background:white;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid var(--gray-100)}
+        .s-card .s-label{font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;margin-bottom:4px}
+        .s-card .s-value{font-size:20px;font-weight:800}
+        .s-card.total{border-color:var(--gold);background:var(--gold-bg)}
+        .s-card.total .s-value{color:var(--gold)}
+        .s-card.estimated .s-value{color:var(--blue)}
+        .s-card.paid .s-value{color:var(--green)}
+        .s-card.remaining .s-value{color:var(--orange)}
+        .s-card.over .s-value{color:var(--red)}
+        .total-edit{display:flex;align-items:center;gap:6px}
+        .total-input{width:100%;font-size:20px;font-weight:800;color:var(--gold);border:none;background:transparent;font-family:inherit;padding:0}
+        .total-input:focus{outline:none;border-bottom:2px solid var(--gold)}
+        .edit-icon{font-size:14px;cursor:pointer;opacity:0.5}
+        .edit-icon:hover{opacity:1}
+
+        /* FILTER CHIPS */
+        .filters{display:flex;gap:8px;padding:0 16px 12px;max-width:640px;margin:0 auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .filters::-webkit-scrollbar{display:none}
+        .chip{padding:6px 14px;border-radius:20px;border:1px solid var(--gray-200);background:white;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--gray-600);transition:all 0.2s}
+        .chip.active{background:var(--gold);color:white;border-color:var(--gold)}
+
+        /* ITEM LIST */
+        .item-list{max-width:640px;margin:0 auto;padding:0 16px 100px;display:flex;flex-direction:column;gap:10px}
+        .budget-card{background:white;border-radius:14px;border:1px solid var(--gray-100);box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
+        .bc-main{padding:14px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
+        .bc-top{display:flex;justify-content:space-between;align-items:flex-start}
+        .bc-firm{font-size:15px;font-weight:600}
+        .bc-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+        .bc-status.planli{background:var(--gray-100);color:var(--gray-600)}
+        .bc-status.kapora{background:var(--orange-bg);color:var(--orange)}
+        .bc-status.odendi{background:var(--green-bg);color:var(--green)}
+        .bc-cat{font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:2px}
+        .bc-amounts{display:flex;gap:16px;font-size:13px}
+        .bc-amounts span{color:var(--gray-500)}
+        .bc-amounts strong{color:var(--gray-900);font-weight:600}
+        .bc-note{font-size:12px;color:var(--gray-500);line-height:1.4}
+        .bc-actions{display:flex;gap:8px;padding:8px 14px;border-top:1px solid var(--gray-100);display:none}
+        .budget-card.expanded .bc-actions{display:flex}
+        .bc-actions button{font-size:12px;padding:6px 12px;border-radius:7px;border:1px solid var(--gray-200);background:white;cursor:pointer;font-weight:500;color:var(--gray-700)}
+        .bc-actions .del{color:var(--red);border-color:var(--red-bg)}
+
+        .cat-mekan{background:#dbeafe;color:#1d4ed8}
+        .cat-yemek{background:#fce7f3;color:#be185d}
+        .cat-fotograf{background:var(--purple-bg);color:var(--purple)}
+        .cat-muzik{background:var(--cyan-bg);color:var(--cyan)}
+        .cat-dekorasyon{background:var(--orange-bg);color:var(--orange)}
+        .cat-kiyafet{background:#fef3c7;color:#92400e}
+        .cat-diger{background:var(--gray-100);color:var(--gray-600)}
+
+        /* FAB */
+        .fab{position:fixed;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(184,134,11,0.4);display:flex;align-items:center;justify-content:center;z-index:50;transition:transform 0.2s}
+        .fab:hover{transform:scale(1.08)}
+
+        /* MODAL */
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center}
+        .modal-overlay.open{display:flex}
+        .modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:20px 16px 32px;animation:slideUp 0.3s ease}
+        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .modal h2{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+        .modal h2 button{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-400)}
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:5px}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--gray-200);border-radius:10px;font-size:14px;font-family:inherit;background:white}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--gold)}
+        .form-group textarea{resize:vertical;min-height:60px}
+        .form-row{display:flex;gap:10px}
+        .form-row .form-group{flex:1}
+        .modal-save{width:100%;padding:13px;border-radius:12px;border:none;background:var(--gold);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+        .modal-save:hover{background:var(--gold-light)}
+
+        .empty-state{text-align:center;padding:60px 20px;color:var(--gray-400)}
+        .empty-state .icon{font-size:48px;margin-bottom:12px}
+        .empty-state p{font-size:14px}
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+    <div class="login-card">
+        <div class="logo">💰</div>
+        <h1>Butce Yonetimi</h1>
+        <p>Dugun butcenizi birlikte yonetin</p>
+        <button class="google-btn" onclick="googleSignIn()">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google ile Giris Yap
+        </button>
+    </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--gray-500)">Yukleniyor...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+    <div class="header">
+        <div class="header-row">
+            <a href="index.html" class="back-btn">&#8592;</a>
+            <h1>Butce</h1>
+            <img id="user-avatar" class="user-avatar" src="" alt="" style="display:none">
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="s-card total">
+            <div class="s-label">Toplam Butce</div>
+            <div class="total-edit">
+                <input type="text" class="total-input" id="totalBudgetInput" value="0" inputmode="numeric">
+                <span class="edit-icon">&#9998;</span>
+            </div>
+        </div>
+        <div class="s-card estimated">
+            <div class="s-label">Tahmini Toplam</div>
+            <div class="s-value" id="estimatedTotal">0</div>
+        </div>
+        <div class="s-card paid">
+            <div class="s-label">Odenen</div>
+            <div class="s-value" id="paidTotal">0</div>
+        </div>
+        <div class="s-card remaining" id="remainingCard">
+            <div class="s-label">Kalan</div>
+            <div class="s-value" id="remainingTotal">0</div>
+        </div>
+    </div>
+
+    <div class="filters" id="filters">
+        <div class="chip active" data-cat="Hepsi">Hepsi</div>
+        <div class="chip" data-cat="Mekan">Mekan</div>
+        <div class="chip" data-cat="Yemek">Yemek</div>
+        <div class="chip" data-cat="Fotograf">Fotograf</div>
+        <div class="chip" data-cat="Muzik">Muzik</div>
+        <div class="chip" data-cat="Dekorasyon">Dekorasyon</div>
+        <div class="chip" data-cat="Kiyafet">Kiyafet</div>
+        <div class="chip" data-cat="Diger">Diger</div>
+    </div>
+
+    <div class="item-list" id="itemList"></div>
+
+    <button class="fab" onclick="openModal()">+</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h2>
+            <span id="modalTitle">Kalem Ekle</span>
+            <button onclick="closeModal()">&times;</button>
+        </h2>
+        <div class="form-group">
+            <label>Kategori</label>
+            <select id="f-category">
+                <option value="Mekan">Mekan</option>
+                <option value="Yemek">Yemek</option>
+                <option value="Fotograf">Fotograf</option>
+                <option value="Muzik">Muzik</option>
+                <option value="Dekorasyon">Dekorasyon</option>
+                <option value="Kiyafet">Kiyafet</option>
+                <option value="Diger">Diger</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Firma / Aciklama</label>
+            <input type="text" id="f-firm" placeholder="Ornek: Hilton Otel">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tahmini Tutar</label>
+                <input type="number" id="f-estimated" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label>Gerceklesen Tutar</label>
+                <input type="number" id="f-actual" placeholder="0" inputmode="numeric">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Durum</label>
+            <select id="f-status">
+                <option value="Planli">Planli</option>
+                <option value="Kapora Odendi">Kapora Odendi</option>
+                <option value="Odendi">Odendi</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Not</label>
+            <textarea id="f-note" placeholder="Ek bilgiler..."></textarea>
+        </div>
+        <button class="modal-save" onclick="saveItem()">Kaydet</button>
+    </div>
+</div>
+
+<script>
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBwXGAb_p-Hx7D1qmxBBu7viFL1PAQ0m_0",
+    authDomain: "dugun-planlayici-ff34e.firebaseapp.com",
+    projectId: "dugun-planlayici-ff34e",
+    storageBucket: "dugun-planlayici-ff34e.firebasestorage.app",
+    messagingSenderId: "740092604485",
+    appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const docRef = db.collection('shared').doc('budget_v2');
+
+let budgetData = { list: [], totalBudget: 0 };
+let editingId = null;
+let activeFilter = 'Hepsi';
+let unsubscribe = null;
+
+function googleSignIn() {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+}
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('loading-screen').style.display = 'flex';
+        const av = document.getElementById('user-avatar');
+        if (user.photoURL) { av.src = user.photoURL; av.style.display = 'block'; }
+        startListener();
+    } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'none';
+        if (unsubscribe) unsubscribe();
+    }
+});
+
+function startListener() {
+    unsubscribe = docRef.onSnapshot(snap => {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        if (snap.exists) {
+            const d = snap.data();
+            budgetData.list = d.list || [];
+            budgetData.totalBudget = d.totalBudget || 0;
+        } else {
+            budgetData = { list: [], totalBudget: 0 };
+        }
+        render();
+    });
+}
+
+function save() {
+    docRef.set({
+        list: budgetData.list,
+        totalBudget: budgetData.totalBudget,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+}
+
+function fmt(n) {
+    return Number(n || 0).toLocaleString('tr-TR');
+}
+
+function catClass(cat) {
+    const map = { Mekan:'cat-mekan', Yemek:'cat-yemek', Fotograf:'cat-fotograf', Muzik:'cat-muzik', Dekorasyon:'cat-dekorasyon', Kiyafet:'cat-kiyafet', Diger:'cat-diger' };
+    return map[cat] || 'cat-diger';
+}
+
+function statusClass(s) {
+    if (s === 'Planli') return 'planli';
+    if (s === 'Kapora Odendi') return 'kapora';
+    return 'odendi';
+}
+
+function render() {
+    document.getElementById('totalBudgetInput').value = fmt(budgetData.totalBudget);
+
+    let estTotal = 0, paidTotal = 0;
+    budgetData.list.forEach(item => {
+        estTotal += Number(item.estimated || 0);
+        if (item.status === 'Odendi' || item.status === 'Kapora Odendi') {
+            paidTotal += Number(item.actual || item.estimated || 0);
+        }
+    });
+
+    document.getElementById('estimatedTotal').textContent = fmt(estTotal);
+    document.getElementById('paidTotal').textContent = fmt(paidTotal);
+
+    const remaining = budgetData.totalBudget - estTotal;
+    document.getElementById('remainingTotal').textContent = fmt(remaining);
+    const rc = document.getElementById('remainingCard');
+    if (remaining < 0) {
+        rc.classList.add('over');
+        rc.classList.remove('remaining');
+    } else {
+        rc.classList.remove('over');
+        rc.classList.add('remaining');
+    }
+
+    const list = document.getElementById('itemList');
+    const filtered = activeFilter === 'Hepsi' ? budgetData.list : budgetData.list.filter(i => i.category === activeFilter);
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="icon">💰</div><p>Henuz butce kalemi eklenmedi</p></div>';
+        return;
+    }
+
+    list.innerHTML = filtered.map(item => `
+        <div class="budget-card" id="bc-${item.id}">
+            <div class="bc-main" onclick="toggleCard('${item.id}')">
+                <span class="bc-cat ${catClass(item.category)}">${item.category}</span>
+                <div class="bc-top">
+                    <div class="bc-firm">${item.firm || '-'}</div>
+                    <span class="bc-status ${statusClass(item.status)}">${item.status}</span>
+                </div>
+                <div class="bc-amounts">
+                    <div><span>Tahmini: </span><strong>${fmt(item.estimated)} TL</strong></div>
+                    <div><span>Gercek: </span><strong>${fmt(item.actual)} TL</strong></div>
+                </div>
+                ${item.note ? `<div class="bc-note">${item.note}</div>` : ''}
+            </div>
+            <div class="bc-actions">
+                <button onclick="editItem('${item.id}')">Duzenle</button>
+                <button class="del" onclick="deleteItem('${item.id}')">Sil</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleCard(id) {
+    document.getElementById('bc-' + id).classList.toggle('expanded');
+}
+
+// FILTERS
+document.getElementById('filters').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.cat;
+    render();
+});
+
+// TOTAL BUDGET
+const totalInput = document.getElementById('totalBudgetInput');
+totalInput.addEventListener('focus', () => {
+    totalInput.value = budgetData.totalBudget || '';
+});
+totalInput.addEventListener('blur', () => {
+    const val = parseInt(totalInput.value.replace(/\D/g, '')) || 0;
+    budgetData.totalBudget = val;
+    save();
+});
+totalInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') totalInput.blur();
+});
+
+// MODAL
+function openModal(id) {
+    editingId = id || null;
+    document.getElementById('modalTitle').textContent = id ? 'Kalemi Duzenle' : 'Kalem Ekle';
+    if (id) {
+        const item = budgetData.list.find(i => i.id === id);
+        if (item) {
+            document.getElementById('f-category').value = item.category;
+            document.getElementById('f-firm').value = item.firm || '';
+            document.getElementById('f-estimated').value = item.estimated || '';
+            document.getElementById('f-actual').value = item.actual || '';
+            document.getElementById('f-status').value = item.status;
+            document.getElementById('f-note').value = item.note || '';
+        }
+    } else {
+        document.getElementById('f-category').value = 'Mekan';
+        document.getElementById('f-firm').value = '';
+        document.getElementById('f-estimated').value = '';
+        document.getElementById('f-actual').value = '';
+        document.getElementById('f-status').value = 'Planli';
+        document.getElementById('f-note').value = '';
+    }
+    document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    editingId = null;
+}
+
+function saveItem() {
+    const cat = document.getElementById('f-category').value;
+    const firm = document.getElementById('f-firm').value.trim();
+    const est = parseFloat(document.getElementById('f-estimated').value) || 0;
+    const act = parseFloat(document.getElementById('f-actual').value) || 0;
+    const status = document.getElementById('f-status').value;
+    const note = document.getElementById('f-note').value.trim();
+
+    if (!firm) { alert('Firma / aciklama girin'); return; }
+
+    if (editingId) {
+        const idx = budgetData.list.findIndex(i => i.id === editingId);
+        if (idx > -1) {
+            budgetData.list[idx] = { ...budgetData.list[idx], category: cat, firm, estimated: est, actual: act, status, note };
+        }
+    } else {
+        budgetData.list.push({
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+            category: cat, firm, estimated: est, actual: act, status, note
+        });
+    }
+    save();
+    closeModal();
+}
+
+function editItem(id) {
+    openModal(id);
+}
+
+function deleteItem(id) {
+    if (!confirm('Bu kalemi silmek istediginize emin misiniz?')) return;
+    budgetData.list = budgetData.list.filter(i => i.id !== id);
+    save();
+}
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) closeModal();
+});
+</script>
+</body>
+</html>
