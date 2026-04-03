@@ -316,23 +316,23 @@ function loadDashboard() {
     unsubscribers.forEach(fn => fn());
     unsubscribers = [];
 
-    // Tasks
+    // Tasks (stored as {list: [...]})
     unsubscribers.push(
         db.collection('shared').doc('planner_tasks').onSnapshot(snap => {
-            dashData.tasks = (snap.exists && snap.data().tasks) ? snap.data().tasks : [];
+            dashData.tasks = (snap.exists && snap.data().list) ? snap.data().list : [];
             renderDashboard();
         })
     );
 
-    // Guests
+    // Guests (stored as {list: [...]})
     unsubscribers.push(
         db.collection('shared').doc('guests').onSnapshot(snap => {
-            dashData.guests = (snap.exists && snap.data().guests) ? snap.data().guests : [];
+            dashData.guests = (snap.exists && snap.data().list) ? snap.data().list : [];
             renderDashboard();
         })
     );
 
-    // Budget
+    // Budget (stored as {list: [...], totalBudget: N})
     unsubscribers.push(
         db.collection('shared').doc('budget_v2').onSnapshot(snap => {
             dashData.budget = snap.exists ? snap.data() : null;
@@ -340,10 +340,10 @@ function loadDashboard() {
         })
     );
 
-    // Venues
+    // Venues (stored as {list: [...]})
     unsubscribers.push(
         db.collection('shared').doc('venues').onSnapshot(snap => {
-            dashData.venues = (snap.exists && snap.data().venues) ? snap.data().venues : [];
+            dashData.venues = (snap.exists && snap.data().list) ? snap.data().list : [];
             renderDashboard();
         })
     );
@@ -400,11 +400,11 @@ function renderGuestSummary() {
     const guests = dashData.guests;
     let total = 0, confirmed = 0, pending = 0, declined = 0;
     guests.forEach(g => {
-        const count = (g.count || 1);
+        const count = (g.total || 1);
         total += count;
-        const s = (g.status || '').toLowerCase();
-        if (s === 'confirmed' || s === 'katilacak') confirmed += count;
-        else if (s === 'declined' || s === 'katilmayacak') declined += count;
+        const s = (g.rsvp || '');
+        if (s === 'Katilacak') confirmed += count;
+        else if (s === 'Katilmayacak') declined += count;
         else pending += count;
     });
     document.getElementById('gs-total').textContent = total;
@@ -423,11 +423,11 @@ function renderBudgetSummary() {
         return;
     }
     const totalBudget = b.totalBudget || 0;
-    const items = b.items || [];
+    const items = b.list || [];
     let estimated = 0, paid = 0;
     items.forEach(item => {
         estimated += (item.estimated || 0);
-        paid += (item.paid || 0);
+        paid += (item.actual || 0);
     });
     const remaining = totalBudget - paid;
     document.getElementById('bs-total').textContent = fmtMoney(totalBudget);
