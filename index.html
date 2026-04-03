@@ -11,19 +11,17 @@
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
             --gold:#b8860b;--gold-light:#daa520;--gold-bg:#fdf8ef;
-            --green:#059669;--green-bg:#ecfdf5;--green-light:#34d399;
+            --green:#059669;--green-bg:#ecfdf5;
             --red:#dc2626;--red-bg:#fef2f2;
-            --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
-            --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
-            --gray-700:#374151;--gray-900:#111827;--white:#fff;
-            --c0:#8b5cf6;--c0-bg:#f5f3ff;--c1:#b8860b;--c1-bg:#fdf8ef;
-            --c2:#0891b2;--c2-bg:#ecfeff;--c3:#059669;--c3-bg:#ecfdf5;
-            --c4:#dc2626;--c4-bg:#fef2f2;--c5:#ea580c;--c5-bg:#fff7ed;
+            --blue:#2563eb;--blue-bg:#eff6ff;
+            --orange:#ea580c;--orange-bg:#fff7ed;
+            --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
+            --gray-400:#9ca3af;--gray-500:#6b7280;--gray-700:#374151;--gray-900:#111827;
         }
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh}
 
         /* LOGIN */
-        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+        #login-screen{align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card .logo{font-size:48px;margin-bottom:16px}
         .login-card h1{color:white;font-size:24px;font-weight:700;margin-bottom:6px}
@@ -32,15 +30,8 @@
         .google-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.2)}
         .google-btn svg{width:20px;height:20px;flex-shrink:0}
 
-        /* SETUP SCREEN */
-        #setup-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--gray-50);padding:16px}
-        .setup-card{max-width:560px;background:white;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
-        .setup-card h2{font-size:18px;font-weight:700;margin-bottom:12px;color:var(--gold)}
-        .setup-card ol{padding-left:20px;font-size:14px;line-height:2;color:var(--gray-700)}
-        .setup-card code{background:var(--gray-100);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:13px}
-
         /* LOADING */
-        #loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
+        #loading-screen{align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
         .spinner{width:36px;height:36px;border:3px solid var(--gray-200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
         .loading-text{font-size:14px;color:var(--gray-500)}
@@ -49,267 +40,111 @@
         #app{display:none;padding-bottom:68px}
 
         /* HEADER */
-        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
-        .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .header-top h1{font-size:18px;font-weight:700}
-        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;opacity:0.8}
-        .hamburger:hover{opacity:1}
-        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
-        .drawer-overlay.open{display:block}
-        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
-        .drawer.open{right:0}
-        .drawer-header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
-        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100);text-decoration:none;color:var(--gray-900);font-size:14px;font-weight:500}
-        .drawer-item:active{background:var(--gray-50)}
-        .drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
-        .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
-        .user-menu{display:flex;align-items:center;gap:8px;cursor:pointer;position:relative}
-        .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;flex-shrink:0}
-        .user-avatar-fallback{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
-        .user-dropdown{position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
-        .user-dropdown.open{display:block}
-        .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:var(--gray-900);border-bottom:1px solid var(--gray-100)}
-        .user-dropdown button{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:var(--red)}
+        .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:14px 16px 12px;position:sticky;top:0;z-index:50}
+        .header-top{display:flex;align-items:center;justify-content:space-between}
+        .header-top h1{font-size:17px;font-weight:700;flex:1;text-align:center}
+        .user-menu{cursor:pointer;position:relative}
+        .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--gold-light)}
+        .user-avatar-placeholder{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;border:2px solid var(--gold-light)}
+        .user-dropdown{display:none;position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:100;overflow:hidden}
+        .user-dropdown.show{display:block}
+        .user-dropdown-name{padding:12px 14px 8px;font-size:13px;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-100)}
+        .user-dropdown button{width:100%;padding:10px 14px;border:none;background:none;font-size:13px;color:var(--red);cursor:pointer;text-align:left}
         .user-dropdown button:hover{background:var(--gray-50)}
-        .countdowns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 2px}
+
+        /* COUNTDOWNS */
+        .countdowns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:8px}
         .cd-box{background:rgba(255,255,255,0.1);border-radius:10px;padding:6px 12px;min-width:100px;text-align:center}
         .cd-box .cd-num{font-size:18px;font-weight:800;color:var(--gold-light)}
         .cd-box .cd-label{font-size:10px;opacity:0.8}
-        .overall-progress{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px}
-        .progress-bar-mini{width:120px;height:5px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden}
-        .progress-fill-mini{height:100%;background:var(--gold-light);border-radius:3px;transition:width 0.5s}
-        .progress-pct{font-size:12px;font-weight:600;color:var(--gold-light)}
+
+        /* DASHBOARD CARDS */
+        .dash-cards{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto;padding-bottom:80px}
+        .dash-card{background:white;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid var(--gray-100)}
+        .dash-card-title{font-size:13px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+        .dash-card-title a{font-size:12px;color:var(--gold);text-decoration:none;font-weight:500;text-transform:none;letter-spacing:0}
+
+        /* PROGRESS BAR */
+        .progress-wrap{margin-bottom:4px}
+        .progress-bar{width:100%;height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:4px;transition:width 0.5s}
+        .progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-top:4px}
+
+        /* TASK PREVIEW */
+        .task-preview{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer}
+        .task-preview:last-child{border-bottom:none}
+        .tp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .tp-dot.urgent{background:var(--red)}
+        .tp-dot.normal{background:var(--orange)}
+        .tp-dot.low{background:var(--gray-300)}
+        .tp-info{flex:1;min-width:0}
+        .tp-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tp-meta{font-size:11px;color:var(--gray-400)}
+        .tp-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;flex-shrink:0}
+        .tp-tag.assignee{background:var(--blue-bg);color:var(--blue)}
+
+        /* MINI STATS */
+        .mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+        .mini-stat{text-align:center;padding:8px 4px;border-radius:8px;background:var(--gray-50)}
+        .mini-stat .ms-num{font-size:20px;font-weight:800}
+        .mini-stat .ms-label{font-size:9px;color:var(--gray-500);margin-top:1px}
+        .mini-stat.green .ms-num{color:var(--green)}
+        .mini-stat.orange .ms-num{color:var(--orange)}
+        .mini-stat.red .ms-num{color:var(--red)}
+        .mini-stat.blue .ms-num{color:var(--blue)}
+
+        /* BUDGET ROW */
+        .budget-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+        .budget-item{text-align:center;padding:8px 4px}
+        .budget-item .bi-num{font-size:15px;font-weight:700;color:var(--gray-900)}
+        .budget-item .bi-label{font-size:9px;color:var(--gray-500);margin-top:2px}
+
+        /* VENUE SUMMARY */
+        .venue-summary{display:flex;align-items:center;justify-content:space-between}
+        .venue-summary .vs-text{font-size:14px;color:var(--gray-700)}
+        .venue-summary .vs-text strong{color:var(--gold)}
+        .venue-summary a{font-size:13px;color:var(--gold);text-decoration:none;font-weight:600}
+
+        /* EMPTY STATE */
+        .empty-state{text-align:center;padding:12px 0;color:var(--gray-400);font-size:13px}
 
         /* BOTTOM NAV */
-        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);display:flex;height:56px;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
-        .bnav a,.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:500;color:var(--gray-400);text-decoration:none;border:none;background:none;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
-        .bnav .active{color:var(--gold)}
-        .bnav .bicon{font-size:18px}
-        .tab-badge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:white;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px;line-height:14px}
+        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);z-index:40;padding:6px 0 env(safe-area-inset-bottom)}
+        .bnav{display:none;grid-template-columns:repeat(4,1fr)}
+        .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;text-decoration:none;color:var(--gray-400);font-size:10px;font-weight:500;transition:color 0.2s}
+        .bnav a.active{color:var(--gold)}
+        .bicon{font-size:20px}
 
-        /* SCREENS */
-        .screen{display:none}
-        .screen.active{display:block}
-        .screen-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:white;border-bottom:1px solid var(--gray-100);position:sticky;top:0;z-index:10}
-        .screen-title{font-size:18px;font-weight:700}
-        .btn-sm{padding:7px 13px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;background:var(--gold);color:white}
-
-        /* ROADMAP */
-        .roadmap{max-width:640px;margin:0 auto;padding:16px 16px 8px;position:relative}
-        .roadmap::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:3px;background:var(--gray-200)}
-        .phase{position:relative;margin-bottom:20px}
-        .phase-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;cursor:pointer;position:relative;z-index:1;transition:transform 0.2s}
-        .phase-header:hover{transform:translateX(2px)}
-        .phase-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
-        .phase-info{flex:1;min-width:0}
-        .phase-name{font-size:15px;font-weight:700}
-        .phase-dates{font-size:11px;opacity:0.7;margin-top:1px}
-        .phase-progress{display:flex;align-items:center;gap:5px;margin-top:4px}
-        .phase-progress-bar{width:80px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;overflow:hidden}
-        .phase-progress-fill{height:100%;border-radius:2px;transition:width 0.4s}
-        .phase-progress-text{font-size:10px;font-weight:600}
-        .phase-del-btn{background:none;border:none;font-size:13px;cursor:pointer;opacity:0.5;padding:3px;border-radius:4px;flex-shrink:0}
-        .phase-del-btn:hover{opacity:1;background:rgba(0,0,0,0.1)}
-        .phase-chevron{font-size:14px;transition:transform 0.3s;flex-shrink:0}
-        .phase.open .phase-chevron{transform:rotate(90deg)}
-        .phase.completed .phase-header{opacity:0.6}
-        .pc-0 .phase-header{background:var(--c0-bg);color:var(--c0)}.pc-0 .phase-dot{background:var(--c0)}.pc-0 .phase-progress-fill{background:var(--c0)}
-        .pc-1 .phase-header{background:var(--c1-bg);color:var(--c1)}.pc-1 .phase-dot{background:var(--c1)}.pc-1 .phase-progress-fill{background:var(--c1)}
-        .pc-2 .phase-header{background:var(--c2-bg);color:var(--c2)}.pc-2 .phase-dot{background:var(--c2)}.pc-2 .phase-progress-fill{background:var(--c2)}
-        .pc-3 .phase-header{background:var(--c3-bg);color:var(--c3)}.pc-3 .phase-dot{background:var(--c3)}.pc-3 .phase-progress-fill{background:var(--c3)}
-        .pc-4 .phase-header{background:var(--c4-bg);color:var(--c4)}.pc-4 .phase-dot{background:var(--c4)}.pc-4 .phase-progress-fill{background:var(--c4)}
-        .pc-5 .phase-header{background:var(--c5-bg);color:var(--c5)}.pc-5 .phase-dot{background:var(--c5)}.pc-5 .phase-progress-fill{background:var(--c5)}
-        .phase-steps{overflow:hidden;max-height:0;transition:max-height 0.4s ease;padding-left:14px}
-        .phase.open .phase-steps{max-height:8000px}
-
-        /* STEPS */
-        .step{display:flex;gap:8px;margin:6px 0;transition:opacity 0.15s}
-        .step.dragging{opacity:0.3}
-        .step-left{display:flex;flex-direction:column;align-items:center;width:26px;flex-shrink:0}
-        .drag-handle{width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--gray-300);font-size:12px;border-radius:4px;touch-action:none;flex-shrink:0}
-        .drag-handle:hover{color:var(--gray-500);background:var(--gray-100)}
-        .step-circle{width:18px;height:18px;border-radius:50%;border:2px solid var(--gray-300);background:white;cursor:pointer;transition:all 0.2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-        .step-circle:hover{transform:scale(1.15)}
-        .step-circle.done{background:var(--green);border-color:var(--green)}
-        .step-circle.done::after{content:'';width:5px;height:8px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px}
-        .step-connector{flex:1;width:2px;background:var(--gray-200);margin:2px 0;min-height:6px}
-        .step.done .step-connector{background:var(--green-light)}
-        .step-card{flex:1;background:white;border-radius:11px;border:1px solid var(--gray-100);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:box-shadow 0.2s}
-        .step-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-        .step.done .step-card{opacity:0.5}
-        .step.active .step-card{border-color:var(--gold);box-shadow:0 0 0 2px rgba(184,134,11,0.15),0 4px 12px rgba(184,134,11,0.1)}
-        .step.personal .step-card{background:#fffbf0;border-color:#f0d890}
-        .step-main{display:flex;align-items:center;padding:10px 12px;cursor:pointer;gap:8px}
-        .step-title{font-size:13px;font-weight:500;flex:1;line-height:1.3}
-        .step.done .step-title{text-decoration:line-through;color:var(--gray-400)}
-        .step-badges{display:flex;gap:4px;align-items:center}
-        .step-badge{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--gray-100);color:var(--gray-600);font-weight:500;white-space:nowrap}
-        .step-badge.personal{background:#fef3c7;color:#92400e}
-        .step-badge.assigned{background:var(--blue-bg,#eff6ff);color:#1d4ed8}
-        .step-expand{font-size:12px;color:var(--gray-400);transition:transform 0.2s}
-        .step.expanded .step-expand{transform:rotate(90deg)}
-        .step-detail{display:none;padding:0 12px 12px;border-top:1px solid var(--gray-100)}
-        .step.expanded .step-detail{display:block}
-        .step-hint{font-size:12px;color:var(--gray-500);margin-top:8px;line-height:1.5}
-        .step-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:13px;resize:vertical;min-height:44px;font-family:inherit;margin-top:8px}
-        .step-note:focus{outline:none;border-color:var(--gold)}
-        .step-del-btn{margin-top:8px;font-size:11px;color:var(--red);background:var(--red-bg);border:none;border-radius:6px;padding:4px 10px;cursor:pointer}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,134,11,0.25)}50%{box-shadow:0 0 0 5px rgba(184,134,11,0)}}
-        .step.active .step-circle{animation:pulse 2s infinite;border-color:var(--gold);background:var(--gold-bg)}
-
-        /* ADD STEP ROW */
-        .add-step-area{padding:6px 0 10px}
-        .add-step-row{display:flex;gap:6px;margin-bottom:6px}
-        .add-step-input{flex:1;padding:8px 10px;border:1px dashed var(--gray-300);border-radius:8px;font-size:13px;font-family:inherit;background:white}
-        .add-step-input:focus{outline:none;border-color:var(--gold);border-style:solid}
-        .add-step-btn{padding:8px 12px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:12px;cursor:pointer}
-        .step-type-toggle{display:flex;gap:6px;font-size:11px}
-        .step-type-toggle label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--gray-600)}
-        .add-phase-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 0px);margin:4px 0 20px;padding:11px;border:2px dashed var(--gray-300);border-radius:14px;background:none;cursor:pointer;font-size:13px;color:var(--gray-500);transition:all 0.2s}
-        .add-phase-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
-
-        /* VENUES */
-        .venue-grid{padding:12px 16px;display:flex;flex-direction:column;gap:12px;max-width:640px;margin:0 auto}
-        .venue-card{background:white;border-radius:14px;border:1px solid var(--gray-100);box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;position:relative}
-        .venue-card.fav{border-color:var(--gold);border-width:2px}
-        .vc-top{padding:14px 14px 10px}
-        .vc-name{font-size:16px;font-weight:600;padding-right:32px;margin-bottom:6px}
-        .vc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
-        .vc-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--gray-100);color:var(--gray-700);font-weight:500}
-        .vc-tag.green{background:var(--green-bg);color:var(--green)}
-        .vc-fav{position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;cursor:pointer}
-        .vc-expand-btn{width:100%;background:none;border:none;border-top:1px solid var(--gray-100);padding:8px;font-size:12px;color:var(--gray-500);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
-        .vc-expand-btn:hover{background:var(--gray-50)}
-        .vc-expand-arrow{transition:transform 0.2s;font-size:11px}
-        .venue-card.expanded .vc-expand-arrow{transform:rotate(180deg)}
-        .vc-detail{display:none;padding:12px 14px;border-top:1px solid var(--gray-100);background:var(--gray-50)}
-        .venue-card.expanded .vc-detail{display:block}
-        .vc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--gray-100);font-size:13px}
-        .vc-row span{color:var(--gray-500)}
-        .vc-row input{border:none;background:transparent;text-align:right;font-size:13px;font-family:inherit;width:150px}
-        .vc-row input:focus{outline:none}
-        .vc-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:13px;resize:none;height:55px;font-family:inherit;margin-top:8px;background:white}
-        .vc-note:focus{outline:none;border-color:var(--gold)}
-        .vc-actions{display:flex;gap:8px;margin-top:10px}
-        .vc-actions a,.vc-actions button{font-size:12px;padding:6px 12px;border-radius:7px;border:1px solid var(--gray-200);background:white;text-decoration:none;color:var(--gray-700);cursor:pointer;font-weight:500}
-        .vc-actions a.ig{background:linear-gradient(135deg,#833AB4,#FD1D1D);color:white;border:none}
-        .vc-actions .del{color:var(--red);border-color:var(--red-bg)}
-
-        /* NOTES */
-        .notes-screen{max-width:640px;margin:0 auto;padding:0 0 20px}
-        .notes-subtabs{display:flex;background:white;border-bottom:1px solid var(--gray-200)}
-        .notes-subtab{flex:1;padding:10px 4px;text-align:center;font-size:13px;font-weight:500;color:var(--gray-500);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;position:relative}
-        .notes-subtab.active{color:var(--gold);border-bottom-color:var(--gold)}
-        .notes-subtab .sub-badge{display:inline-block;background:var(--red);color:white;font-size:9px;border-radius:8px;padding:1px 5px;margin-left:4px;line-height:14px}
-        .notes-add{padding:12px 16px;background:white;border-bottom:1px solid var(--gray-100)}
-        .notes-add textarea{width:100%;border:1px solid var(--gray-200);border-radius:10px;padding:10px 12px;font-size:14px;resize:none;height:70px;font-family:inherit}
-        .notes-add textarea:focus{outline:none;border-color:var(--gold)}
-        .notes-add-actions{display:flex;justify-content:flex-end;margin-top:8px;gap:8px;align-items:center}
-        .notes-add-actions button{padding:7px 14px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;font-weight:500;cursor:pointer}
-        .notes-list{padding:12px 16px}
-        .note-card{background:white;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border-left:4px solid var(--gold)}
-        .note-card.personal-note{border-left-color:#f59e0b;background:#fffbf0}
-        .note-card.mention-note{border-left-color:#8b5cf6;background:#f5f3ff}
-        .note-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
-        .note-meta{font-size:11px;color:var(--gray-400);line-height:1.4}
-        .note-author{font-weight:600;color:var(--gray-600)}
-        .note-del{background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:18px;flex-shrink:0}
-        .note-del:hover{color:var(--red)}
-        .note-body{font-size:14px;line-height:1.55;white-space:pre-wrap;color:var(--gray-700)}
-        .note-body .mention-tag{color:#8b5cf6;font-weight:600}
-        .empty-hint{text-align:center;padding:28px;color:var(--gray-400);font-size:13px}
-
-        /* BUDGET */
-        .budget-screen{max-width:640px;margin:0 auto;padding:0 0 20px}
-        .budget-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 16px}
-        .bt-card{text-align:center;padding:12px 8px;border-radius:12px;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-        .bt-card .bt-amt{font-size:16px;font-weight:700}
-        .bt-card .bt-lbl{font-size:10px;color:var(--gray-500);margin-top:2px}
-        .bt-card.total .bt-amt{color:var(--gold)}.bt-card.spent .bt-amt{color:var(--red)}.bt-card.rem .bt-amt{color:var(--green)}
-        .budget-set{padding:0 16px 12px}
-        .budget-set label{font-size:12px;font-weight:500;color:var(--gray-500);display:block;margin-bottom:4px}
-        .budget-set-row{display:flex;gap:8px}
-        .budget-set-row input{flex:1;padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit}
-        .budget-set-row input:focus{outline:none;border-color:var(--gold)}
-        .budget-set-row button{padding:9px 14px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;cursor:pointer}
-        .budget-add{padding:0 16px 16px}
-        .budget-add-form{background:white;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-        .budget-add-form .row{display:flex;gap:8px;margin-bottom:8px}
-        .budget-add-form input,.budget-add-form select{flex:1;padding:9px 10px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;font-family:inherit}
-        .budget-add-form button{padding:9px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:13px;font-weight:500;cursor:pointer;width:100%}
-        .budget-list{padding:0 16px}
-        .bi-card{background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
-        .bi-name{font-size:14px;font-weight:500}.bi-status{font-size:11px;color:var(--gray-400);margin-top:2px}
-        .bi-right{display:flex;align-items:center;gap:8px}
-        .bi-amount{font-size:15px;font-weight:700}.bi-amount.paid{color:var(--green)}
-        .bi-del{background:none;border:none;color:var(--gray-300);cursor:pointer;font-size:18px}
-        .bi-del:hover{color:var(--red)}
-
-        /* @MENTION PICKER */
-        .mention-picker{display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:400;background:white;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);overflow:hidden;min-width:220px;border:1px solid var(--gray-200)}
-        .mention-picker.visible{display:block}
-        .mention-picker-header{padding:8px 12px;font-size:11px;color:var(--gray-500);font-weight:600;background:var(--gray-50);border-bottom:1px solid var(--gray-100)}
-        .mention-user-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.15s}
-        .mention-user-item:hover{background:var(--gray-50)}
-        .mention-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;color:white;font-weight:700}
-        .mention-name{font-size:14px;font-weight:500}
-
-        /* MODALS */
-        .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-end;justify-content:center}
-        .modal-overlay.active{display:flex}
-        .modal{background:white;border-radius:16px 16px 0 0;padding:20px 16px 30px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s}
-        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        .modal-title{font-size:17px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray-500)}
-        .form-group{margin-bottom:12px}
-        .form-group label{font-size:13px;font-weight:500;color:var(--gray-700);display:block;margin-bottom:4px}
-        .form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit}
-        .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--gold)}
-        .color-picker{display:flex;gap:8px;flex-wrap:wrap}
-        .color-opt{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.15s}
-        .color-opt.selected{border-color:var(--gray-900);transform:scale(1.1)}
-        .btn-block{padding:11px 16px;border-radius:8px;border:none;font-size:14px;font-weight:500;cursor:pointer;width:100%;background:var(--gold);color:white;margin-top:4px}
-
-        /* DRAG GHOST */
-        .drag-ghost{position:fixed;pointer-events:none;z-index:500;opacity:0.88;box-shadow:0 8px 24px rgba(0,0,0,0.18);border-radius:11px;background:white;transform:rotate(1.5deg)}
-
-        @media(min-width:600px){.roadmap{padding:24px 24px 8px}.roadmap::before{left:36px}}
+        /* DRAWER */
+        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:60}
+        .drawer-overlay.show{display:block}
+        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:70;transition:right 0.3s;overflow-y:auto;box-shadow:-2px 0 20px rgba(0,0,0,0.1)}
+        .drawer.show{right:0}
+        .drawer-header{padding:20px 16px 12px;font-size:18px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--gray-100)}
+        .drawer-section{padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
+        .drawer-item{display:flex;align-items:center;gap:10px;padding:10px 16px;text-decoration:none;color:var(--gray-700);font-size:14px;font-weight:500;transition:background 0.15s}
+        .drawer-item:hover,.drawer-item.active{background:var(--gold-bg);color:var(--gold)}
+        .di-icon{font-size:18px;width:24px;text-align:center}
     </style>
 </head>
 <body>
 
-<!-- SETUP SCREEN -->
-<div id="setup-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--gray-50);padding:16px;flex-direction:column">
-    <div class="setup-card">
-        <h2>Firebase Kurulumu Gerekiyor</h2>
-        <p style="font-size:14px;color:var(--gray-500);margin-bottom:16px">Google giris icin Firebase projesi olusturmaniz gerekiyor. Asagidaki adimlari takip edin:</p>
-        <ol>
-            <li><a href="https://console.firebase.google.com" target="_blank" style="color:var(--gold)">console.firebase.google.com</a> adresine gidin</li>
-            <li>"Add project" ile yeni proje olusturun</li>
-            <li>Sol menu: <b>Authentication</b> → Get started → <b>Google</b> provider'i aktif edin</li>
-            <li>Sol menu: <b>Firestore Database</b> → Create database → <b>Test mode</b> secin</li>
-            <li>Sol menu: <b>Project Settings</b> → "Add app" (web &lt;/&gt; ikonu) → Config kodunu kopyalayin</li>
-            <li>Authentication → Settings → <b>Authorized domains</b> → <code>ikoncu.github.io</code> ekleyin</li>
-            <li>Bu HTML dosyasinin basindaki <code>FIREBASE_CONFIG</code> objesini doldurun</li>
-        </ol>
-    </div>
-</div>
-
-<!-- LOGIN SCREEN (hidden by default) -->
+<!-- LOGIN -->
 <div id="login-screen" style="display:none">
     <div class="login-card">
         <div class="logo">💍</div>
         <h1>Dugun Planlayici</h1>
-        <p>Hilal &amp; Ibrahim</p>
-        <button class="google-btn" onclick="signInWithGoogle()">
-            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <p>Dugunuzu birlikte planlayalim</p>
+        <button class="google-btn" onclick="doGoogleLogin()">
+            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
             Google ile Giris Yap
         </button>
     </div>
 </div>
 
 <!-- LOADING -->
-<div id="loading-screen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px">
+<div id="loading-screen" style="display:flex">
     <div class="spinner"></div>
     <div class="loading-text">Yukleniyor...</div>
 </div>
@@ -318,7 +153,7 @@
 <div id="app">
     <div class="header">
         <div class="header-top">
-            <div class="user-menu" onclick="toggleUserDropdown()">
+            <div class="user-menu" onclick="toggleDropdown()" style="position:relative">
                 <div id="user-avatar-wrap"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-dropdown-name"></div>
@@ -332,142 +167,81 @@
             <div class="cd-box"><div class="cd-num" id="cd-nisan">--</div><div class="cd-label">gun nisana</div></div>
             <div class="cd-box"><div class="cd-num" id="cd-dugun">--</div><div class="cd-label">gun dugune</div></div>
         </div>
-        <div class="overall-progress">
-            <div class="progress-bar-mini"><div class="progress-fill-mini" id="overall-fill" style="width:0%"></div></div>
-            <span class="progress-pct" id="overall-pct">0%</span>
+    </div>
+
+    <div class="dash-cards" id="dash-cards">
+        <!-- Genel Ilerleme -->
+        <div class="dash-card">
+            <div class="dash-card-title">Genel Ilerleme <a href="gorevler.html">Tumu &rarr;</a></div>
+            <div class="progress-wrap">
+                <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+                <div class="progress-text"><span id="prog-label">0 / 0 gorev</span><span id="prog-pct">0%</span></div>
+            </div>
+        </div>
+
+        <!-- Yaklasan Gorevler -->
+        <div class="dash-card">
+            <div class="dash-card-title">Yaklasan Gorevler <a href="gorevler.html">Tumu &rarr;</a></div>
+            <div id="upcoming-tasks"><div class="empty-state">Gorev bulunamadi</div></div>
+        </div>
+
+        <!-- Davetli Ozeti -->
+        <div class="dash-card">
+            <div class="dash-card-title">Davetli Ozeti <a href="davetliler.html">Tumu &rarr;</a></div>
+            <div class="mini-stats" id="guest-stats">
+                <div class="mini-stat blue"><div class="ms-num" id="gs-total">0</div><div class="ms-label">Toplam Kisi</div></div>
+                <div class="mini-stat green"><div class="ms-num" id="gs-confirmed">0</div><div class="ms-label">Katilacak</div></div>
+                <div class="mini-stat orange"><div class="ms-num" id="gs-pending">0</div><div class="ms-label">Beklemede</div></div>
+                <div class="mini-stat red"><div class="ms-num" id="gs-declined">0</div><div class="ms-label">Katilmayacak</div></div>
+            </div>
+        </div>
+
+        <!-- Butce Ozeti -->
+        <div class="dash-card">
+            <div class="dash-card-title">Butce Ozeti <a href="butce.html">Detay &rarr;</a></div>
+            <div class="budget-row" id="budget-stats">
+                <div class="budget-item"><div class="bi-num" id="bs-total">0</div><div class="bi-label">Toplam Butce</div></div>
+                <div class="budget-item"><div class="bi-num" id="bs-estimated">0</div><div class="bi-label">Tahmini</div></div>
+                <div class="budget-item"><div class="bi-num" id="bs-paid">0</div><div class="bi-label">Odenen</div></div>
+                <div class="budget-item"><div class="bi-num" id="bs-remaining">0</div><div class="bi-label">Kalan</div></div>
+            </div>
+        </div>
+
+        <!-- Mekan Durumu -->
+        <div class="dash-card">
+            <div class="dash-card-title">Mekan Durumu <a href="mekanlar.html">Mekanlari Gor &rarr;</a></div>
+            <div class="venue-summary" id="venue-summary">
+                <span class="vs-text">Henuz mekan eklenmedi</span>
+            </div>
         </div>
     </div>
-
-    <div class="screen active" id="screen-roadmap">
-        <div class="roadmap" id="roadmap"></div>
-    </div>
-
-    <div class="screen" id="screen-venues">
-        <div class="screen-header">
-            <div class="screen-title">Mekanlar</div>
-            <button class="btn-sm" onclick="openVenueModal()">+ Mekan Ekle</button>
-        </div>
-        <div class="venue-grid" id="venue-grid"></div>
-    </div>
-
-    <div class="screen" id="screen-budget">
-        <div class="screen-header"><div class="screen-title">Butce Takibi</div></div>
-        <div class="budget-screen">
-            <div class="budget-totals" id="budget-totals"></div>
-            <div class="budget-set">
-                <label>Toplam Butce (TL)</label>
-                <div class="budget-set-row">
-                    <input type="number" id="total-budget-input" placeholder="500000">
-                    <button onclick="setTotalBudget()">Kaydet</button>
-                </div>
-            </div>
-            <div class="budget-add">
-                <div class="budget-add-form">
-                    <div class="row"><input type="text" id="bi-name" placeholder="Kalem adi"></div>
-                    <div class="row">
-                        <input type="number" id="bi-amount" placeholder="Tutar (TL)">
-                        <select id="bi-status"><option value="planned">Planli</option><option value="paid">Odendi</option></select>
-                    </div>
-                    <button onclick="addBudgetItem()">+ Kalem Ekle</button>
-                </div>
-            </div>
-            <div class="budget-list"><div id="budget-items-container"></div></div>
-        </div>
-    </div>
-
-    <div class="screen" id="screen-notes">
-        <div class="screen-header"><div class="screen-title">Notlar</div></div>
-        <div class="notes-screen">
-            <div class="notes-subtabs">
-                <button class="notes-subtab active" id="sntab-shared" onclick="switchNotesTab('shared')">Ortak</button>
-                <button class="notes-subtab" id="sntab-personal" onclick="switchNotesTab('personal')">Kisisel</button>
-                <button class="notes-subtab" id="sntab-mentions" onclick="switchNotesTab('mentions')">
-                    Bahsedildi <span class="sub-badge" id="mention-badge" style="display:none"></span>
-                </button>
-            </div>
-            <div class="notes-add" id="notes-add-area">
-                <textarea id="note-input" placeholder="Not yazin... (@isim ile birisini etiketleyebilirsiniz)"></textarea>
-                <div class="notes-add-actions">
-                    <span style="font-size:11px;color:var(--gray-400)" id="note-visibility-label">Ortak not</span>
-                    <button onclick="addNote()">Kaydet</button>
-                </div>
-            </div>
-            <div class="notes-list" id="notes-list"></div>
-        </div>
-    </div>
-
-    <nav class="bnav">
-        <button class="active" id="tab-roadmap" onclick="switchTab('roadmap')">
-            <span class="bicon">🗺️</span>Harita
-        </button>
-        <button id="tab-venues" onclick="switchTab('venues')">
-            <span class="bicon">🏛️</span>Mekanlar
-        </button>
-        <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
-        <button id="tab-notes" onclick="switchTab('notes')">
-            <span class="bicon">✏️</span>Notlar
-            <span class="tab-badge" id="tab-mention-badge" style="display:none"></span>
-        </button>
-        <a href="planner.html"><span class="bicon">🧠</span>Asistan</a>
-    </nav>
 </div>
 
-<!-- DRAWER MENU -->
+<!-- BOTTOM NAV -->
+<nav class="bnav" id="bnav">
+    <a class="active" href="index.html"><span class="bicon">🏠</span>Ana Sayfa</a>
+    <a href="gorevler.html"><span class="bicon">✅</span>Gorevler</a>
+    <a href="mekanlar.html"><span class="bicon">🏛️</span>Mekanlar</a>
+    <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
+</nav>
+
+<!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
     <div class="drawer-header">💍 Dugun Planlayici</div>
     <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">🗺️</span>Yol Haritasi</a>
+    <a class="drawer-item active" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
+    <a class="drawer-item" href="gorevler.html"><span class="di-icon">✅</span>Gorevler</a>
+    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
     <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
-    <a class="drawer-item" href="planner.html"><span class="di-icon">🧠</span>Asistan</a>
-    <div class="drawer-section">Yonetim</div>
+    <div class="drawer-section">Diger</div>
     <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
-    <a class="drawer-item" href="checklist.html"><span class="di-icon">✅</span>Checklist</a>
-</div>
-
-<!-- @MENTION PICKER -->
-<div class="mention-picker" id="mention-picker">
-    <div class="mention-picker-header">Etiketle</div>
-    <div id="mention-picker-items"></div>
-</div>
-
-<!-- MODALS -->
-<div class="modal-overlay" id="modal-venue-overlay" onclick="if(event.target===this)this.classList.remove('active')">
-    <div class="modal">
-        <div class="modal-title">Yeni Mekan <button class="modal-close" onclick="document.getElementById('modal-venue-overlay').classList.remove('active')">&times;</button></div>
-        <div class="form-group"><label>Mekan Adi</label><input type="text" id="nv-name"></div>
-        <div class="form-group"><label>Instagram</label><input type="url" id="nv-ig" placeholder="https://instagram.com/..."></div>
-        <div class="form-group"><label>Ozellikler (virgul ile)</label><input type="text" id="nv-feat" placeholder="Acik hava, Yemekli"></div>
-        <button class="btn-block" onclick="addVenue()">Ekle</button>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-phase-overlay" onclick="if(event.target===this)this.classList.remove('active')">
-    <div class="modal">
-        <div class="modal-title">Yeni Kategori <button class="modal-close" onclick="document.getElementById('modal-phase-overlay').classList.remove('active')">&times;</button></div>
-        <div class="form-group"><label>Kategori Adi</label><input type="text" id="np-name" placeholder="orn: Kina Gecesi"></div>
-        <div class="form-group"><label>Tarih Araligi</label><input type="text" id="np-dates" placeholder="orn: Agustos 2026"></div>
-        <div class="form-group"><label>Renk</label>
-            <div class="color-picker" id="color-picker">
-                <div class="color-opt" style="background:#8b5cf6" data-ci="0" onclick="selectPhaseColor(0)"></div>
-                <div class="color-opt selected" style="background:#b8860b" data-ci="1" onclick="selectPhaseColor(1)"></div>
-                <div class="color-opt" style="background:#0891b2" data-ci="2" onclick="selectPhaseColor(2)"></div>
-                <div class="color-opt" style="background:#059669" data-ci="3" onclick="selectPhaseColor(3)"></div>
-                <div class="color-opt" style="background:#dc2626" data-ci="4" onclick="selectPhaseColor(4)"></div>
-                <div class="color-opt" style="background:#ea580c" data-ci="5" onclick="selectPhaseColor(5)"></div>
-            </div>
-        </div>
-        <button class="btn-block" onclick="addPhase()">Ekle</button>
-    </div>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
 </div>
 
 <script>
-// ════════════════════════════════════════
-// FIREBASE CONFIG — BURAYA KENDI DEGERLERİNİZİ YAZIN
-// Firebase Console > Project Settings > Your apps > SDK setup > Config
-// ════════════════════════════════════════
-const FIREBASE_CONFIG = {
+// Firebase config
+const firebaseConfig = {
     apiKey: "AIzaSyBwXGAb_p-Hx7D1qmxBBu7viFL1PAQ0m_0",
     authDomain: "dugun-planlayici-ff34e.firebaseapp.com",
     projectId: "dugun-planlayici-ff34e",
@@ -475,711 +249,241 @@ const FIREBASE_CONFIG = {
     messagingSenderId: "740092604485",
     appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
 };
-// ════════════════════════════════════════
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 const NISAN_DATE = '2026-05-16';
+const WEDDING_DATE = '2026-09-01';
 
-const DEFAULT_PHASES = [
-    {id:'nisan',name:'Nisan Hazirliklari',ci:0,dates:'Simdi \u2192 16 Mayis 2026',steps:[
-        {id:'n1',title:'Saglik raporu al',hint:'Nikah icin zorunlu.',done:false,note:''},
-        {id:'n2',title:'Nisan mekani belirle',hint:'Restoran, otel veya ev?',done:false,note:''},
-        {id:'n3',title:'Nisan yuzugu al',hint:'Tek tas veya alyans?',done:false,note:''},
-        {id:'n4',title:'Nisan kiyafetleri',hint:'Kiyafet ve kuafor randevusu.',done:false,note:''},
-        {id:'n5',title:'Davetli listesi (nisan)',hint:'Yakin aile + arkadaslar.',done:false,note:''},
-        {id:'n6',title:'Nisan organizasyonu',hint:'Soz kesme, cicek, pasta, fotograf.',done:false,note:''},
-        {id:'n7',title:'Dugun mekani arastirmasina basla',hint:'Mekanlar sekmesine goz at!',done:false,note:''},
-    ]},
-    {id:'dugun',name:'Dugun Hazirliklari',ci:1,dates:'Mayis \u2192 Agustos/Eylul 2026',steps:[
-        {id:'d1',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi dikkatlice oku.',done:false,note:''},
-        {id:'d2',title:'Nikah basvurusu (nufus mudurlugu)',hint:'Nufus cuzdani, vesikalik, saglik raporu gerekli.',done:false,note:''},
-        {id:'d3',title:'Dugun organizatoru sec',hint:'2-3 organizatorle gorusun.',done:false,note:''},
-        {id:'d4',title:'Nikah sahitleri belirle',hint:'2 sahit gerekli.',done:false,note:''},
-        {id:'d5',title:'Gelinlik / Damatlk',hint:'En az 3 ay once siparis verin.',done:false,note:''},
-        {id:'d6',title:'Davetiye tasarimi & siparisi',hint:'',done:false,note:''},
-        {id:'d7',title:'Fotograf / Video ekibi',hint:'Portfolyo inceleyin.',done:false,note:''},
-        {id:'d8',title:'Muzik / DJ secimi',hint:'',done:false,note:''},
-        {id:'d9',title:'Cicek & dekorasyon',hint:'',done:false,note:''},
-        {id:'d10',title:'Menu secimi',hint:'Tadim yapmayi unutmayin.',done:false,note:''},
-        {id:'d11',title:'Kuafor & makyaj',hint:'Prova makyaji yaptirin.',done:false,note:''},
-        {id:'d12',title:'Alyans secimi',hint:'',done:false,note:''},
-        {id:'d13',title:'Kina gecesi organizasyonu',hint:'',done:false,note:''},
-        {id:'d14',title:'Davetli listesi (dugun)',hint:'',done:false,note:''},
-        {id:'d15',title:'Son kontroller & prova',hint:'',done:false,note:''},
-    ]},
-    {id:'balayi',name:'Balayi & Son',ci:2,dates:'Dugun sonrasi',steps:[
-        {id:'b1',title:'Balayi destinasyonu arastir',hint:'',done:false,note:''},
-        {id:'b2',title:'Otel & ucak rezervasyonu',hint:'Erken rezervasyon = uygun fiyat.',done:false,note:''},
-        {id:'b3',title:'Pasaport / Vize',hint:'Yurt disi ise 2 ay onceden basvurun.',done:false,note:''},
-        {id:'b4',title:'Balayi butcesi',hint:'',done:false,note:''},
-    ]}
-];
+// State
+let dashData = { tasks: [], guests: [], budget: null, venues: [] };
+let unsubscribers = [];
 
-const DEFAULT_VENUES = [
-    {id:'v1',name:'Selale Plaza Dugun Salonu',instagram:'https://www.instagram.com/selaleplazadugunsalonu/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v2',name:'Pembe Kosk Balo Salon',instagram:'https://www.instagram.com/pembekoskbalosalon/',features:['Balo Salonu'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v3',name:'Marina Gaziantep BKM',instagram:'https://www.instagram.com/marinagaziantepbkm/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v4',name:'Vadi Garden Gaziantep',instagram:'https://www.instagram.com/vadigardengaziantep/',features:['Bahce','Acik Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v5',name:'Livas Park Dugun',instagram:'https://www.instagram.com/livasparkdugun/',features:['Park','Acik Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v6',name:'Ceremony Erikce',instagram:'https://www.instagram.com/ceremonyerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v7',name:'MSM Erikce',instagram:'https://www.instagram.com/msmerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''}
-];
-
-// ─── STATE ───
-let auth, db;
-let currentUser = null;
-let allUsers = {}; // uid -> {uid, name, email, photoURL}
-let phases = [];
-let venues = [];
-let sharedNotes = [];
-let personalNotes = [];
-let myMentions = [];
-let budgetItems = [];
-let totalBudget = 0;
-let weddingDate = '2026-09-01';
-let activeTab = 'roadmap';
-let notesSubTab = 'shared';
-let newPhaseCI = 1;
-let unsubs = [];
-
-// ─── FIREBASE INIT ───
-function isConfigured(){
-    return !FIREBASE_CONFIG.apiKey.startsWith('BURAYA');
+// Auth
+function doGoogleLogin() {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message));
 }
-
-if(!isConfigured()){
-    document.getElementById('loading-screen').style.display='none';
-    document.getElementById('setup-screen').style.display='flex';
-} else {
-    try {
-        firebase.initializeApp(FIREBASE_CONFIG);
-        auth = firebase.auth();
-        db = firebase.firestore();
-        auth.onAuthStateChanged(handleAuth);
-    } catch(e) {
-        console.error(e);
-        document.getElementById('loading-screen').style.display='none';
-        document.getElementById('setup-screen').style.display='flex';
-    }
-}
-
-// ─── AUTH ───
-function signInWithGoogle(){
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(e=>alert('Giris basarisiz: '+e.message));
-}
-function doSignOut(){
+function doSignOut() {
+    unsubscribers.forEach(fn => fn());
+    unsubscribers = [];
     auth.signOut();
-    document.getElementById('user-dropdown').classList.remove('open');
 }
-function toggleDrawer(){
-    document.getElementById('drawer').classList.toggle('open');
-    document.getElementById('drawer-overlay').classList.toggle('open');
-}
-function toggleUserDropdown(){
-    document.getElementById('user-dropdown').classList.toggle('open');
-}
-document.addEventListener('click',e=>{
-    if(!e.target.closest('.user-menu')) document.getElementById('user-dropdown')?.classList.remove('open');
-    if(!e.target.closest('.mention-picker') && !e.target.closest('textarea')) hideMentionPicker();
+
+auth.onAuthStateChanged(user => {
+    document.getElementById('loading-screen').style.display = 'none';
+    if (user) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('bnav').style.display = 'grid';
+        renderAvatar(user);
+        loadDashboard();
+    } else {
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('bnav').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+    }
 });
 
-async function handleAuth(user){
-    unsubs.forEach(u=>u());
-    unsubs=[];
-    if(user){
-        currentUser=user;
-        show('loading');
-        await initUserProfile(user);
-        await loadAllUsers();
-        setupListeners();
-        renderUserAvatar();
-        show('app');
+function renderAvatar(user) {
+    const wrap = document.getElementById('user-avatar-wrap');
+    if (user.photoURL) {
+        wrap.innerHTML = '<img class="user-avatar" src="' + user.photoURL + '" referrerpolicy="no-referrer">';
     } else {
-        currentUser=null;
-        show('login');
+        const init = (user.displayName || user.email || '?')[0].toUpperCase();
+        wrap.innerHTML = '<div class="user-avatar-placeholder">' + init + '</div>';
     }
+    document.getElementById('user-dropdown-name').textContent = user.displayName || user.email || '';
 }
 
-async function initUserProfile(user){
-    await db.collection('users').doc(user.uid).set({
-        uid: user.uid,
-        name: user.displayName || user.email.split('@')[0],
-        email: user.email,
-        photoURL: user.photoURL || '',
-        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
+// Dropdown & Drawer
+function toggleDropdown() {
+    document.getElementById('user-dropdown').classList.toggle('show');
 }
-
-async function loadAllUsers(){
-    const snap = await db.collection('users').get();
-    allUsers = {};
-    snap.docs.forEach(d=>{ allUsers[d.id]={uid:d.id,...d.data()}; });
-}
-
-function renderUserAvatar(){
-    const wrap=document.getElementById('user-avatar-wrap');
-    const name=document.getElementById('user-dropdown-name');
-    name.textContent=currentUser.displayName||currentUser.email;
-    if(currentUser.photoURL){
-        wrap.innerHTML=`<img class="user-avatar" src="${currentUser.photoURL}" referrerpolicy="no-referrer">`;
-    } else {
-        const initial=(currentUser.displayName||currentUser.email||'U')[0].toUpperCase();
-        wrap.innerHTML=`<div class="user-avatar-fallback">${initial}</div>`;
+document.addEventListener('click', e => {
+    if (!e.target.closest('.user-menu')) {
+        document.getElementById('user-dropdown').classList.remove('show');
     }
+});
+
+function toggleDrawer() {
+    document.getElementById('drawer').classList.toggle('show');
+    document.getElementById('drawer-overlay').classList.toggle('show');
 }
 
-function show(screen){
-    document.getElementById('login-screen').style.display=screen==='login'?'flex':'none';
-    document.getElementById('loading-screen').style.display=screen==='loading'?'flex':'none';
-    document.getElementById('setup-screen').style.display=screen==='setup'?'flex':'none';
-    document.getElementById('app').style.display=screen==='app'?'block':'none';
+// Dashboard Loading
+function loadDashboard() {
+    unsubscribers.forEach(fn => fn());
+    unsubscribers = [];
+
+    // Tasks
+    unsubscribers.push(
+        db.collection('shared').doc('planner_tasks').onSnapshot(snap => {
+            dashData.tasks = (snap.exists && snap.data().tasks) ? snap.data().tasks : [];
+            renderDashboard();
+        })
+    );
+
+    // Guests
+    unsubscribers.push(
+        db.collection('shared').doc('guests').onSnapshot(snap => {
+            dashData.guests = (snap.exists && snap.data().guests) ? snap.data().guests : [];
+            renderDashboard();
+        })
+    );
+
+    // Budget
+    unsubscribers.push(
+        db.collection('shared').doc('budget_v2').onSnapshot(snap => {
+            dashData.budget = snap.exists ? snap.data() : null;
+            renderDashboard();
+        })
+    );
+
+    // Venues
+    unsubscribers.push(
+        db.collection('shared').doc('venues').onSnapshot(snap => {
+            dashData.venues = (snap.exists && snap.data().venues) ? snap.data().venues : [];
+            renderDashboard();
+        })
+    );
 }
 
-// ─── FIRESTORE LISTENERS ───
-function setupListeners(){
-    // Shared roadmap
-    unsubs.push(db.collection('shared').doc('roadmap').onSnapshot(doc=>{
-        if(doc.exists){
-            const d=doc.data();
-            phases=d.phases||[];
-            if(d.weddingDate) weddingDate=d.weddingDate;
-        } else {
-            // First user: seed defaults
-            db.collection('shared').doc('roadmap').set({
-                phases: JSON.parse(JSON.stringify(DEFAULT_PHASES)),
-                weddingDate: '2026-09-01',
-                engagementDate: NISAN_DATE
-            });
-            phases=JSON.parse(JSON.stringify(DEFAULT_PHASES));
-        }
-        if(activeTab==='roadmap') renderRoadmap();
-        updateCountdowns();
-    }));
-
-    // Shared venues
-    unsubs.push(db.collection('shared').doc('venues').onSnapshot(doc=>{
-        if(doc.exists){
-            venues=doc.data().list||[];
-        } else {
-            db.collection('shared').doc('venues').set({list:JSON.parse(JSON.stringify(DEFAULT_VENUES))});
-            venues=JSON.parse(JSON.stringify(DEFAULT_VENUES));
-        }
-        if(activeTab==='venues') renderVenues();
-    }));
-
-    // Shared notes
-    unsubs.push(db.collection('notes').where('isPersonal','==',false)
-        .orderBy('date','desc').limit(50)
-        .onSnapshot(snap=>{
-            sharedNotes=snap.docs.map(d=>({id:d.id,...d.data()}));
-            if(activeTab==='notes'&&notesSubTab==='shared') renderNotes();
-        }));
-
-    // Personal notes for current user
-    unsubs.push(db.collection('notes').where('isPersonal','==',true).where('authorUid','==',currentUser.uid)
-        .orderBy('date','desc').limit(50)
-        .onSnapshot(snap=>{
-            personalNotes=snap.docs.map(d=>({id:d.id,...d.data()}));
-            if(activeTab==='notes'&&notesSubTab==='personal') renderNotes();
-        }));
-
-    // Mentions for current user
-    unsubs.push(db.collection('notes').where('mentionedUids','array-contains',currentUser.uid)
-        .orderBy('date','desc').limit(30)
-        .onSnapshot(snap=>{
-            myMentions=snap.docs.map(d=>({id:d.id,...d.data()}));
-            updateMentionBadge();
-            if(activeTab==='notes'&&notesSubTab==='mentions') renderNotes();
-        }));
-
-    // Budget (personal, from localStorage)
-    budgetItems=loadLocal('budget_items',[]);
-    totalBudget=loadLocal('total_budget',0);
-    renderBudget();
-}
-
-// ─── TABS ───
-function switchTab(tab){
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    document.querySelectorAll('.bnav button,.bnav a').forEach(t=>t.classList.remove('active'));
-    document.getElementById('screen-'+tab).classList.add('active');
-    document.getElementById('tab-'+tab).classList.add('active');
-    activeTab=tab;
-    if(tab==='venues') renderVenues();
-    if(tab==='budget') renderBudget();
-    if(tab==='notes'){ renderNotes(); initMentionInTextarea(document.getElementById('note-input')); }
-}
-
-function switchNotesTab(sub){
-    notesSubTab=sub;
-    document.querySelectorAll('.notes-subtab').forEach(t=>t.classList.remove('active'));
-    document.getElementById('sntab-'+sub).classList.add('active');
-    // Hide add area for mentions tab
-    document.getElementById('notes-add-area').style.display=sub==='mentions'?'none':'block';
-    const label=document.getElementById('note-visibility-label');
-    if(label) label.textContent=sub==='personal'?'Sadece ben gororum':'Ortak not';
-    renderNotes();
-}
-
-// ─── COUNTDOWNS ───
-function updateCountdowns(){
-    const now=new Date();
-    const nd=Math.ceil((new Date(NISAN_DATE)-now)/864e5);
-    const wd=Math.ceil((new Date(weddingDate)-now)/864e5);
-    const el1=document.getElementById('cd-nisan');
-    const el2=document.getElementById('cd-dugun');
-    if(el1) el1.textContent=nd>0?nd:(nd===0?'Bugun!':'Gecti');
-    if(el2) el2.textContent=wd>0?wd:(wd===0?'Bugun!':'?');
-}
-
-// ─── ROADMAP ───
-function renderRoadmap(){
+// Render
+function renderDashboard() {
+    renderProgress();
+    renderUpcomingTasks();
+    renderGuestSummary();
+    renderBudgetSummary();
+    renderVenueSummary();
     updateCountdowns();
-    const container=document.getElementById('roadmap');
-    if(!container) return;
-    let html='',totalSteps=0,totalDone=0,foundActive=false;
-
-    phases.forEach((phase,pi)=>{
-        const done=phase.steps.filter(s=>s.done).length;
-        const total=phase.steps.length;
-        totalSteps+=total; totalDone+=done;
-        const pct=total>0?Math.round(done/total*100):0;
-        const allDone=done===total&&total>0;
-        const ci=phase.ci||0;
-
-        html+=`<div class="phase pc-${ci}${allDone?' completed':''} open" data-phase="${pi}">`;
-        html+=`<div class="phase-header" onclick="togglePhase(${pi})">`;
-        html+=`<div class="phase-dot">${allDone?'✓':(pi+1)}</div>`;
-        html+=`<div class="phase-info"><div class="phase-name">${esc(phase.name)}</div>`;
-        if(phase.dates) html+=`<div class="phase-dates">${esc(phase.dates)}</div>`;
-        html+=`<div class="phase-progress"><div class="phase-progress-bar"><div class="phase-progress-fill" style="width:${pct}%"></div></div><span class="phase-progress-text">${done}/${total}</span></div></div>`;
-        html+=`<button class="phase-del-btn" onclick="event.stopPropagation();deletePhase(${pi})">🗑</button>`;
-        html+=`<div class="phase-chevron">▶</div></div>`;
-        html+=`<div class="phase-steps">`;
-
-        phase.steps.forEach((step,si)=>{
-            const isActive=!step.done&&!foundActive;
-            if(isActive) foundActive=true;
-            const isPersonal=!!step.personal;
-            const isAssigned=step.assignedTo&&step.assignedTo!==currentUser?.uid;
-            const assignedUser=step.assignedTo?allUsers[step.assignedTo]:null;
-            const isLast=si===phase.steps.length-1;
-
-            html+=`<div class="step${step.done?' done':''}${isActive?' active':''}${isPersonal?' personal':''}" data-phase="${pi}" data-step="${si}">`;
-            html+=`<div class="step-left"><div class="drag-handle" data-pi="${pi}" data-si="${si}">☰</div>`;
-            html+=`<div class="step-circle${step.done?' done':''}" onclick="toggleStep(${pi},${si})"></div>`;
-            if(!isLast) html+=`<div class="step-connector"></div>`;
-            html+=`</div>`;
-            html+=`<div class="step-card">`;
-            html+=`<div class="step-main" onclick="expandStep(this)">`;
-            html+=`<div class="step-title">${esc(step.title)}</div>`;
-            html+=`<div class="step-badges">`;
-            if(isPersonal) html+=`<span class="step-badge personal">👤 Kisisel</span>`;
-            if(step.assignedTo){
-                const aName=allUsers[step.assignedTo]?.name||'?';
-                html+=`<span class="step-badge assigned">→ ${esc(aName)}</span>`;
-            }
-            html+=`</div>`;
-            html+=`<div class="step-expand">▶</div></div>`;
-            html+=`<div class="step-detail">`;
-            if(step.hint) html+=`<div class="step-hint">${esc(step.hint)}</div>`;
-            html+=`<textarea class="step-note" placeholder="Not ekle..." onchange="saveStepNote(${pi},${si},this.value)">${esc(step.note||'')}</textarea>`;
-            html+=`<button class="step-del-btn" onclick="deleteStep(${pi},${si})">Gorevi sil</button>`;
-            html+=`</div></div></div>`;
-        });
-
-        // Add step row
-        html+=`<div class="add-step-area">`;
-        html+=`<div class="add-step-row">`;
-        html+=`<input class="add-step-input" type="text" placeholder="+ Yeni gorev ekle... (@isim ile ata)" id="new-step-${pi}" onkeydown="if(event.key==='Enter')addStep(${pi})">`;
-        html+=`<button class="add-step-btn" onclick="addStep(${pi})">Ekle</button>`;
-        html+=`</div>`;
-        html+=`<div class="step-type-toggle">`;
-        html+=`<label><input type="radio" name="step-type-${pi}" value="shared" checked> Ortak</label>`;
-        html+=`<label><input type="radio" name="step-type-${pi}" value="personal"> Kisisel</label>`;
-        html+=`</div></div>`;
-        html+=`</div></div>`;
-    });
-
-    html+=`<button class="add-phase-btn" onclick="openPhaseModal()">+ Yeni Kategori Ekle</button>`;
-    container.innerHTML=html;
-
-    // Progress
-    const op=totalSteps>0?Math.round(totalDone/totalSteps*100):0;
-    document.getElementById('overall-fill').style.width=op+'%';
-    document.getElementById('overall-pct').textContent=op+'%';
-
-    // Attach drag + mention
-    document.querySelectorAll('.drag-handle').forEach(h=>attachDrag(h));
-    document.querySelectorAll('.step-note').forEach(t=>initMentionInTextarea(t));
-    document.querySelectorAll('.add-step-input').forEach(t=>initMentionInTextarea(t));
-
-    setTimeout(()=>{
-        const a=document.querySelector('.step.active');
-        if(a) a.scrollIntoView({behavior:'smooth',block:'center'});
-    },300);
 }
 
-function togglePhase(pi){
-    const els=document.querySelectorAll('.phase');
-    if(els[pi]) els[pi].classList.toggle('open');
+function renderProgress() {
+    const tasks = dashData.tasks;
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-label').textContent = done + ' / ' + total + ' gorev';
+    document.getElementById('prog-pct').textContent = pct + '%';
 }
 
-function toggleStep(pi,si){
-    phases[pi].steps[si].done=!phases[pi].steps[si].done;
-    savePhases();
-}
+function renderUpcomingTasks() {
+    const container = document.getElementById('upcoming-tasks');
+    const now = new Date();
+    const upcoming = dashData.tasks
+        .filter(t => !t.done && t.due)
+        .sort((a, b) => new Date(a.due) - new Date(b.due))
+        .slice(0, 5);
 
-function expandStep(btn){btn.closest('.step').classList.toggle('expanded')}
-
-function saveStepNote(pi,si,val){
-    phases[pi].steps[si].note=val;
-    savePhases();
-}
-
-function addStep(pi){
-    const inp=document.getElementById('new-step-'+pi);
-    const title=inp.value.trim();
-    if(!title) return;
-    const typeRadio=document.querySelector(`input[name="step-type-${pi}"]:checked`);
-    const isPersonal=typeRadio?.value==='personal';
-
-    // Parse @mentions for assignment
-    const mentionMatch=title.match(/@(\S+)/);
-    let assignedTo=null;
-    if(mentionMatch){
-        const mentionName=mentionMatch[1].toLowerCase();
-        const found=Object.values(allUsers).find(u=>
-            u.name.toLowerCase().includes(mentionName)||
-            (u.email&&u.email.toLowerCase().includes(mentionName))
-        );
-        if(found) assignedTo=found.uid;
+    if (upcoming.length === 0) {
+        container.innerHTML = '<div class="empty-state">Yaklasan gorev yok</div>';
+        return;
     }
 
-    const step={
-        id:'s'+Date.now(),
-        title,hint:'',done:false,note:'',
-        createdBy:currentUser.uid,
-        ...(isPersonal?{personal:true}:{}),
-        ...(assignedTo?{assignedTo}:{})
-    };
-    phases[pi].steps.push(step);
-    savePhases();
-    inp.value='';
-}
-
-function deleteStep(pi,si){
-    if(!confirm('Bu gorevi silmek istediginize emin misiniz?')) return;
-    phases[pi].steps.splice(si,1);
-    savePhases();
-}
-
-function deletePhase(pi){
-    if(!confirm(`"${phases[pi].name}" kategorisini silmek istediginize emin misiniz?`)) return;
-    phases.splice(pi,1);
-    savePhases();
-}
-
-function savePhases(){
-    db.collection('shared').doc('roadmap').update({phases}).catch(()=>{
-        db.collection('shared').doc('roadmap').set({phases, weddingDate});
-    });
-}
-
-function openPhaseModal(){document.getElementById('modal-phase-overlay').classList.add('active')}
-function selectPhaseColor(ci){
-    newPhaseCI=ci;
-    document.querySelectorAll('.color-opt').forEach(el=>el.classList.toggle('selected',parseInt(el.dataset.ci)===ci));
-}
-function addPhase(){
-    const name=document.getElementById('np-name').value.trim();
-    if(!name) return;
-    phases.push({id:'p'+Date.now(),name,ci:newPhaseCI,dates:document.getElementById('np-dates').value.trim(),steps:[]});
-    savePhases();
-    document.getElementById('modal-phase-overlay').classList.remove('active');
-    document.getElementById('np-name').value='';
-    document.getElementById('np-dates').value='';
-}
-
-// ─── VENUES ───
-function renderVenues(){
-    const grid=document.getElementById('venue-grid');
-    if(!grid) return;
-    if(!venues.length){grid.innerHTML='<div class="empty-hint">Henuz mekan eklenmedi</div>';return}
-    const sorted=[...venues].sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0));
-    grid.innerHTML=sorted.map(v=>`
-        <div class="venue-card${v.favorite?' fav':''}" id="vc-${v.id}">
-            <div class="vc-top">
-                <button class="vc-fav" onclick="toggleFav('${v.id}')">${v.favorite?'★':'☆'}</button>
-                <div class="vc-name">${esc(v.name)}</div>
-                <div class="vc-tags">${v.features.map(f=>`<span class="vc-tag${/acik|bahce|park/i.test(f)?' green':''}">${esc(f)}</span>`).join('')}</div>
-            </div>
-            <button class="vc-expand-btn" onclick="toggleVenueExpand('${v.id}')">Detaylar &amp; Notlar <span class="vc-expand-arrow">▼</span></button>
-            <div class="vc-detail">
-                <div class="vc-row"><span>Fiyat</span><input value="${esc(v.price||'')}" placeholder="Bilgi yok" onchange="updVenue('${v.id}','price',this.value)"></div>
-                <div class="vc-row"><span>Kapasite</span><input value="${esc(v.capacity||'')}" placeholder="? kisi" onchange="updVenue('${v.id}','capacity',this.value)"></div>
-                <div class="vc-row"><span>Iletisim</span><input value="${esc(v.contact||'')}" placeholder="Telefon" onchange="updVenue('${v.id}','contact',this.value)"></div>
-                <textarea class="vc-note" placeholder="Notlar, izlenimler..." onchange="updVenue('${v.id}','notes',this.value)">${esc(v.notes||'')}</textarea>
-                <div class="vc-actions">
-                    ${v.instagram?`<a href="${v.instagram}" target="_blank" class="ig">Instagram</a>`:''}
-                    <button class="del" onclick="removeVenue('${v.id}')">Sil</button>
-                </div>
-            </div>
-        </div>`).join('');
-}
-function toggleVenueExpand(id){document.getElementById('vc-'+id)?.classList.toggle('expanded')}
-function toggleFav(id){const v=venues.find(x=>x.id===id);if(v){v.favorite=!v.favorite;saveVenues();renderVenues()}}
-function updVenue(id,f,val){const v=venues.find(x=>x.id===id);if(v){v[f]=val;saveVenues()}}
-function removeVenue(id){if(confirm('Bu mekani silmek istediginize emin misiniz?')){venues=venues.filter(v=>v.id!==id);saveVenues();renderVenues()}}
-function saveVenues(){
-    db.collection('shared').doc('venues').set({list:venues});
-}
-function openVenueModal(){document.getElementById('modal-venue-overlay').classList.add('active')}
-function addVenue(){
-    const name=document.getElementById('nv-name').value.trim();
-    if(!name) return;
-    venues.push({id:'v'+Date.now(),name,instagram:document.getElementById('nv-ig').value.trim(),features:document.getElementById('nv-feat').value.split(',').map(s=>s.trim()).filter(Boolean),notes:'',favorite:false,price:'',capacity:'',contact:''});
-    saveVenues();renderVenues();
-    document.getElementById('modal-venue-overlay').classList.remove('active');
-    document.getElementById('nv-name').value='';document.getElementById('nv-ig').value='';document.getElementById('nv-feat').value='';
-}
-
-// ─── NOTES ───
-function renderNotes(){
-    const list=document.getElementById('notes-list');
-    if(!list) return;
-    let items=[];
-    if(notesSubTab==='shared') items=sharedNotes;
-    else if(notesSubTab==='personal') items=personalNotes;
-    else items=myMentions;
-
-    if(!items.length){list.innerHTML='<div class="empty-hint">Henuz not yok</div>';return}
-
-    list.innerHTML=items.map(note=>{
-        const isPersonal=note.isPersonal;
-        const isMention=notesSubTab==='mentions';
-        const canDelete=note.authorUid===currentUser?.uid;
-        const displayText=highlightMentions(note.text||'');
-        const authorName=note.authorName||note.createdByName||'?';
-        const isMe=note.authorUid===currentUser?.uid;
-        return`<div class="note-card${isPersonal?' personal-note':''}${isMention?' mention-note':''}">
-            <div class="note-card-top">
-                <div class="note-meta">
-                    <span class="note-author">${isMe?'Sen':esc(authorName)}</span>
-                    ${isPersonal?' · <span style="color:#92400e">kisisel</span>':''}
-                    ${isMention&&note.authorName?` · <span>@${esc(note.authorName)} tarafindan</span>`:''}
-                    <br>${note.date instanceof Object&&note.date.toDate?note.date.toDate().toLocaleDateString('tr-TR'):note.date||''}
-                </div>
-                ${canDelete?`<button class="note-del" onclick="deleteNote('${note.id}',${isPersonal})">×</button>`:''}
-            </div>
-            <div class="note-body">${displayText}</div>
-        </div>`;
+    container.innerHTML = upcoming.map(t => {
+        const pClass = t.priority === 'urgent' ? 'urgent' : (t.priority === 'low' ? 'low' : 'normal');
+        const assignee = t.assignee ? '<span class="tp-tag assignee">' + esc(t.assignee) + '</span>' : '';
+        return '<div class="task-preview" onclick="location.href=\'gorevler.html\'">' +
+            '<div class="tp-dot ' + pClass + '"></div>' +
+            '<div class="tp-info">' +
+                '<div class="tp-title">' + esc(t.title || t.text || '') + '</div>' +
+                '<div class="tp-meta">' + fmtDue(t.due) + '</div>' +
+            '</div>' +
+            assignee +
+        '</div>';
     }).join('');
 }
 
-function highlightMentions(text){
-    return esc(text).replace(/@(\S+)/g,'<span class="mention-tag">@$1</span>');
+function renderGuestSummary() {
+    const guests = dashData.guests;
+    let total = 0, confirmed = 0, pending = 0, declined = 0;
+    guests.forEach(g => {
+        const count = (g.count || 1);
+        total += count;
+        const s = (g.status || '').toLowerCase();
+        if (s === 'confirmed' || s === 'katilacak') confirmed += count;
+        else if (s === 'declined' || s === 'katilmayacak') declined += count;
+        else pending += count;
+    });
+    document.getElementById('gs-total').textContent = total;
+    document.getElementById('gs-confirmed').textContent = confirmed;
+    document.getElementById('gs-pending').textContent = pending;
+    document.getElementById('gs-declined').textContent = declined;
 }
 
-async function addNote(){
-    const text=document.getElementById('note-input').value.trim();
-    if(!text) return;
-    const isPersonal=notesSubTab==='personal';
-    const mentions=extractMentions(text);
-
-    const noteData={
-        text,
-        date: firebase.firestore.FieldValue.serverTimestamp(),
-        authorUid: currentUser.uid,
-        authorName: currentUser.displayName||currentUser.email,
-        isPersonal,
-        mentionedUids: mentions
-    };
-
-    await db.collection('notes').add(noteData);
-    document.getElementById('note-input').value='';
+function renderBudgetSummary() {
+    const b = dashData.budget;
+    if (!b) {
+        document.getElementById('bs-total').textContent = '0';
+        document.getElementById('bs-estimated').textContent = '0';
+        document.getElementById('bs-paid').textContent = '0';
+        document.getElementById('bs-remaining').textContent = '0';
+        return;
+    }
+    const totalBudget = b.totalBudget || 0;
+    const items = b.items || [];
+    let estimated = 0, paid = 0;
+    items.forEach(item => {
+        estimated += (item.estimated || 0);
+        paid += (item.paid || 0);
+    });
+    const remaining = totalBudget - paid;
+    document.getElementById('bs-total').textContent = fmtMoney(totalBudget);
+    document.getElementById('bs-estimated').textContent = fmtMoney(estimated);
+    document.getElementById('bs-paid').textContent = fmtMoney(paid);
+    document.getElementById('bs-remaining').textContent = fmtMoney(remaining);
 }
 
-function deleteNote(id, isPersonal){
-    if(confirm('Bu notu silmek istediginize emin misiniz?')){
-        db.collection('notes').doc(id).delete();
+function renderVenueSummary() {
+    const venues = dashData.venues;
+    const container = document.getElementById('venue-summary');
+    const total = venues.length;
+    const favs = venues.filter(v => v.favorite || v.fav).length;
+    if (total === 0) {
+        container.innerHTML = '<span class="vs-text">Henuz mekan eklenmedi</span><a href="mekanlar.html">Mekan Ekle &rarr;</a>';
+    } else {
+        container.innerHTML = '<span class="vs-text"><strong>' + total + '</strong> mekan listelendi, <strong>' + favs + '</strong> favori</span><a href="mekanlar.html">Mekanlari Gor &rarr;</a>';
     }
 }
 
-function extractMentions(text){
-    const matches=text.match(/@(\S+)/g)||[];
-    const uids=[];
-    matches.forEach(m=>{
-        const name=m.slice(1).toLowerCase();
-        const found=Object.values(allUsers).find(u=>
-            u.name.toLowerCase().includes(name)||
-            (u.email&&u.email.toLowerCase().startsWith(name))
-        );
-        if(found&&found.uid!==currentUser.uid&&!uids.includes(found.uid)){
-            uids.push(found.uid);
-        }
-    });
-    return uids;
+function updateCountdowns() {
+    const now = new Date();
+    const nisan = new Date(NISAN_DATE);
+    const dugun = new Date(WEDDING_DATE);
+    document.getElementById('cd-nisan').textContent = Math.max(0, Math.ceil((nisan - now) / 864e5));
+    document.getElementById('cd-dugun').textContent = Math.max(0, Math.ceil((dugun - now) / 864e5));
 }
 
-function updateMentionBadge(){
-    const count=myMentions.length;
-    const badge1=document.getElementById('mention-badge');
-    const badge2=document.getElementById('tab-mention-badge');
-    if(badge1){badge1.style.display=count>0?'inline':'none';badge1.textContent=count}
-    if(badge2){badge2.style.display=count>0?'inline':'none';badge2.textContent=count}
+// Helpers
+function fmtDue(d) {
+    if (!d) return '';
+    const now = new Date();
+    const due = new Date(d);
+    const diff = Math.ceil((due - now) / 864e5);
+    if (diff < 0) return Math.abs(diff) + ' gun gecti';
+    if (diff === 0) return 'Bugun';
+    if (diff === 1) return 'Yarin';
+    if (diff <= 7) return diff + ' gun sonra';
+    if (diff <= 30) return Math.ceil(diff / 7) + ' hafta sonra';
+    return Math.ceil(diff / 30) + ' ay sonra';
 }
 
-// ─── @MENTION AUTOCOMPLETE ───
-let mentionState={active:false,el:null,atIdx:-1};
-
-function initMentionInTextarea(el){
-    if(!el||el._mentionInit) return;
-    el._mentionInit=true;
-    el.addEventListener('input',()=>checkMention(el));
-    el.addEventListener('keydown',e=>{if(e.key==='Escape') hideMentionPicker()});
+function fmtMoney(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.0', '') + 'K';
+    return String(n);
 }
 
-function checkMention(el){
-    const text=el.value;
-    const cursor=el.selectionStart;
-    const before=text.slice(0,cursor);
-    const atIdx=before.lastIndexOf('@');
-    if(atIdx>=0){
-        const query=before.slice(atIdx+1);
-        if(!query.includes(' ')&&!query.includes('\n')){
-            const others=Object.values(allUsers).filter(u=>u.uid!==currentUser?.uid);
-            const filtered=query?others.filter(u=>u.name.toLowerCase().includes(query.toLowerCase())):others;
-            if(filtered.length>0){
-                mentionState={active:true,el,atIdx};
-                showMentionPicker(filtered);
-                return;
-            }
-        }
-    }
-    hideMentionPicker();
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
 }
 
-function showMentionPicker(users){
-    const picker=document.getElementById('mention-picker');
-    const items=document.getElementById('mention-picker-items');
-    items.innerHTML=users.map(u=>{
-        const avatarHtml=u.photoURL
-            ?`<img class="mention-avatar" src="${u.photoURL}" referrerpolicy="no-referrer">`
-            :`<div class="mention-avatar">${(u.name||'?')[0].toUpperCase()}</div>`;
-        return`<div class="mention-user-item" onclick="selectMention('${u.uid}','${esc(u.name)}')">
-            ${avatarHtml}<span class="mention-name">${esc(u.name)}</span>
-        </div>`;
-    }).join('');
-    picker.classList.add('visible');
-}
-
-function selectMention(uid, name){
-    if(!mentionState.active||!mentionState.el) return;
-    const el=mentionState.el;
-    const text=el.value;
-    const before=text.slice(0,mentionState.atIdx);
-    const after=text.slice(el.selectionStart);
-    el.value=before+'@'+name+' '+after;
-    el.selectionStart=el.selectionEnd=mentionState.atIdx+name.length+2;
-    el.focus();
-    hideMentionPicker();
-}
-
-function hideMentionPicker(){
-    document.getElementById('mention-picker')?.classList.remove('visible');
-    mentionState={active:false,el:null,atIdx:-1};
-}
-
-// ─── BUDGET (personal, localStorage) ───
-function loadLocal(k,d){try{const v=localStorage.getItem('wr3_'+k);return v?JSON.parse(v):d}catch{return d}}
-function saveLocal(k,v){localStorage.setItem('wr3_'+k,JSON.stringify(v))}
-
-function setTotalBudget(){
-    const v=parseInt(document.getElementById('total-budget-input').value);
-    if(v>0){totalBudget=v;saveLocal('total_budget',totalBudget);renderBudget()}
-}
-function renderBudget(){
-    const ti=document.getElementById('total-budget-input');
-    if(ti) ti.value=totalBudget||'';
-    const spent=budgetItems.reduce((s,i)=>s+(i.status==='paid'?i.amount:0),0);
-    const planned=budgetItems.reduce((s,i)=>s+i.amount,0);
-    const rem=totalBudget-planned;
-    const totEl=document.getElementById('budget-totals');
-    if(totEl) totEl.innerHTML=totalBudget>0
-        ?`<div class="bt-card total"><div class="bt-amt">${fmt(totalBudget)}</div><div class="bt-lbl">Toplam</div></div>
-           <div class="bt-card spent"><div class="bt-amt">${fmt(spent)}</div><div class="bt-lbl">Odenen</div></div>
-           <div class="bt-card rem"><div class="bt-amt">${fmt(rem)}</div><div class="bt-lbl">Kalan</div></div>`
-        :'<div style="grid-column:1/-1;text-align:center;font-size:13px;color:var(--gray-400);padding:4px">Toplam butce belirleyin</div>';
-    const c=document.getElementById('budget-items-container');
-    if(!c) return;
-    if(!budgetItems.length){c.innerHTML='<div class="empty-hint">Henuz harcama eklenmedi</div>';return}
-    c.innerHTML=budgetItems.map((it,i)=>`
-        <div class="bi-card">
-            <div><div class="bi-name">${esc(it.name)}</div><div class="bi-status">${it.status==='paid'?'Odendi':'Planli'}</div></div>
-            <div class="bi-right"><span class="bi-amount${it.status==='paid'?' paid':''}">${fmt(it.amount)}</span>
-            <button class="bi-del" onclick="rmBudget(${i})">×</button></div>
-        </div>`).join('');
-}
-function addBudgetItem(){
-    const n=document.getElementById('bi-name').value.trim();
-    const a=parseInt(document.getElementById('bi-amount').value);
-    if(!n||!a) return;
-    budgetItems.push({name:n,amount:a,status:document.getElementById('bi-status').value});
-    saveLocal('budget_items',budgetItems);renderBudget();
-    document.getElementById('bi-name').value='';document.getElementById('bi-amount').value='';
-}
-function rmBudget(i){budgetItems.splice(i,1);saveLocal('budget_items',budgetItems);renderBudget()}
-function fmt(n){return n.toLocaleString('tr-TR')+' TL'}
-
-// ─── DRAG & DROP ───
-let drag={active:false};
-function attachDrag(handle){handle.addEventListener('pointerdown',onDragStart,{passive:false})}
-
-function onDragStart(e){
-    e.preventDefault();
-    const pi=parseInt(e.currentTarget.dataset.pi);
-    const si=parseInt(e.currentTarget.dataset.si);
-    const stepEl=e.currentTarget.closest('.step');
-    const rect=stepEl.getBoundingClientRect();
-    const ghost=stepEl.querySelector('.step-card').cloneNode(true);
-    ghost.className='drag-ghost';
-    ghost.style.cssText+=`;width:${rect.width-36}px;height:${rect.height}px;left:${rect.left+36}px;top:${rect.top}px`;
-    document.body.appendChild(ghost);
-    stepEl.classList.add('dragging');
-    drag={active:true,ghost,pi,si,stepEl,offsetY:e.clientY-rect.top,targetSi:si};
-    document.addEventListener('pointermove',onDragMove,{passive:false});
-    document.addEventListener('pointerup',onDragEnd);
-    document.addEventListener('pointercancel',onDragEnd);
-}
-function onDragMove(e){
-    if(!drag.active) return;
-    e.preventDefault();
-    drag.ghost.style.top=(e.clientY-drag.offsetY)+'px';
-    const steps=Array.from(document.querySelectorAll(`.step[data-phase="${drag.pi}"]`));
-    let t=drag.si;
-    steps.forEach((el,i)=>{if(i!==drag.si){const r=el.getBoundingClientRect();if(e.clientY>r.top+r.height/2) t=i;}});
-    drag.targetSi=Math.max(0,Math.min(t,steps.length-1));
-    steps.forEach((el,i)=>{
-        el.style.transform='';
-        if(drag.targetSi>drag.si&&i>drag.si&&i<=drag.targetSi) el.style.transform='translateY(-32px)';
-        if(drag.targetSi<drag.si&&i>=drag.targetSi&&i<drag.si) el.style.transform='translateY(32px)';
-    });
-}
-function onDragEnd(){
-    if(!drag.active) return;
-    drag.ghost.remove();
-    drag.stepEl.classList.remove('dragging');
-    document.querySelectorAll('.step').forEach(el=>el.style.transform='');
-    const{pi,si,targetSi}=drag;
-    drag.active=false;
-    document.removeEventListener('pointermove',onDragMove);
-    document.removeEventListener('pointerup',onDragEnd);
-    document.removeEventListener('pointercancel',onDragEnd);
-    if(targetSi!==si){const s=phases[pi].steps;const[m]=s.splice(si,1);s.splice(targetSi,0,m);savePhases();}
-}
-
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+// Update countdowns every minute
+setInterval(updateCountdowns, 60000);
 </script>
 </body>
 </html>

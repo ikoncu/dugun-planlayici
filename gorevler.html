@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dugun Asistani</title>
+    <title>Gorevler - Dugun Planlayici</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -27,7 +27,8 @@
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
         .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
-        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:transform 0.15s}
+        .google-btn:hover{transform:translateY(-1px)}
         .google-btn svg{width:20px;height:20px;flex-shrink:0}
 
         /* LOADING */
@@ -46,6 +47,8 @@
         .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:#111;border-bottom:1px solid #f3f4f6}
         .user-dropdown button.dd-btn{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#dc2626}
         .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;opacity:0.8}
+
+        /* DRAWER */
         .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
         .drawer-overlay.open{display:block}
         .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
@@ -57,30 +60,44 @@
         .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px}
         .drawer-item.active{background:#fdf8ef;color:var(--gold);font-weight:600}
 
-        /* FILTER STRIP */
+        /* PROGRESS */
+        .progress-section{padding:12px 16px 4px;max-width:640px;margin:0 auto}
+        .progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .progress-label{font-size:13px;font-weight:600;color:var(--g700)}
+        .progress-count{font-size:13px;font-weight:700;color:var(--gold)}
+        .progress-bar{width:100%;height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:4px;transition:width 0.5s ease}
+
+        /* FILTER STRIPS */
         .filter-strip{display:flex;overflow-x:auto;gap:6px;padding:10px 16px;background:white;border-bottom:1px solid var(--g100);-webkit-overflow-scrolling:touch;position:sticky;top:42px;z-index:90}
+        .filter-strip::-webkit-scrollbar{display:none}
         .filter-btn{padding:6px 12px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--g200);background:white;cursor:pointer;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px}
         .filter-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
         .filter-btn .cnt{font-size:10px;background:var(--g200);color:var(--g600);border-radius:8px;padding:0 5px;font-weight:600;min-width:16px;text-align:center}
         .filter-btn.active .cnt{background:var(--gold);color:white}
 
+        /* ASSIGNEE FILTER */
+        .assignee-strip{display:flex;overflow-x:auto;gap:6px;padding:6px 16px 10px;background:white;border-bottom:1px solid var(--g100);-webkit-overflow-scrolling:touch;position:sticky;top:82px;z-index:89}
+        .assignee-strip::-webkit-scrollbar{display:none}
+        .asg-btn{padding:5px 12px;border-radius:16px;font-size:11px;font-weight:500;border:1.5px solid var(--g200);background:white;cursor:pointer;white-space:nowrap;flex-shrink:0;color:var(--g600)}
+        .asg-btn.active{font-weight:600;color:white}
+        .asg-btn.active[data-a="Hepsi"]{border-color:var(--gold);background:var(--gold);color:white}
+        .asg-btn.active[data-a="Ibrahim"]{border-color:var(--blue);background:var(--blue);color:white}
+        .asg-btn.active[data-a="Hilal"]{border-color:var(--purple);background:var(--purple);color:white}
+        .asg-btn.active[data-a="Birlikte"]{border-color:var(--gold);background:var(--gold-bg);color:var(--gold)}
+
         /* QUICK INPUT */
-        .quick-bar{padding:10px 16px;background:white;border-bottom:1px solid var(--g100);position:sticky;top:82px;z-index:80}
+        .quick-bar{padding:10px 16px;background:white;border-bottom:1px solid var(--g100);position:sticky;top:122px;z-index:80}
         .quick-row{display:flex;gap:6px;align-items:center}
         .quick-input{flex:1;border:1.5px solid var(--g200);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
         .quick-input:focus{border-color:var(--gold)}
         .qbtn{width:38px;height:38px;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .qbtn-send{background:var(--gold);color:white;font-size:20px;font-weight:300}
         .qbtn-mic{background:var(--g100);font-size:16px}
-        .qbtn-mic.on{background:var(--red);animation:pulse 1s infinite}
-        .qbtn-mic.on::after{content:'';display:block}
+        .qbtn-mic.on{background:var(--red);color:white;animation:pulse 1s infinite}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
         .voice-hint{font-size:11px;color:var(--red);padding:3px 0 0;display:none}
         .voice-hint.show{display:block}
-
-        /* SECTION HEADERS */
-        .section-hdr{font-size:11px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:0.5px;padding:14px 16px 4px;display:flex;align-items:center;gap:6px}
-        .section-hdr .sdot{width:7px;height:7px;border-radius:50%}
 
         /* TASK CARDS */
         .tlist{padding:0 12px 120px;max-width:640px;margin:0 auto}
@@ -93,7 +110,7 @@
         .tchk{width:20px;height:20px;border-radius:5px;border:2px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px}
         .tchk:active{transform:scale(0.9)}
         .tchk.on{background:var(--green);border-color:var(--green)}
-        .tchk.on::after{content:'✓';color:white;font-size:12px;font-weight:700}
+        .tchk.on::after{content:'\2713';color:white;font-size:12px;font-weight:700}
         .tbody{flex:1;min-width:0;cursor:pointer}
         .ttitle{font-size:13px;font-weight:500;line-height:1.35}
         .tsub{font-size:11px;color:var(--g500);margin-top:1px}
@@ -103,12 +120,15 @@
         .ttag-urgent{background:var(--red-bg);color:var(--red)}
         .ttag-due{background:var(--g100);color:var(--g600)}
         .ttag-overdue{background:var(--red-bg);color:var(--red)}
+        .ttag-ibrahim{background:var(--blue-bg);color:var(--blue)}
+        .ttag-hilal{background:var(--purple-bg);color:var(--purple)}
+        .ttag-birlikte{background:var(--gold-bg);color:var(--gold)}
         .tarrow{color:var(--g300);font-size:10px;padding:4px;flex-shrink:0}
         .tcard.open .tarrow{transform:rotate(180deg)}
 
         .tdetail{display:none;padding:0 10px 10px;border-top:1px solid var(--g100)}
         .tcard.open .tdetail{display:block}
-        .tnote{white-space:pre-wrap;font-size:12px;color:var(--g700);padding:8px 0;line-height:1.5;background:var(--g50);border-radius:6px;padding:8px;margin-top:6px}
+        .tnote{white-space:pre-wrap;font-size:12px;color:var(--g700);padding:8px;line-height:1.5;background:var(--g50);border-radius:6px;margin-top:6px}
         .tbtns{display:flex;gap:6px;margin-top:8px}
         .tbtns button{padding:6px 12px;border-radius:6px;border:none;font-size:11px;cursor:pointer;font-weight:500}
         .tbtn-edit{background:var(--g100);color:var(--g700)}
@@ -139,19 +159,20 @@
         /* EMPTY */
         .empty{text-align:center;padding:40px 20px;color:var(--g400);font-size:13px}
 
-        /* BOTTOM NAV (mini) */
-        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);display:flex;height:52px;z-index:95}
-        .bnav a,.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:9px;font-weight:500;color:var(--g400);text-decoration:none;border:none;background:none;cursor:pointer}
+        /* BOTTOM NAV */
+        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);display:none;height:56px;z-index:95;box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
+        .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:500;color:var(--g400);text-decoration:none}
         .bnav .active{color:var(--gold)}
         .bnav .bicon{font-size:18px}
     </style>
 </head>
 <body>
 
+<!-- LOGIN (hidden by default) -->
 <div id="login-screen" style="display:none">
     <div class="login-card">
-        <h1>Dugun Asistani</h1>
-        <p>Akilli planlama araci</p>
+        <h1>Gorevler</h1>
+        <p>Dugun organizasyon gorev yonetimi</p>
         <button class="google-btn" onclick="signIn()">
             <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Google ile Giris
@@ -160,11 +181,12 @@
 </div>
 
 <!-- LOADING (visible by default) -->
-<div id="loading-screen">
+<div id="loading-screen" style="display:flex">
     <div class="spinner"></div>
     <div style="font-size:14px;color:var(--g400)">Yukleniyor...</div>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none;padding-bottom:60px">
     <!-- HEADER -->
     <div class="header">
@@ -176,13 +198,32 @@
                     <button class="dd-btn" onclick="signOut()">Cikis Yap</button>
                 </div>
             </div>
-            <h1>Asistan</h1>
-            <button class="hamburger" onclick="toggleDrawer()">☰</button>
+            <h1>Gorevler</h1>
+            <button class="hamburger" onclick="toggleDrawer()">&#9776;</button>
         </div>
     </div>
 
-    <!-- SINGLE FILTER ROW -->
+    <!-- PROGRESS BAR -->
+    <div class="progress-section">
+        <div class="progress-info">
+            <span class="progress-label">Ilerleme</span>
+            <span class="progress-count" id="progressText">0 / 0</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- CATEGORY FILTERS -->
     <div class="filter-strip" id="filters"></div>
+
+    <!-- ASSIGNEE FILTERS -->
+    <div class="assignee-strip" id="asgFilters">
+        <button class="asg-btn active" data-a="Hepsi" onclick="setAssignee('Hepsi')">Hepsi</button>
+        <button class="asg-btn" data-a="Ibrahim" onclick="setAssignee('Ibrahim')">Ibrahim</button>
+        <button class="asg-btn" data-a="Hilal" onclick="setAssignee('Hilal')">Hilal</button>
+        <button class="asg-btn" data-a="Birlikte" onclick="setAssignee('Birlikte')">Birlikte</button>
+    </div>
 
     <!-- QUICK INPUT -->
     <div class="quick-bar">
@@ -202,25 +243,24 @@
 
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="bnav" style="display:none">
-    <a href="index.html"><span class="bicon">🗺️</span>Harita</a>
-    <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
-    <a href="butce.html"><span class="bicon">💰</span>Butce</a>
-    <a href="checklist.html"><span class="bicon">✅</span>Checklist</a>
-    <a class="active" href="planner.html"><span class="bicon">🧠</span>Asistan</a>
+    <a href="index.html"><span class="bicon">&#127968;</span>Ana Sayfa</a>
+    <a class="active" href="gorevler.html"><span class="bicon">&#9989;</span>Gorevler</a>
+    <a href="mekanlar.html"><span class="bicon">&#127963;&#65039;</span>Mekanlar</a>
+    <a href="davetliler.html"><span class="bicon">&#128101;</span>Davetliler</a>
 </nav>
 
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Dugun Planlayici</div>
+    <div class="drawer-header">&#128141; Dugun Planlayici</div>
     <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">🗺️</span>Yol Haritasi</a>
-    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
-    <a class="drawer-item active" href="planner.html"><span class="di-icon">🧠</span>Asistan</a>
-    <div class="drawer-section">Yonetim</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
-    <a class="drawer-item" href="checklist.html"><span class="di-icon">✅</span>Checklist</a>
+    <a class="drawer-item" href="index.html"><span class="di-icon">&#127968;</span>Ana Sayfa</a>
+    <a class="drawer-item active" href="gorevler.html"><span class="di-icon">&#9989;</span>Gorevler</a>
+    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">&#127963;&#65039;</span>Mekanlar</a>
+    <a class="drawer-item" href="davetliler.html"><span class="di-icon">&#128101;</span>Davetliler</a>
+    <div class="drawer-section">Diger</div>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">&#128176;</span>Butce</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">&#129681;</span>Masa Plani</a>
 </div>
 
 <!-- ADD/EDIT MODAL -->
@@ -230,7 +270,10 @@
         <div class="modal-hdr"><span id="me-title-label">Gorev</span><button class="modal-x" onclick="closeModal('modal-edit')">&times;</button></div>
         <div class="fg"><label>Baslik</label><input type="text" id="me-title"></div>
         <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kisa aciklama"></div>
-        <div class="fg"><label>Kategori</label><select id="me-cat"></select></div>
+        <div style="display:flex;gap:8px">
+            <div class="fg" style="flex:1"><label>Kategori</label><select id="me-cat"></select></div>
+            <div class="fg" style="flex:1"><label>Sorumluluk</label><select id="me-asg"><option value="Birlikte">Birlikte</option><option value="Ibrahim">Ibrahim</option><option value="Hilal">Hilal</option></select></div>
+        </div>
         <div style="display:flex;gap:8px">
             <div class="fg" style="flex:1"><label>Oncelik</label><select id="me-pri"><option value="urgent">Acil</option><option value="normal" selected>Normal</option><option value="low">Dusuk</option></select></div>
             <div class="fg" style="flex:1"><label>Son Tarih</label><input type="date" id="me-due"></div>
@@ -274,72 +317,74 @@ const CATS = [
 ];
 
 const DEFAULT_TASKS = [
-    {id:'s1',cat:'seyahat',title:'Ucak bileti al (Istanbul → Gaziantep)',hint:'1 Mayis veya 30 Nisan. Ibrahim + Hilal birlikte.',done:false,priority:'urgent',due:'2026-04-20',note:'Pegasus, THY, AnadoluJet karsilastir.\nGidis: 30 Nisan aksam veya 1 Mayis sabah.'},
-    {id:'s2',cat:'seyahat',title:'Konaklama ayarla (Gaziantep, 1-4 Mayis)',hint:'3-4 gece. Otel veya aile yaninda.',done:false,priority:'normal',due:'2026-04-20',note:''},
-    {id:'s3',cat:'seyahat',title:'Donus ucak bileti (4 veya 5 Mayis)',hint:'Belediye turu sonrasina gore.',done:false,priority:'normal',due:'2026-04-20',note:''},
-    {id:'b1',cat:'belgeler',title:'Saglik raporu randevusu al (Ibrahim)',hint:'Aile hekimi — UCRETSIZ',done:false,priority:'urgent',due:'2026-04-15',note:'Testler: Hemogram, Hepatit B/C, HIV, Sifiliz, Talasemi, SMA (ZORUNLU), akciger filmi, idrar.\nSMA testi olmadan nikah KIYILAMAZ.\nRapor 6 ay gecerli.'},
-    {id:'b2',cat:'belgeler',title:'Saglik raporu randevusu al (Hilal)',hint:'Ayni testler gerekli.',done:false,priority:'urgent',due:'2026-04-15',note:''},
-    {id:'b3',cat:'belgeler',title:'TC Kimlik Karti fotokopisi (2 kisi)',hint:'Asli + fotokopi.',done:false,priority:'normal',due:'2026-04-25',note:''},
-    {id:'b4',cat:'belgeler',title:'Vesikalik fotograf cektir (4-5 adet, 2 kisi)',hint:'Renkli, son 6 ay.',done:false,priority:'normal',due:'2026-04-25',note:''},
-    {id:'b5',cat:'belgeler',title:'Ikametgah belgesi (e-Devlet)',hint:'Bazi belediyeler istiyor.',done:false,priority:'low',due:'2026-04-28',note:''},
-    {id:'b6',cat:'belgeler',title:'Nufus kayit ornegi',hint:'e-Devlet\'ten alinabilir.',done:false,priority:'low',due:'2026-04-28',note:''},
-    {id:'m1',cat:'mekanlar',title:'Mekanlarin 1-2-3 Mayis saatlerini dogrula',hint:'1 Mayis resmi tatil! Arayin.',done:false,priority:'urgent',due:'2026-04-10',note:'1 Mayis Cuma = resmi tatil.\n2 Mayis Cmt, 3 Mayis Pzr = normal.\nHer mekani tek tek arayin.'},
-    {id:'m2',cat:'mekanlar',title:'MSM Erikce — randevu al',hint:'Tel: 0342 777 76 76 (dahili 2)',done:false,priority:'urgent',due:'2026-04-12',note:'Haftasonu 08:00-23:00\nKapasite: 400 kisi / 100 masa\nAdres: Gazi Mah. Zubeyde Hanim Blv. No:39, Sehitkamil'},
-    {id:'m3',cat:'mekanlar',title:'Ceremony Erikce (Seremoni) — randevu al',hint:'Tel: 0533 255 66 27',done:false,priority:'urgent',due:'2026-04-12',note:'Kapasite: 1200 kisi\nAdres: Ibrahimli Mah. Erikce, Sehitkamil\nSaatleri online yok — mutlaka arayin.'},
-    {id:'m4',cat:'mekanlar',title:'Selale Plaza — randevu al',hint:'@selaleplazadugunsalonu',done:false,priority:'normal',due:'2026-04-12',note:''},
-    {id:'m5',cat:'mekanlar',title:'Pembe Kosk — randevu al',hint:'@pembekoskbalosalon',done:false,priority:'normal',due:'2026-04-12',note:''},
-    {id:'m6',cat:'mekanlar',title:'Marina BKM — randevu al',hint:'@marinagaziantepbkm',done:false,priority:'normal',due:'2026-04-12',note:''},
-    {id:'m7',cat:'mekanlar',title:'Vadi Garden — randevu al',hint:'Acik hava — @vadigardengaziantep',done:false,priority:'normal',due:'2026-04-12',note:''},
-    {id:'m8',cat:'mekanlar',title:'Livas Park — randevu al',hint:'Acik hava — @livasparkdugun',done:false,priority:'normal',due:'2026-04-12',note:''},
-    {id:'m9',cat:'mekanlar',title:'Randevulari ayni gun yakin saatlere denkle',hint:'10:00-17:00 arasi, 1-1.5 saat aralik.',done:false,priority:'normal',due:'2026-04-15',note:'Oncelik: MSM Erikce + Seremoni.\nDigerlerini aralara serp.'},
-    {id:'be1',cat:'belediye',title:'Nikah randevu sistemi var mi arastir',hint:'Sehitkamil, Sahinbey, Buyuksehir.',done:false,priority:'normal',due:'2026-04-15',note:'Sahinbey: 444 27 01\nBuyuksehir: ebelediye.gaziantep.bel.tr\nOnline sorgulama bulunamadi.'},
-    {id:'be2',cat:'belediye',title:'Belediyelere randevu gerekiyor mu?',hint:'Telefonla sor.',done:false,priority:'normal',due:'2026-04-20',note:'4 Mayis icin planlaniyor.'},
-    {id:'be3',cat:'belediye',title:'4 Mayis icin izin al (Ibrahim)',hint:'Is gunu — izin gerekli.',done:false,priority:'normal',due:'2026-04-25',note:''},
-    {id:'be4',cat:'belediye',title:'Belediye listesi hazirla',hint:'Sehitkamil, Sahinbey, Buyuksehir + ilceler',done:false,priority:'low',due:'2026-05-01',note:'Uzak ilce belediyeleri de gelebilir (Nurdagi vb.).\nBuyuksehir de nikah kiyabiliyor.'},
-    {id:'ni1',cat:'nisan',title:'Nisan mekani belirle',hint:'16 Mayis 2026.',done:false,priority:'normal',due:'2026-04-20',note:''},
-    {id:'ni2',cat:'nisan',title:'Nisan yuzugu al',hint:'',done:false,priority:'normal',due:'2026-05-01',note:''},
-    {id:'ni3',cat:'nisan',title:'Nisan kiyafetleri + kuafor',hint:'',done:false,priority:'normal',due:'2026-05-05',note:''},
-    {id:'ni4',cat:'nisan',title:'Davetli listesi (nisan)',hint:'Yakin aile + arkadaslar.',done:false,priority:'normal',due:'2026-05-01',note:''},
-    {id:'ni5',cat:'nisan',title:'Nisan organizasyonu',hint:'Soz kesme, cicek, pasta, fotograf.',done:false,priority:'normal',due:'2026-05-10',note:''},
-    {id:'du1',cat:'dugun',title:'Mekan gezisi sonrasi: karar matrisi',hint:'Tercihlere gore siralama.',done:false,priority:'normal',due:'2026-05-03',note:'Kriterler: fiyat, kapasite, acik/kapali, tarih, konum.\nEn begenilen 5 mekani sirala.'},
-    {id:'du2',cat:'dugun',title:'En iyi mekan + nikah tarihini esle',hint:'Mekan tarihi + belediye memuru = optimum.',done:false,priority:'normal',due:'2026-05-04',note:''},
-    {id:'du3',cat:'dugun',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi oku.',done:false,priority:'normal',due:'2026-05-15',note:''},
-    {id:'du4',cat:'dugun',title:'Nikah basvurusu yap',hint:'Iki taraf birlikte.',done:false,priority:'normal',due:'2026-05-15',note:'Belgeler: TC kimlik, vesikalik, saglik raporu, evlenme beyannamesi.\nEvlilik cuzdani: ~1.202 TL'},
+    {id:'s1',cat:'seyahat',title:'Ucak bileti al (Istanbul \u2192 Gaziantep)',hint:'1 Mayis veya 30 Nisan. Ibrahim + Hilal birlikte.',done:false,priority:'urgent',due:'2026-04-20',note:'Pegasus, THY, AnadoluJet karsilastir.\nGidis: 30 Nisan aksam veya 1 Mayis sabah.',assignee:'Birlikte'},
+    {id:'s2',cat:'seyahat',title:'Konaklama ayarla (Gaziantep, 1-4 Mayis)',hint:'3-4 gece. Otel veya aile yaninda.',done:false,priority:'normal',due:'2026-04-20',note:'',assignee:'Birlikte'},
+    {id:'s3',cat:'seyahat',title:'Donus ucak bileti (4 veya 5 Mayis)',hint:'Belediye turu sonrasina gore.',done:false,priority:'normal',due:'2026-04-20',note:'',assignee:'Birlikte'},
+    {id:'b1',cat:'belgeler',title:'Saglik raporu randevusu al (Ibrahim)',hint:'Aile hekimi \u2014 UCRETSIZ',done:false,priority:'urgent',due:'2026-04-15',note:'Testler: Hemogram, Hepatit B/C, HIV, Sifiliz, Talasemi, SMA (ZORUNLU), akciger filmi, idrar.\nSMA testi olmadan nikah KIYILAMAZ.\nRapor 6 ay gecerli.',assignee:'Ibrahim'},
+    {id:'b2',cat:'belgeler',title:'Saglik raporu randevusu al (Hilal)',hint:'Ayni testler gerekli.',done:false,priority:'urgent',due:'2026-04-15',note:'',assignee:'Hilal'},
+    {id:'b3',cat:'belgeler',title:'TC Kimlik Karti fotokopisi (2 kisi)',hint:'Asli + fotokopi.',done:false,priority:'normal',due:'2026-04-25',note:'',assignee:'Birlikte'},
+    {id:'b4',cat:'belgeler',title:'Vesikalik fotograf cektir (4-5 adet, 2 kisi)',hint:'Renkli, son 6 ay.',done:false,priority:'normal',due:'2026-04-25',note:'',assignee:'Birlikte'},
+    {id:'b5',cat:'belgeler',title:'Ikametgah belgesi (e-Devlet)',hint:'Bazi belediyeler istiyor.',done:false,priority:'low',due:'2026-04-28',note:'',assignee:'Birlikte'},
+    {id:'b6',cat:'belgeler',title:'Nufus kayit ornegi',hint:'e-Devlet\'ten alinabilir.',done:false,priority:'low',due:'2026-04-28',note:'',assignee:'Birlikte'},
+    {id:'m1',cat:'mekanlar',title:'Mekanlarin 1-2-3 Mayis saatlerini dogrula',hint:'1 Mayis resmi tatil! Arayin.',done:false,priority:'urgent',due:'2026-04-10',note:'1 Mayis Cuma = resmi tatil.\n2 Mayis Cmt, 3 Mayis Pzr = normal.\nHer mekani tek tek arayin.',assignee:'Birlikte'},
+    {id:'m2',cat:'mekanlar',title:'MSM Erikce \u2014 randevu al',hint:'Tel: 0342 777 76 76 (dahili 2)',done:false,priority:'urgent',due:'2026-04-12',note:'Haftasonu 08:00-23:00\nKapasite: 400 kisi / 100 masa\nAdres: Gazi Mah. Zubeyde Hanim Blv. No:39, Sehitkamil',assignee:'Birlikte'},
+    {id:'m3',cat:'mekanlar',title:'Ceremony Erikce (Seremoni) \u2014 randevu al',hint:'Tel: 0533 255 66 27',done:false,priority:'urgent',due:'2026-04-12',note:'Kapasite: 1200 kisi\nAdres: Ibrahimli Mah. Erikce, Sehitkamil\nSaatleri online yok \u2014 mutlaka arayin.',assignee:'Birlikte'},
+    {id:'m4',cat:'mekanlar',title:'Selale Plaza \u2014 randevu al',hint:'@selaleplazadugunsalonu',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
+    {id:'m5',cat:'mekanlar',title:'Pembe Kosk \u2014 randevu al',hint:'@pembekoskbalosalon',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
+    {id:'m6',cat:'mekanlar',title:'Marina BKM \u2014 randevu al',hint:'@marinagaziantepbkm',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
+    {id:'m7',cat:'mekanlar',title:'Vadi Garden \u2014 randevu al',hint:'Acik hava \u2014 @vadigardengaziantep',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
+    {id:'m8',cat:'mekanlar',title:'Livas Park \u2014 randevu al',hint:'Acik hava \u2014 @livasparkdugun',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
+    {id:'m9',cat:'mekanlar',title:'Randevulari ayni gun yakin saatlere denkle',hint:'10:00-17:00 arasi, 1-1.5 saat aralik.',done:false,priority:'normal',due:'2026-04-15',note:'Oncelik: MSM Erikce + Seremoni.\nDigerlerini aralara serp.',assignee:'Birlikte'},
+    {id:'be1',cat:'belediye',title:'Nikah randevu sistemi var mi arastir',hint:'Sehitkamil, Sahinbey, Buyuksehir.',done:false,priority:'normal',due:'2026-04-15',note:'Sahinbey: 444 27 01\nBuyuksehir: ebelediye.gaziantep.bel.tr\nOnline sorgulama bulunamadi.',assignee:'Ibrahim'},
+    {id:'be2',cat:'belediye',title:'Belediyelere randevu gerekiyor mu?',hint:'Telefonla sor.',done:false,priority:'normal',due:'2026-04-20',note:'4 Mayis icin planlaniyor.',assignee:'Ibrahim'},
+    {id:'be3',cat:'belediye',title:'4 Mayis icin izin al (Ibrahim)',hint:'Is gunu \u2014 izin gerekli.',done:false,priority:'normal',due:'2026-04-25',note:'',assignee:'Ibrahim'},
+    {id:'be4',cat:'belediye',title:'Belediye listesi hazirla',hint:'Sehitkamil, Sahinbey, Buyuksehir + ilceler',done:false,priority:'low',due:'2026-05-01',note:'Uzak ilce belediyeleri de gelebilir (Nurdagi vb.).\nBuyuksehir de nikah kiyabiliyor.',assignee:'Birlikte'},
+    {id:'ni1',cat:'nisan',title:'Nisan mekani belirle',hint:'16 Mayis 2026.',done:false,priority:'normal',due:'2026-04-20',note:'',assignee:'Birlikte'},
+    {id:'ni2',cat:'nisan',title:'Nisan yuzugu al',hint:'',done:false,priority:'normal',due:'2026-05-01',note:'',assignee:'Birlikte'},
+    {id:'ni3',cat:'nisan',title:'Nisan kiyafetleri + kuafor',hint:'',done:false,priority:'normal',due:'2026-05-05',note:'',assignee:'Birlikte'},
+    {id:'ni4',cat:'nisan',title:'Davetli listesi (nisan)',hint:'Yakin aile + arkadaslar.',done:false,priority:'normal',due:'2026-05-01',note:'',assignee:'Birlikte'},
+    {id:'ni5',cat:'nisan',title:'Nisan organizasyonu',hint:'Soz kesme, cicek, pasta, fotograf.',done:false,priority:'normal',due:'2026-05-10',note:'',assignee:'Birlikte'},
+    {id:'du1',cat:'dugun',title:'Mekan gezisi sonrasi: karar matrisi',hint:'Tercihlere gore siralama.',done:false,priority:'normal',due:'2026-05-03',note:'Kriterler: fiyat, kapasite, acik/kapali, tarih, konum.\nEn begenilen 5 mekani sirala.',assignee:'Birlikte'},
+    {id:'du2',cat:'dugun',title:'En iyi mekan + nikah tarihini esle',hint:'Mekan tarihi + belediye memuru = optimum.',done:false,priority:'normal',due:'2026-05-04',note:'',assignee:'Birlikte'},
+    {id:'du3',cat:'dugun',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi oku.',done:false,priority:'normal',due:'2026-05-15',note:'',assignee:'Birlikte'},
+    {id:'du4',cat:'dugun',title:'Nikah basvurusu yap',hint:'Iki taraf birlikte.',done:false,priority:'normal',due:'2026-05-15',note:'Belgeler: TC kimlik, vesikalik, saglik raporu, evlenme beyannamesi.\nEvlilik cuzdani: ~1.202 TL',assignee:'Birlikte'},
 ];
 
 const TEMPLATES = [
-    {id:'t1',icon:'🏖️',name:'Balayi Planlama',desc:'Destinasyon, otel, ucak, vize',tasks:[
-        {cat:'diger',title:'Balayi destinasyonu arastir',hint:'',priority:'normal',note:''},
-        {cat:'diger',title:'Balayi oteli rezervasyonu',hint:'',priority:'normal',note:''},
-        {cat:'diger',title:'Balayi ucak bileti',hint:'',priority:'normal',note:''},
-        {cat:'belgeler',title:'Pasaport / Vize',hint:'Yurt disi ise 2 ay once',priority:'normal',note:''},
+    {id:'t1',icon:'\uD83C\uDFD6\uFE0F',name:'Balayi Planlama',desc:'Destinasyon, otel, ucak, vize',tasks:[
+        {cat:'diger',title:'Balayi destinasyonu arastir',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
+        {cat:'diger',title:'Balayi oteli rezervasyonu',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
+        {cat:'diger',title:'Balayi ucak bileti',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
+        {cat:'belgeler',title:'Pasaport / Vize',hint:'Yurt disi ise 2 ay once',priority:'normal',note:'',assignee:'Birlikte'},
     ]},
-    {id:'t2',icon:'🎉',name:'Kina Gecesi',desc:'Mekan, malzeme, davetli',tasks:[
-        {cat:'dugun',title:'Kina gecesi mekani belirle',hint:'',priority:'normal',note:''},
-        {cat:'dugun',title:'Kina malzemeleri',hint:'',priority:'normal',note:''},
-        {cat:'dugun',title:'Kina davetli listesi',hint:'',priority:'normal',note:''},
+    {id:'t2',icon:'\uD83C\uDF89',name:'Kina Gecesi',desc:'Mekan, malzeme, davetli',tasks:[
+        {cat:'dugun',title:'Kina gecesi mekani belirle',hint:'',priority:'normal',note:'',assignee:'Hilal'},
+        {cat:'dugun',title:'Kina malzemeleri',hint:'',priority:'normal',note:'',assignee:'Hilal'},
+        {cat:'dugun',title:'Kina davetli listesi',hint:'',priority:'normal',note:'',assignee:'Hilal'},
     ]},
-    {id:'t3',icon:'📸',name:'Fotograf & Video',desc:'Ekip, dis cekim, drone',tasks:[
-        {cat:'dugun',title:'Fotograf / Video ekibi sec',hint:'2-3 teklif al',priority:'normal',note:''},
-        {cat:'dugun',title:'Dis cekim lokasyonu + tarih',hint:'',priority:'normal',note:''},
+    {id:'t3',icon:'\uD83D\uDCF8',name:'Fotograf & Video',desc:'Ekip, dis cekim, drone',tasks:[
+        {cat:'dugun',title:'Fotograf / Video ekibi sec',hint:'2-3 teklif al',priority:'normal',note:'',assignee:'Birlikte'},
+        {cat:'dugun',title:'Dis cekim lokasyonu + tarih',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
     ]},
-    {id:'t4',icon:'👗',name:'Kiyafetler',desc:'Gelinlik, damatlik, kuafor',tasks:[
-        {cat:'dugun',title:'Gelinlik arastir',hint:'3 ay once siparis',priority:'normal',note:''},
-        {cat:'dugun',title:'Damatlik sec',hint:'',priority:'normal',note:''},
-        {cat:'dugun',title:'Kuafor + makyaj provasi',hint:'',priority:'normal',note:''},
+    {id:'t4',icon:'\uD83D\uDC57',name:'Kiyafetler',desc:'Gelinlik, damatlik, kuafor',tasks:[
+        {cat:'dugun',title:'Gelinlik arastir',hint:'3 ay once siparis',priority:'normal',note:'',assignee:'Hilal'},
+        {cat:'dugun',title:'Damatlik sec',hint:'',priority:'normal',note:'',assignee:'Ibrahim'},
+        {cat:'dugun',title:'Kuafor + makyaj provasi',hint:'',priority:'normal',note:'',assignee:'Hilal'},
     ]},
 ];
 
 // STATE
-let auth,db,currentUser=null,tasks=[],activeCat='all',editId=null,recognition=null,isRec=false,unsub=null;
+let authInstance, db, currentUser=null, tasks=[], activeCat='all', activeAsg='Hepsi', editId=null, recognition=null, isRec=false, unsub=null;
 
 // FIREBASE
 firebase.initializeApp(FIREBASE_CONFIG);
-auth=firebase.auth();
-db=firebase.firestore();
+authInstance = firebase.auth();
+db = firebase.firestore();
+
 function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
 function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
 document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container')&&!e.target.closest('.user-dropdown'))document.getElementById('user-dropdown')?.classList.remove('open')});
+
 function renderAvatar(user){
     const c=document.getElementById('user-avatar-container');
     const n=document.getElementById('user-name');
@@ -348,13 +393,26 @@ function renderAvatar(user){
     else{const i=(user.displayName||user.email||'U')[0].toUpperCase();c.innerHTML='<div class="user-avatar-fallback">'+i+'</div>';}
 }
 
-auth.onAuthStateChanged(u=>{
+authInstance.onAuthStateChanged(u=>{
     document.getElementById('loading-screen').style.display='none';
-    if(u){currentUser=u;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('bnav').style.display='flex';renderAvatar(u);listen();}
-    else{currentUser=null;document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('bnav').style.display='none';}
+    if(u){
+        currentUser=u;
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app').style.display='block';
+        document.getElementById('bnav').style.display='flex';
+        renderAvatar(u);
+        listen();
+    } else {
+        currentUser=null;
+        document.getElementById('login-screen').style.display='flex';
+        document.getElementById('app').style.display='none';
+        document.getElementById('bnav').style.display='none';
+        if(unsub) unsub();
+    }
 });
-function signIn(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message))}
-function signOut(){if(unsub)unsub();auth.signOut()}
+
+function signIn(){authInstance.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message))}
+function signOut(){if(unsub)unsub();authInstance.signOut()}
 
 function listen(){
     unsub=db.collection('shared').doc('planner_tasks').onSnapshot(doc=>{
@@ -367,24 +425,41 @@ function save(){db.collection('shared').doc('planner_tasks').set({list:JSON.pars
 
 // RENDER
 function render(){
+    renderProgress();
     renderFilters();
     renderList();
+}
+
+function renderProgress(){
+    const total=tasks.length;
+    const done=tasks.filter(t=>t.done).length;
+    const pct=total>0?Math.round((done/total)*100):0;
+    document.getElementById('progressText').textContent=done+' / '+total;
+    document.getElementById('progressFill').style.width=pct+'%';
 }
 
 function renderFilters(){
     const el=document.getElementById('filters');
     el.innerHTML=CATS.map(c=>{
         const n=c.id==='all'?tasks.filter(t=>!t.done).length:tasks.filter(t=>t.cat===c.id&&!t.done).length;
-        return `<button class="filter-btn${activeCat===c.id?' active':''}" onclick="setCat('${c.id}')">${c.name} <span class="cnt">${n}</span></button>`;
+        return '<button class="filter-btn'+(activeCat===c.id?' active':'')+'" onclick="setCat(\''+c.id+'\')">'+c.name+' <span class="cnt">'+n+'</span></button>';
     }).join('');
 }
+
 function setCat(id){activeCat=id;render();}
+
+function setAssignee(a){
+    activeAsg=a;
+    document.querySelectorAll('.asg-btn').forEach(b=>b.classList.toggle('active',b.dataset.a===a));
+    render();
+}
 
 function renderList(){
     const el=document.getElementById('tlist');
     let list=activeCat==='all'?[...tasks]:tasks.filter(t=>t.cat===activeCat);
+    if(activeAsg!=='Hepsi') list=list.filter(t=>(t.assignee||'Birlikte')===activeAsg);
 
-    // ALWAYS sort by: done last, then urgent first, then nearest due
+    // Sort: done last, then urgent first, then nearest due
     list.sort((a,b)=>{
         if(a.done!==b.done) return a.done?1:-1;
         const p={urgent:0,normal:1,low:2};
@@ -395,9 +470,7 @@ function renderList(){
         return 0;
     });
 
-    if(!list.length){el.innerHTML='<div class="empty">Bu kategoride gorev yok.</div>';return;}
-
-    // Flat list — no category grouping. Show category as small tag on each card.
+    if(!list.length){el.innerHTML='<div class="empty">Bu filtrede gorev yok.</div>';return;}
     el.innerHTML=list.map(t=>cardHTML(t)).join('');
 }
 
@@ -406,28 +479,31 @@ function cardHTML(t){
     const urg=t.priority==='urgent'&&!t.done;
     const due=t.due?fmtDue(t.due):'';
     const over=t.due&&!t.done&&new Date(t.due)<new Date();
-    return `<div class="tcard${t.done?' done':''}${urg?' urgent':''}" id="t-${t.id}">
-        <div class="tmain">
-            <div class="tchk${t.done?' on':''}" onclick="event.stopPropagation();tog('${t.id}')"></div>
-            <div class="tbody" onclick="flip('${t.id}')">
-                <div class="ttitle">${esc(t.title)}</div>
-                ${t.hint?`<div class="tsub">${esc(t.hint)}</div>`:''}
-                <div class="ttags">
-                    ${activeCat==='all'&&cat?`<span class="ttag ttag-cat" style="border-left:2px solid ${cat.color}">${cat.name}</span>`:''}
-                    ${urg?'<span class="ttag ttag-urgent">Acil</span>':''}
-                    ${due?`<span class="ttag ${over?'ttag-overdue':'ttag-due'}">${due}</span>`:''}
-                </div>
-            </div>
-            <span class="tarrow" onclick="flip('${t.id}')">▼</span>
-        </div>
-        <div class="tdetail">
-            ${t.note?`<div class="tnote">${esc(t.note)}</div>`:''}
-            <div class="tbtns">
-                <button class="tbtn-edit" onclick="openEdit('${t.id}')">Duzenle</button>
-                <button class="tbtn-del" onclick="del('${t.id}')">Sil</button>
-            </div>
-        </div>
-    </div>`;
+    const asg=t.assignee||'Birlikte';
+    const asgClass=asg==='Ibrahim'?'ttag-ibrahim':asg==='Hilal'?'ttag-hilal':'ttag-birlikte';
+    return '<div class="tcard'+(t.done?' done':'')+(urg?' urgent':'')+'" id="t-'+t.id+'">'
+        +'<div class="tmain">'
+        +'<div class="tchk'+(t.done?' on':'')+'" onclick="event.stopPropagation();tog(\''+t.id+'\')"></div>'
+        +'<div class="tbody" onclick="flip(\''+t.id+'\')">'
+        +'<div class="ttitle">'+esc(t.title)+'</div>'
+        +(t.hint?'<div class="tsub">'+esc(t.hint)+'</div>':'')
+        +'<div class="ttags">'
+        +(activeCat==='all'&&cat?'<span class="ttag ttag-cat" style="border-left:2px solid '+cat.color+'">'+cat.name+'</span>':'')
+        +(urg?'<span class="ttag ttag-urgent">Acil</span>':'')
+        +'<span class="ttag '+asgClass+'">'+asg+'</span>'
+        +(due?'<span class="ttag '+(over?'ttag-overdue':'ttag-due')+'">'+due+'</span>':'')
+        +'</div>'
+        +'</div>'
+        +'<span class="tarrow" onclick="flip(\''+t.id+'\')">&#9660;</span>'
+        +'</div>'
+        +'<div class="tdetail">'
+        +(t.note?'<div class="tnote">'+esc(t.note)+'</div>':'')
+        +'<div class="tbtns">'
+        +'<button class="tbtn-edit" onclick="openEdit(\''+t.id+'\')">Duzenle</button>'
+        +'<button class="tbtn-del" onclick="del(\''+t.id+'\')">Sil</button>'
+        +'</div>'
+        +'</div>'
+        +'</div>';
 }
 
 function fmtDue(d){
@@ -450,7 +526,7 @@ function addQuick(){
     const inp=document.getElementById('qi');
     const txt=inp.value.trim();
     if(!txt) return;
-    tasks.push({id:'t'+Date.now(),cat:activeCat==='all'?'diger':activeCat,title:txt,hint:'',done:false,priority:'normal',due:'',note:''});
+    tasks.push({id:'t'+Date.now(),cat:activeCat==='all'?'diger':activeCat,title:txt,hint:'',done:false,priority:'normal',due:'',note:'',assignee:activeAsg==='Hepsi'?'Birlikte':activeAsg});
     inp.value='';
     save();
 }
@@ -462,15 +538,17 @@ function openEdit(id){
     document.getElementById('me-title-label').textContent=t?'Gorevi Duzenle':'Yeni Gorev';
     document.getElementById('me-del-btn').style.display=t?'block':'none';
     const catSel=document.getElementById('me-cat');
-    catSel.innerHTML=CATS.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    catSel.innerHTML=CATS.filter(c=>c.id!=='all').map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');
     document.getElementById('me-title').value=t?t.title:'';
     document.getElementById('me-hint').value=t?t.hint||'':'';
     catSel.value=t?t.cat:(activeCat==='all'?'diger':activeCat);
+    document.getElementById('me-asg').value=t?(t.assignee||'Birlikte'):'Birlikte';
     document.getElementById('me-pri').value=t?t.priority:'normal';
     document.getElementById('me-due').value=t?t.due||'':'';
     document.getElementById('me-note').value=t?t.note||'':'';
     openModal('modal-edit');
 }
+
 function saveTask(){
     const title=document.getElementById('me-title').value.trim();
     if(!title){alert('Baslik gerekli');return;}
@@ -478,6 +556,7 @@ function saveTask(){
         cat:document.getElementById('me-cat').value,
         title,
         hint:document.getElementById('me-hint').value.trim(),
+        assignee:document.getElementById('me-asg').value,
         priority:document.getElementById('me-pri').value,
         due:document.getElementById('me-due').value,
         note:document.getElementById('me-note').value.trim()
@@ -491,6 +570,7 @@ function saveTask(){
     save();
     closeModal('modal-edit');
 }
+
 function delTask(){
     if(editId&&confirm('Sil?')){tasks=tasks.filter(t=>t.id!==editId);save();closeModal('modal-edit');}
 }
@@ -498,12 +578,13 @@ function delTask(){
 // TEMPLATES
 function renderTemplates(){
     document.getElementById('tmpl-list').innerHTML=TEMPLATES.map(t=>
-        `<div class="tmpl-item" onclick="applyTmpl('${t.id}')">
-            <span class="tmpl-icon">${t.icon}</span>
-            <div class="tmpl-info"><h4>${t.name}</h4><p>${t.desc}</p></div>
-        </div>`
+        '<div class="tmpl-item" onclick="applyTmpl(\''+t.id+'\')">'
+        +'<span class="tmpl-icon">'+t.icon+'</span>'
+        +'<div class="tmpl-info"><h4>'+t.name+'</h4><p>'+t.desc+'</p></div>'
+        +'</div>'
     ).join('');
 }
+
 function applyTmpl(tid){
     const tmpl=TEMPLATES.find(t=>t.id===tid);
     if(!tmpl||!confirm(tmpl.name+' eklensin mi?')) return;
