@@ -30,14 +30,32 @@
         .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333}
         .google-btn svg{width:20px;height:20px;flex-shrink:0}
 
-        /* HEADER — minimal */
+        /* LOADING */
+        #loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--g50)}
+        .spinner{width:36px;height:36px;border:3px solid var(--g200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* HEADER */
         .header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:10px 16px;position:sticky;top:0;z-index:100}
         .header-row{display:flex;align-items:center;justify-content:space-between}
-        .header-left{display:flex;align-items:center;gap:10px}
-        .header-left a{color:rgba(255,255,255,0.5);font-size:18px;text-decoration:none}
-        .header h1{font-size:16px;font-weight:600}
-        .header-right{display:flex;gap:6px;align-items:center}
-        .header-right button{color:rgba(255,255,255,0.6);font-size:11px;background:rgba(255,255,255,0.1);border:none;padding:4px 10px;border-radius:6px;cursor:pointer}
+        .header h1{font-size:16px;font-weight:600;flex:1;text-align:center}
+        .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;cursor:pointer}
+        .user-avatar-fallback{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
+        .user-dropdown{position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
+        .user-dropdown.open{display:block}
+        .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:#111;border-bottom:1px solid #f3f4f6}
+        .user-dropdown button.dd-btn{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#dc2626}
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;opacity:0.8}
+        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
+        .drawer-overlay.open{display:block}
+        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
+        .drawer.open{right:0}
+        .drawer-header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
+        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f3f4f6;text-decoration:none;color:#111;font-size:14px;font-weight:500}
+        .drawer-item:active{background:#f9fafb}
+        .drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
+        .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px}
+        .drawer-item.active{background:#fdf8ef;color:var(--gold);font-weight:600}
 
         /* FILTER STRIP */
         .filter-strip{display:flex;overflow-x:auto;gap:6px;padding:10px 16px;background:white;border-bottom:1px solid var(--g100);-webkit-overflow-scrolling:touch;position:sticky;top:42px;z-index:90}
@@ -130,7 +148,7 @@
 </head>
 <body>
 
-<div id="login-screen">
+<div id="login-screen" style="display:none">
     <div class="login-card">
         <h1>Dugun Asistani</h1>
         <p>Akilli planlama araci</p>
@@ -141,18 +159,25 @@
     </div>
 </div>
 
-<div id="app" style="display:none">
-    <!-- HEADER: just title + back -->
+<!-- LOADING (visible by default) -->
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--g400)">Yukleniyor...</div>
+</div>
+
+<div id="app" style="display:none;padding-bottom:60px">
+    <!-- HEADER -->
     <div class="header">
         <div class="header-row">
-            <div class="header-left">
-                <a href="index.html">&#8592;</a>
-                <h1>Dugun Asistani</h1>
+            <div style="position:relative">
+                <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+                <div class="user-dropdown" id="user-dropdown">
+                    <div class="user-dropdown-name" id="user-name"></div>
+                    <button class="dd-btn" onclick="signOut()">Cikis Yap</button>
+                </div>
             </div>
-            <div class="header-right">
-                <button onclick="openModal('modal-templates')">Sablonlar</button>
-                <button onclick="signOut()">Cikis</button>
-            </div>
+            <h1>Asistan</h1>
+            <button class="hamburger" onclick="toggleDrawer()">☰</button>
         </div>
     </div>
 
@@ -178,9 +203,25 @@
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="bnav" style="display:none">
     <a href="index.html"><span class="bicon">🗺️</span>Harita</a>
-    <a href="index.html#venues"><span class="bicon">🏛️</span>Mekanlar</a>
+    <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
+    <a href="butce.html"><span class="bicon">💰</span>Butce</a>
+    <a href="checklist.html"><span class="bicon">✅</span>Checklist</a>
     <a class="active" href="planner.html"><span class="bicon">🧠</span>Asistan</a>
 </nav>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+    <div class="drawer-header">💍 Dugun Planlayici</div>
+    <div class="drawer-section">Sayfalar</div>
+    <a class="drawer-item" href="index.html"><span class="di-icon">🗺️</span>Yol Haritasi</a>
+    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
+    <a class="drawer-item active" href="planner.html"><span class="di-icon">🧠</span>Asistan</a>
+    <div class="drawer-section">Yonetim</div>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
+    <a class="drawer-item" href="checklist.html"><span class="di-icon">✅</span>Checklist</a>
+</div>
 
 <!-- ADD/EDIT MODAL -->
 <div class="modal-bg" id="modal-edit" onclick="if(event.target===this)closeModal('modal-edit')">
@@ -296,8 +337,20 @@ let auth,db,currentUser=null,tasks=[],activeCat='all',editId=null,recognition=nu
 firebase.initializeApp(FIREBASE_CONFIG);
 auth=firebase.auth();
 db=firebase.firestore();
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
+function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
+document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container')&&!e.target.closest('.user-dropdown'))document.getElementById('user-dropdown')?.classList.remove('open')});
+function renderAvatar(user){
+    const c=document.getElementById('user-avatar-container');
+    const n=document.getElementById('user-name');
+    if(n)n.textContent=user.displayName||user.email;
+    if(user.photoURL){c.innerHTML='<img class="user-avatar" src="'+user.photoURL+'" referrerpolicy="no-referrer">';}
+    else{const i=(user.displayName||user.email||'U')[0].toUpperCase();c.innerHTML='<div class="user-avatar-fallback">'+i+'</div>';}
+}
+
 auth.onAuthStateChanged(u=>{
-    if(u){currentUser=u;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('bnav').style.display='flex';listen();}
+    document.getElementById('loading-screen').style.display='none';
+    if(u){currentUser=u;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('bnav').style.display='flex';renderAvatar(u);listen();}
     else{currentUser=null;document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('bnav').style.display='none';}
 });
 function signIn(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message))}

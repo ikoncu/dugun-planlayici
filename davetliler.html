@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -38,7 +39,7 @@
         .header-right{display:flex;gap:6px;align-items:center}
         .user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;cursor:pointer}
         .user-avatar-fallback{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;cursor:pointer}
-        .user-dropdown{position:absolute;top:46px;right:12px;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
+        .user-dropdown{position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
         .user-dropdown.open{display:block}
         .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:var(--gray-900);border-bottom:1px solid var(--gray-100)}
         .user-dropdown button{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:var(--red)}
@@ -136,13 +137,62 @@
         .cbtn-del{background:var(--red);color:white}
 
         /* BOTTOM NAV */
-        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);display:flex;height:52px;z-index:95}
-        .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:9px;font-weight:500;color:var(--gray-400);text-decoration:none}
+        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);display:flex;height:56px;z-index:95;box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
+        .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:500;color:var(--gray-400);text-decoration:none;-webkit-tap-highlight-color:transparent}
         .bnav .active{color:var(--gold)}
         .bnav .bicon{font-size:18px}
 
+        /* HAMBURGER & DRAWER */
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;opacity:0.8}
+        .hamburger:hover{opacity:1}
+        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
+        .drawer-overlay.open{display:block}
+        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
+        .drawer.open{right:0}
+        .drawer-header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
+        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100);text-decoration:none;color:var(--gray-900);font-size:14px;font-weight:500}
+        .drawer-item:active{background:var(--gray-50)}
+        .drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
+        .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
+        .drawer-item.active{background:var(--gold-bg);color:var(--gold);font-weight:600}
+
         /* EMPTY */
         .empty-msg{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:14px}
+
+        /* IMPORT/EXPORT */
+        .io-bar{display:flex;gap:6px;padding:8px 16px;background:white;border-bottom:1px solid var(--gray-100)}
+        .io-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--gray-200);background:white;font-size:12px;font-weight:500;cursor:pointer;color:var(--gray-700);white-space:nowrap}
+        .io-btn:active{background:var(--gray-50);transform:scale(0.97)}
+        .io-btn.primary{border-color:var(--gold);background:var(--gold-bg);color:var(--gold)}
+        .io-btn .io-icon{font-size:14px}
+        .io-btn.sheets{border-color:#34a853;color:#34a853;background:#f0fdf4}
+
+        /* IMPORT MODAL */
+        .import-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:16px}
+        .import-modal-bg.show{display:flex}
+        .import-modal{background:white;border-radius:16px;max-width:440px;width:100%;max-height:80vh;overflow-y:auto;padding:20px}
+        .import-modal h3{font-size:16px;font-weight:700;margin-bottom:4px}
+        .import-modal .im-sub{font-size:12px;color:var(--gray-500);margin-bottom:16px}
+        .import-preview{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:12px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+        .import-preview table{width:100%;font-size:11px;border-collapse:collapse}
+        .import-preview th{text-align:left;color:var(--gray-500);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--gray-200)}
+        .import-preview td{padding:3px 6px;color:var(--gray-700)}
+        .import-preview tr:nth-child(even){background:var(--gray-100)}
+        .import-stats{display:flex;gap:10px;margin-bottom:14px;font-size:13px}
+        .import-stats .is-num{font-weight:700;color:var(--gold)}
+        .import-mode{display:flex;gap:8px;margin-bottom:14px}
+        .import-mode label{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;border:1.5px solid var(--gray-200);font-size:13px;cursor:pointer;flex:1}
+        .import-mode input:checked+span{color:var(--gold);font-weight:600}
+        .import-mode label:has(input:checked){border-color:var(--gold);background:var(--gold-bg)}
+        .import-btns{display:flex;gap:8px}
+        .import-btns button{flex:1;padding:10px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer}
+        .ibtn-cancel{background:var(--gray-100);color:var(--gray-700)}
+        .ibtn-go{background:var(--gold);color:white}
+        .ibtn-go:active{opacity:0.8}
+
+        /* TOAST */
+        .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:opacity 0.3s;pointer-events:none}
+        .toast.show{opacity:1}
 
         /* LOADING */
         #loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
@@ -152,8 +202,8 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen" style="display:flex">
+<!-- LOGIN (hidden by default - shows only if not authenticated) -->
+<div id="login-screen" style="display:none">
     <div class="login-card">
         <div class="logo">💍</div>
         <h1>Davetli Listesi</h1>
@@ -165,8 +215,8 @@
     </div>
 </div>
 
-<!-- LOADING -->
-<div id="loading-screen">
+<!-- LOADING (visible by default - first thing user sees) -->
+<div id="loading-screen" style="display:flex">
     <div class="spinner"></div>
     <div style="font-size:14px;color:var(--gray-500)">Yukleniyor...</div>
 </div>
@@ -176,17 +226,15 @@
     <!-- HEADER -->
     <div class="header">
         <div class="header-row">
-            <a href="index.html" class="header-back">&#8592;</a>
-            <h1>Davetliler</h1>
-            <div class="header-right">
-                <div style="position:relative">
-                    <div id="user-avatar-container" onclick="toggleDropdown()"></div>
-                    <div class="user-dropdown" id="user-dropdown">
-                        <div class="user-dropdown-name" id="user-name"></div>
-                        <button onclick="signOut()">Cikis Yap</button>
-                    </div>
+            <div style="position:relative">
+                <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+                <div class="user-dropdown" id="user-dropdown">
+                    <div class="user-dropdown-name" id="user-name"></div>
+                    <button onclick="signOut()">Cikis Yap</button>
                 </div>
             </div>
+            <h1>Davetliler</h1>
+            <button class="hamburger" onclick="toggleDrawer()">☰</button>
         </div>
     </div>
 
@@ -215,6 +263,14 @@
         </div>
     </div>
 
+    <!-- IMPORT/EXPORT BAR -->
+    <div class="io-bar">
+        <button class="io-btn primary" onclick="document.getElementById('file-excel').click()"><span class="io-icon">&#x1F4E5;</span>Excel Yukle</button>
+        <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel Indir</button>
+        <button class="io-btn sheets" onclick="fetchFromSheets()"><span class="io-icon">&#x1F4CA;</span>Sheets'ten Cek</button>
+        <input type="file" id="file-excel" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileImport(this)">
+    </div>
+
     <!-- SEARCH & FILTER -->
     <div class="search-strip">
         <input type="text" class="search-input" id="search-input" placeholder="Davetli ara..." oninput="renderList()">
@@ -234,11 +290,26 @@
 
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="bnav" style="display:none">
-    <a href="index.html"><span class="bicon">&#x1F5FA;&#xFE0F;</span>Harita</a>
-    <a href="index.html#venues"><span class="bicon">&#x1F3DB;&#xFE0F;</span>Mekanlar</a>
-    <a class="active" href="davetliler.html"><span class="bicon">&#x1F465;</span>Davetliler</a>
-    <a href="planner.html"><span class="bicon">&#x1F9E0;</span>Asistan</a>
+    <a href="index.html"><span class="bicon">🗺️</span>Harita</a>
+    <a class="active" href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
+    <a href="butce.html"><span class="bicon">💰</span>Butce</a>
+    <a href="checklist.html"><span class="bicon">✅</span>Checklist</a>
+    <a href="planner.html"><span class="bicon">🧠</span>Asistan</a>
 </nav>
+
+<!-- DRAWER MENU -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+    <div class="drawer-header">💍 Dugun Planlayici</div>
+    <div class="drawer-section">Sayfalar</div>
+    <a class="drawer-item" href="index.html"><span class="di-icon">🗺️</span>Yol Haritasi</a>
+    <a class="drawer-item active" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
+    <a class="drawer-item" href="planner.html"><span class="di-icon">🧠</span>Asistan</a>
+    <div class="drawer-section">Yonetim</div>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
+    <a class="drawer-item" href="checklist.html"><span class="di-icon">✅</span>Checklist</a>
+</div>
 
 <!-- ADD/EDIT MODAL -->
 <div class="modal-bg" id="modal-guest" onclick="if(event.target===this)closeModal()">
@@ -311,6 +382,27 @@
         </div>
     </div>
 </div>
+
+<!-- IMPORT PREVIEW MODAL -->
+<div class="import-modal-bg" id="import-modal" onclick="if(event.target===this)closeImportModal()">
+    <div class="import-modal">
+        <h3>Excel Icerik Onizleme</h3>
+        <div class="im-sub" id="im-source"></div>
+        <div class="import-stats" id="im-stats"></div>
+        <div class="import-preview" id="im-preview"></div>
+        <div class="import-mode">
+            <label><input type="radio" name="im-mode" value="replace" checked><span>Uzerine Yaz</span></label>
+            <label><input type="radio" name="im-mode" value="merge"><span>Birlestir</span></label>
+        </div>
+        <div class="import-btns">
+            <button class="ibtn-cancel" onclick="closeImportModal()">Vazgec</button>
+            <button class="ibtn-go" onclick="confirmImport()">Aktar</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <!-- CONFIRM DELETE -->
 <div class="confirm-bg" id="confirm-del" onclick="if(event.target===this)this.classList.remove('show')">
@@ -536,6 +628,11 @@ function renderList(){
     container.innerHTML = html;
 }
 
+function toggleDrawer(){
+    document.getElementById('drawer').classList.toggle('open');
+    document.getElementById('drawer-overlay').classList.toggle('open');
+}
+
 function esc(s){
     const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;
 }
@@ -652,6 +749,287 @@ function confirmDelete(){
     }
     deleteTargetId = null;
     document.getElementById('confirm-del').classList.remove('show');
+}
+
+// ===== IMPORT / EXPORT / SHEETS =====
+
+let pendingImportGuests = [];
+
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// --- EXCEL IMPORT ---
+function handleFileImport(input){
+    const file = input.files[0];
+    if(!file) return;
+    input.value='';
+    const reader = new FileReader();
+    reader.onload = function(e){
+        try{
+            const wb = XLSX.read(e.target.result, {type:'array'});
+            // Find the guest sheet
+            const sheetName = wb.SheetNames.find(n=>n.includes('Davetli')) || wb.SheetNames[0];
+            const ws = wb.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+            if(rows.length<2){showToast('Excel bos gorunuyor');return;}
+            parseExcelRows(rows, 'Excel: '+file.name);
+        }catch(err){
+            console.error(err);
+            showToast('Excel okunamadi: '+err.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function parseExcelRows(rows, sourceName){
+    // Find header row
+    let headerIdx = 0;
+    for(let i=0;i<Math.min(rows.length,5);i++){
+        const row = rows[i].map(c=>String(c||'').toLowerCase());
+        if(row.some(c=>c.includes('ad soyad') || c.includes('adsoyad') || c.includes('isim'))){
+            headerIdx=i; break;
+        }
+    }
+    const headers = rows[headerIdx].map(c=>String(c||'').toLowerCase().trim());
+
+    // Map columns
+    const colMap = {
+        name: headers.findIndex(h=>h.includes('ad soyad')||h.includes('adsoyad')||h.includes('isim')),
+        side: headers.findIndex(h=>h.includes('taraf')),
+        group: headers.findIndex(h=>h.includes('aile')||h.includes('grup')),
+        phone: headers.findIndex(h=>h.includes('telefon')||h.includes('tel')),
+        adults: headers.findIndex(h=>h.includes('yeti') && h.includes('say')),
+        children: headers.findIndex(h=>h.includes('ocuk') && h.includes('say')),
+        invited: headers.findIndex(h=>h.includes('davet') && (h.includes('gonder')||h.includes('gönd'))),
+        rsvp: headers.findIndex(h=>h.includes('kat') && h.includes('dur') || h.includes('rsvp')),
+        table: headers.findIndex(h=>h.includes('masa')),
+        note: headers.findIndex(h=>h==='not'||h.includes('notlar'))
+    };
+
+    if(colMap.name<0){showToast('Ad Soyad sutunu bulunamadi');return;}
+
+    // Parse data rows
+    pendingImportGuests = [];
+    for(let i=headerIdx+1;i<rows.length;i++){
+        const r = rows[i];
+        const name = String(r[colMap.name]||'').trim();
+        if(!name) continue;
+
+        const adults = parseInt(r[colMap.adults])||1;
+        const children = parseInt(r[colMap.children])||0;
+
+        // Map RSVP values
+        let rsvpRaw = String(r[colMap.rsvp>=0?colMap.rsvp:-1]||'').trim();
+        let rsvp = 'Beklemede';
+        if(rsvpRaw.toLowerCase().includes('evet')||rsvpRaw.toLowerCase().includes('katıl')||rsvpRaw==='Katilacak') rsvp='Katilacak';
+        else if(rsvpRaw.toLowerCase().includes('hayır')||rsvpRaw.toLowerCase().includes('hayir')||rsvpRaw==='Katilmayacak') rsvp='Katilmayacak';
+
+        // Map invited values
+        let invRaw = String(r[colMap.invited>=0?colMap.invited:-1]||'').trim();
+        let invited = 'Gonderilmedi';
+        if(invRaw.toLowerCase().includes('gönderildi')||invRaw.toLowerCase().includes('gonderildi')||invRaw==='Gonderildi') invited='Gonderildi';
+
+        // Map side
+        let sideRaw = String(r[colMap.side>=0?colMap.side:-1]||'').trim();
+        let side = 'Gelin';
+        if(sideRaw.toLowerCase().includes('damat')) side='Damat';
+
+        // Phone: normalize
+        let phone = String(r[colMap.phone>=0?colMap.phone:-1]||'').trim();
+        if(phone && !isNaN(Number(phone))) phone = phone.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/,'$1 $2 $3 $4');
+
+        // Table
+        let table = '';
+        if(colMap.table>=0){
+            let tv = r[colMap.table];
+            if(tv!==undefined && tv!==null && tv!=='') table = String(Math.floor(Number(tv))||tv);
+        }
+
+        pendingImportGuests.push({
+            id: 'g'+Date.now()+'_'+i,
+            name, side,
+            group: colMap.group>=0 ? String(r[colMap.group]||'').trim() : '',
+            phone, adults, children, total: adults+children,
+            invited, rsvp, table,
+            note: colMap.note>=0 ? String(r[colMap.note]||'').trim() : ''
+        });
+    }
+
+    if(pendingImportGuests.length===0){showToast('Davetli bulunamadi');return;}
+
+    // Show preview modal
+    showImportPreview(sourceName);
+}
+
+function showImportPreview(source){
+    document.getElementById('im-source').textContent = source;
+
+    const gelin = pendingImportGuests.filter(g=>g.side==='Gelin').length;
+    const damat = pendingImportGuests.filter(g=>g.side==='Damat').length;
+    const totalP = pendingImportGuests.reduce((s,g)=>s+g.total,0);
+    document.getElementById('im-stats').innerHTML =
+        '<span><span class="is-num">'+pendingImportGuests.length+'</span> davetli</span>' +
+        '<span><span class="is-num">'+totalP+'</span> kisi</span>' +
+        '<span>Gelin: '+gelin+' | Damat: '+damat+'</span>';
+
+    // Preview table (first 10)
+    let html = '<table><tr><th>Ad Soyad</th><th>Taraf</th><th>Tel</th><th>Kisi</th></tr>';
+    pendingImportGuests.slice(0,10).forEach(g=>{
+        html += '<tr><td>'+esc(g.name)+'</td><td>'+g.side+'</td><td>'+esc(g.phone)+'</td><td>'+g.total+'</td></tr>';
+    });
+    if(pendingImportGuests.length>10) html += '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">... ve '+(pendingImportGuests.length-10)+' daha</td></tr>';
+    html += '</table>';
+    document.getElementById('im-preview').innerHTML = html;
+
+    document.getElementById('import-modal').classList.add('show');
+}
+
+function closeImportModal(){
+    document.getElementById('import-modal').classList.remove('show');
+    pendingImportGuests = [];
+}
+
+function confirmImport(){
+    const mode = document.querySelector('input[name="im-mode"]:checked').value;
+
+    if(mode==='replace'){
+        guests = pendingImportGuests;
+    } else {
+        // Merge: match by normalized name
+        const norm = s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+        const existingMap = {};
+        guests.forEach(g=>{existingMap[norm(g.name)]=g;});
+
+        pendingImportGuests.forEach(ig=>{
+            const key = norm(ig.name);
+            if(existingMap[key]){
+                // Update existing guest fields from Excel (keep app id)
+                const existing = existingMap[key];
+                existing.side = ig.side;
+                existing.group = ig.group || existing.group;
+                existing.phone = ig.phone || existing.phone;
+                existing.adults = ig.adults;
+                existing.children = ig.children;
+                existing.total = ig.total;
+                if(ig.invited!=='Gonderilmedi') existing.invited = ig.invited;
+                if(ig.rsvp!=='Beklemede') existing.rsvp = ig.rsvp;
+                if(ig.table) existing.table = ig.table;
+                if(ig.note) existing.note = ig.note;
+            } else {
+                guests.push(ig);
+            }
+        });
+    }
+
+    saveToFirestore();
+    closeImportModal();
+    showToast((mode==='replace'?'Liste guncellendi':'Birlestirme tamamlandi')+': '+pendingImportGuests.length+' davetli');
+    pendingImportGuests = [];
+}
+
+// --- EXCEL EXPORT ---
+function exportExcel(){
+    if(guests.length===0){showToast('Liste bos');return;}
+
+    const header = ['No','Ad Soyad','Taraf (Gelin/Damat)','Aile / Grup','Telefon','Yetiskin Sayisi','Cocuk Sayisi','Toplam Kisi','Davet Gonderildi','Katilim Durumu','Masa No','Not'];
+    const data = [header];
+    guests.forEach((g,i)=>{
+        // Map app values back to Excel-friendly Turkish
+        let rsvp = g.rsvp;
+        if(rsvp==='Katilacak') rsvp='Evet';
+        else if(rsvp==='Katilmayacak') rsvp='Hayir';
+        else rsvp='Beklemede';
+
+        let invited = g.invited;
+        if(invited==='Gonderildi') invited='Gonderildi';
+        else invited='Gonderilmedi';
+
+        data.push([i+1, g.name, g.side, g.group||'', g.phone||'', g.adults||1, g.children||0, g.total||1, invited, rsvp, g.table||'', g.note||'']);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    // Column widths
+    ws['!cols'] = [{wch:4},{wch:22},{wch:14},{wch:14},{wch:16},{wch:8},{wch:8},{wch:8},{wch:14},{wch:14},{wch:8},{wch:20}];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Davetli Listesi');
+
+    // Add RSVP summary sheet
+    const summaryData = [
+        ['Nisan Davet Dashboard',''],
+        ['',''],
+        ['Toplam Davetli', guests.reduce((s,g)=>s+g.total,0)],
+        ['Katilacak', guests.filter(g=>g.rsvp==='Katilacak').reduce((s,g)=>s+g.total,0)],
+        ['Beklemede', guests.filter(g=>g.rsvp==='Beklemede').reduce((s,g)=>s+g.total,0)],
+        ['Katilmayacak', guests.filter(g=>g.rsvp==='Katilmayacak').reduce((s,g)=>s+g.total,0)],
+        ['',''],
+        ['Gelin Tarafi', guests.filter(g=>g.side==='Gelin').reduce((s,g)=>s+g.total,0)],
+        ['Damat Tarafi', guests.filter(g=>g.side==='Damat').reduce((s,g)=>s+g.total,0)]
+    ];
+    const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+    ws2['!cols'] = [{wch:18},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'RSVP Ozeti');
+
+    XLSX.writeFile(wb, 'davetli_listesi_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    showToast('Excel indirildi: '+guests.length+' davetli');
+}
+
+// --- GOOGLE SHEETS SYNC ---
+const SHEETS_ID = '11KMNL_7cj3yCvbFs_E4J-sSWVRyMoULc';
+const SHEETS_GID = '619714713';
+
+function fetchFromSheets(){
+    showToast('Google Sheets baglantisi kuruluyor...');
+
+    // Try fetching as CSV via export URL
+    const url = 'https://docs.google.com/spreadsheets/d/'+SHEETS_ID+'/gviz/tq?tqx=out:csv&gid='+SHEETS_GID;
+
+    fetch(url)
+        .then(resp=>{
+            if(!resp.ok) throw new Error('HTTP '+resp.status);
+            return resp.text();
+        })
+        .then(csv=>{
+            const wb = XLSX.read(csv, {type:'string'});
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+            if(rows.length<2){showToast('Sheets bos gorunuyor');return;}
+            parseExcelRows(rows, 'Google Sheets (canli)');
+        })
+        .catch(err=>{
+            console.error('Sheets fetch error:', err);
+            // Fallback: show instructions
+            showSheetsFallback();
+        });
+}
+
+function showSheetsFallback(){
+    const msg = document.createElement('div');
+    msg.className = 'import-modal-bg show';
+    msg.id = 'sheets-fallback';
+    msg.onclick = function(e){if(e.target===this){this.remove();}};
+    msg.innerHTML = '<div class="import-modal">'+
+        '<h3>Google Sheets Baglantisi</h3>'+
+        '<div class="im-sub">Sheets\'e dogrudan erisim icin asagidaki adimlari izleyin:</div>'+
+        '<div style="font-size:13px;line-height:1.8;color:var(--gray-700);margin-bottom:14px">'+
+        '<b>Yontem 1 - Yayinla:</b><br>'+
+        '1. Google Sheets\'i acin<br>'+
+        '2. Dosya &gt; Paylas &gt; Web\'de yayinla<br>'+
+        '3. "Yayinla" butonuna basin<br>'+
+        '4. Sonra bu butona tekrar basin<br><br>'+
+        '<b>Yontem 2 - Daha kolay:</b><br>'+
+        '1. Google Sheets\'te Dosya &gt; Indir &gt; .xlsx<br>'+
+        '2. "Excel Yukle" butonu ile buraya yukleyin'+
+        '</div>'+
+        '<div class="import-btns">'+
+        '<button class="ibtn-cancel" onclick="this.closest(\'.import-modal-bg\').remove()">Tamam</button>'+
+        '<button class="ibtn-go" onclick="window.open(\'https://docs.google.com/spreadsheets/d/'+SHEETS_ID+'/edit?gid='+SHEETS_GID+'\',\'_blank\');this.closest(\'.import-modal-bg\').remove()">Sheets\'i Ac</button>'+
+        '</div></div>';
+    document.body.appendChild(msg);
 }
 </script>
 </body>
