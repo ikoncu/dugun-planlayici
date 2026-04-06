@@ -160,7 +160,8 @@
         .empty-msg{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:14px}
 
         /* IMPORT/EXPORT */
-        .io-bar{display:flex;gap:6px;padding:8px 16px;background:white;border-bottom:1px solid var(--gray-100)}
+        .io-bar{display:flex;gap:6px;padding:8px 16px;background:white;border-bottom:1px solid var(--gray-100);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .io-bar::-webkit-scrollbar{display:none}
         .io-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--gray-200);background:white;font-size:12px;font-weight:500;cursor:pointer;color:var(--gray-700);white-space:nowrap}
         .io-btn:active{background:var(--gray-50);transform:scale(0.97)}
         .io-btn.primary{border-color:var(--gold);background:var(--gold-bg);color:var(--gold)}
@@ -545,9 +546,10 @@ function listen(){
         }
         updateDashboard();
         renderList();
-        // Ilk yukleme sonrasi otomatik Sheets sync
+        // Ilk yukleme: migration + otomatik Sheets sync
         if(firstLoad){
             firstLoad = false;
+            applyMigration_20260406();
             setTimeout(()=>autoSyncFromSheets(), 1500);
         }
     }, err=>{
@@ -563,6 +565,53 @@ function listen(){
 
 function saveToFirestore(){
     guestRef.set({list:guests, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+}
+
+// Tek seferlik migration - davetli ekle/cikar (06 Nisan 2026)
+function applyMigration_20260406(){
+    const MIGRATION_KEY = 'migration_20260406_done';
+    if(localStorage.getItem(MIGRATION_KEY)) return;
+
+    const norm = s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+    let changed = false;
+
+    // Cikarilacaklar
+    const removeNames = ['suzan ozcelik','ela (aysel)','ela aysel','duru (aysel)','duru aysel'];
+    const beforeLen = guests.length;
+    guests = guests.filter(g=>!removeNames.includes(norm(g.name)));
+    if(guests.length < beforeLen) changed = true;
+
+    // Eklenecekler (Gelin tarafi, Katilacak)
+    const addGuests = [
+        {name:'Nevra Kuralay', side:'Gelin', group:'Kuralay', rsvp:'Katilacak'},
+        {name:'Kuzey Kuralay', side:'Gelin', group:'Kuralay', rsvp:'Katilacak'},
+        {name:'Ali Koclu', side:'Gelin', group:'Koclu', rsvp:'Katilacak'},
+        {name:'Beste Koclu', side:'Gelin', group:'Koclu', rsvp:'Katilacak'},
+        {name:'Alin Koclu', side:'Gelin', group:'Koclu', rsvp:'Katilacak'},
+        {name:'Aycan Pelenk', side:'Gelin', group:'Pelenk', rsvp:'Katilacak'},
+        {name:'Doruk Pelenk', side:'Gelin', group:'Pelenk', rsvp:'Katilacak'}
+    ];
+
+    const existingNames = new Set(guests.map(g=>norm(g.name)));
+    addGuests.forEach(ag=>{
+        if(!existingNames.has(norm(ag.name))){
+            guests.push({
+                id: 'g'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+                name: ag.name, side: ag.side, group: ag.group,
+                phone:'', adults:1, children:0, total:1,
+                invited:'Gonderilmedi', rsvp: ag.rsvp, table:'', note:''
+            });
+            changed = true;
+        }
+    });
+
+    if(changed){
+        createBackup('Migration 06.04.2026 oncesi').then(()=>{
+            saveToFirestore();
+            showToast('Liste guncellendi: yeni kisiler eklendi, cikarilan kisiler kaldirildi');
+        });
+    }
+    localStorage.setItem(MIGRATION_KEY, 'true');
 }
 
 // --- BACKUP SISTEMI ---
