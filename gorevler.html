@@ -418,7 +418,6 @@ function save(){db.collection('shared').doc('planner_tasks').set({list:JSON.pars
 // RENDER
 function render(){
     renderProgress();
-    renderFilters();
     renderList();
 }
 
@@ -430,15 +429,6 @@ function renderProgress(){
     document.getElementById('progressFill').style.width=pct+'%';
 }
 
-function renderFilters(){
-    const el=document.getElementById('filters');
-    el.innerHTML=CATS.map(c=>{
-        const n=c.id==='all'?tasks.filter(t=>!t.done).length:tasks.filter(t=>t.cat===c.id&&!t.done).length;
-        return '<button class="filter-btn'+(activeCat===c.id?' active':'')+'" onclick="setCat(\''+c.id+'\')">'+c.name+' <span class="cnt">'+n+'</span></button>';
-    }).join('');
-}
-
-function setCat(id){activeCat=id;render();}
 
 function setAssignee(a){
     activeAsg=a;
