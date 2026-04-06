@@ -334,6 +334,11 @@ auth.onAuthStateChanged(user => {
         document.getElementById('bnav').style.display = 'flex';
         renderAvatar(user);
         startListener();
+    } else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('bnav').style.display = 'flex';
     } else {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('loading-screen').style.display = 'none';
