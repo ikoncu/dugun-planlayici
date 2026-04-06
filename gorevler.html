@@ -112,28 +112,24 @@
         .tcard.drag-over-bot{border-bottom:3px solid var(--gold);margin-bottom:-1px}
         .drag-ghost{position:fixed;z-index:999;pointer-events:none;opacity:0.85;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);transform:rotate(1.5deg)}
 
-        /* SUBTASKS - varsayilan acik */
-        .tc-subs{padding:0 12px 6px 42px}
-        .tcard.subs-closed .tc-subs{display:none}
-        /* Expand/collapse toggle */
-        .tc-expand{display:flex;align-items:center;justify-content:center;padding:6px 0 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .tc-expand-icon{font-size:16px;color:var(--g400);transition:transform 0.2s;display:inline-block;transform:rotate(180deg);line-height:1}
-        .tc-expand:active .tc-expand-icon{color:var(--gold)}
-        .tcard.subs-closed .tc-expand-icon{transform:rotate(0deg)}
-        .tc-sub{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid var(--g50)}
+        /* EXPANDABLE CONTENT - tek toggle ile acilir/kapanir */
+        .tc-detail{max-height:0;overflow:hidden;transition:max-height 0.25s ease}
+        .tcard.open .tc-detail{max-height:800px}
+        .tc-subs{padding:4px 12px 2px 42px}
+        .tc-sub{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--g50)}
         .tc-sub:first-child{border-top:none}
         .tc-sub-chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
         .tc-sub-chk.on{background:var(--green);border-color:var(--green);color:white}
         .tc-sub-chk.on::after{content:'✓';font-size:9px;font-weight:700}
         .tc-sub-text{font-size:13px;color:var(--g700);flex:1}
         .tc-sub.done .tc-sub-text{text-decoration:line-through;color:var(--g400)}
-
-        /* HINT */
-        .tc-hint{font-size:12px;color:var(--g400);padding:0 12px 8px 42px;line-height:1.4}
-
-        /* ACTIONS (on tap) */
-        .tc-actions{display:none;padding:6px 12px 10px 42px;gap:8px}
-        .tcard.open .tc-actions{display:flex}
+        .tc-hint{font-size:12px;color:var(--g400);padding:4px 12px 4px 42px;line-height:1.4}
+        .tc-actions{display:flex;padding:6px 12px 4px 42px;gap:8px}
+        /* EXPAND TOGGLE */
+        .tc-toggle{display:flex;align-items:center;justify-content:center;padding:6px 0 8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+        .tc-toggle-icon{width:28px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--g100);color:var(--g500);font-size:14px;transition:transform 0.25s,background 0.2s}
+        .tc-toggle:active .tc-toggle-icon{background:var(--gold-bg);color:var(--gold)}
+        .tcard.open .tc-toggle-icon{transform:rotate(180deg)}
         .tc-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:white;cursor:pointer;color:var(--g600)}
         .tc-btn:active{background:var(--g50)}
         .tc-btn-del{color:var(--red);border-color:var(--red-bg)}
@@ -434,14 +430,10 @@ function renderList(){
         (t.subtasks||[]).some(s=>s.text.toLowerCase().includes(q)));
 
     if(!list.length){el.innerHTML='<div class="empty">Gorev bulunamadi</div>';return;}
-    // Mevcut acik/kapali durumlarini kaydet
-    const closedIds=new Set();
+    // Acik kartlari koru
     const openIds=new Set();
-    document.querySelectorAll('.tcard.subs-closed').forEach(c=>closedIds.add(c.dataset.id));
     document.querySelectorAll('.tcard.open').forEach(c=>openIds.add(c.dataset.id));
     el.innerHTML=list.map((t,i)=>cardHTML(t,tasks.indexOf(t))).join('');
-    // Durumlari geri yukle
-    closedIds.forEach(id=>{const c=document.querySelector('.tcard[data-id="'+id+'"]');if(c)c.classList.add('subs-closed');});
     openIds.forEach(id=>{const c=document.querySelector('.tcard[data-id="'+id+'"]');if(c)c.classList.add('open');});
 }
 
@@ -453,10 +445,10 @@ function cardHTML(t,idx){
 
     let html='<div class="tcard'+(t.done?' done':'')+'" data-id="'+t.id+'" data-idx="'+idx+'">';
 
-    // Header row
-    html+='<div class="tc-header">';
+    // Header - her zaman gorunur
+    html+='<div class="tc-header" onclick="flipCard(\''+t.id+'\')">';
     html+='<div class="tc-chk'+(t.done?' on':'')+'" onclick="event.stopPropagation();togTask(\''+t.id+'\')"></div>';
-    html+='<div class="tc-body" onclick="flipCard(\''+t.id+'\')">';
+    html+='<div class="tc-body">';
     html+='<div class="tc-title">'+esc(t.title)+'</div>';
     html+='<div class="tc-meta">';
     html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+(t.assignee||'Birlikte')+'</span>';
@@ -465,10 +457,9 @@ function cardHTML(t,idx){
     html+='</div></div>';
     html+='</div>';
 
-    // Hint
+    // Detail - acilir/kapanir (subtasks + hint + actions)
+    html+='<div class="tc-detail">';
     if(t.hint) html+='<div class="tc-hint">'+esc(t.hint)+'</div>';
-
-    // Subtasks (varsayilan acik)
     if(subsTotal>0){
         html+='<div class="tc-subs">';
         t.subtasks.forEach(s=>{
@@ -478,15 +469,15 @@ function cardHTML(t,idx){
             html+='</div>';
         });
         html+='</div>';
-        // Expand/collapse toggle
-        html+='<div class="tc-expand" onclick="togSubs(\''+t.id+'\')"><span class="tc-expand-icon">&#9660;</span></div>';
     }
-
-    // Actions (expandable on title click)
     html+='<div class="tc-actions">';
     html+='<button class="tc-btn" onclick="openEdit(\''+t.id+'\')">Duzenle</button>';
     html+='<button class="tc-btn tc-btn-del" onclick="delTaskConfirm(\''+t.id+'\')">Sil</button>';
     html+='</div>';
+    html+='</div>';
+
+    // Toggle ok
+    html+='<div class="tc-toggle" onclick="flipCard(\''+t.id+'\')"><div class="tc-toggle-icon">&#9660;</div></div>';
 
     html+='</div>';
     return html;
@@ -509,11 +500,6 @@ function togSub(taskId,subId){
 function flipCard(id){
     const card=document.querySelector('.tcard[data-id="'+id+'"]');
     if(card) card.classList.toggle('open');
-}
-
-function togSubs(id){
-    const card=document.querySelector('.tcard[data-id="'+id+'"]');
-    if(card) card.classList.toggle('subs-closed');
 }
 
 function delTaskConfirm(id){
