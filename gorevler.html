@@ -16,7 +16,6 @@
             --blue:#2563eb;--blue-bg:#eff6ff;
             --purple:#7c3aed;--purple-bg:#f5f3ff;
             --orange:#ea580c;--orange-bg:#fff7ed;
-            --cyan:#0891b2;--cyan-bg:#ecfeff;
             --g50:#f9fafb;--g100:#f3f4f6;--g200:#e5e7eb;--g300:#d1d5db;
             --g400:#9ca3af;--g500:#6b7280;--g600:#4b5563;--g700:#374151;--g900:#111827;
         }
@@ -25,177 +24,175 @@
         /* LOGIN */
         #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
+        .login-card .logo{font-size:48px;margin-bottom:16px}
         .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
         .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
-        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:transform 0.15s}
-        .google-btn:hover{transform:translateY(-1px)}
-        .google-btn svg{width:20px;height:20px;flex-shrink:0}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
 
         /* LOADING */
         #loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--g50)}
         .spinner{width:36px;height:36px;border:3px solid var(--g200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
 
+        /* APP */
+        #app{display:none;padding-bottom:68px}
+
         /* HEADER */
-        .header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:10px 16px;position:sticky;top:0;z-index:100}
+        .header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:14px 16px;position:sticky;top:0;z-index:50}
         .header-row{display:flex;align-items:center;justify-content:space-between}
-        .header h1{font-size:16px;font-weight:600;flex:1;text-align:center}
-        .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;cursor:pointer}
-        .user-avatar-fallback{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
-        .user-dropdown{position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
+        .header h1{font-size:17px;font-weight:700;flex:1;text-align:center}
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px}
+        #user-avatar-container{cursor:pointer;position:relative}
+        .user-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--gold-light)}
+        .user-avatar-fallback{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white}
+        .user-dropdown{display:none;position:absolute;top:38px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:150px;z-index:200;overflow:hidden}
         .user-dropdown.open{display:block}
-        .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:#111;border-bottom:1px solid #f3f4f6}
-        .user-dropdown button.dd-btn{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#dc2626}
-        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;opacity:0.8}
+        .user-dropdown-name{padding:10px 14px 6px;font-size:12px;font-weight:600;color:var(--g700);border-bottom:1px solid var(--g100)}
+        .dd-btn{width:100%;padding:10px 14px;border:none;background:none;font-size:13px;color:var(--red);cursor:pointer;text-align:left}
 
         /* DRAWER */
         .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
         .drawer-overlay.open{display:block}
-        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
+        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
         .drawer.open{right:0}
         .drawer-header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
-        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f3f4f6;text-decoration:none;color:#111;font-size:14px;font-weight:500}
-        .drawer-item:active{background:#f9fafb}
+        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--g100);text-decoration:none;color:var(--g900);font-size:14px;font-weight:500}
+        .drawer-item.active{background:var(--gold-bg);color:var(--gold);font-weight:600}
         .drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
-        .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px}
-        .drawer-item.active{background:#fdf8ef;color:var(--gold);font-weight:600}
+        .drawer-section{padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--g400);text-transform:uppercase;letter-spacing:0.5px}
 
         /* PROGRESS */
-        .progress-section{padding:12px 16px 4px;max-width:640px;margin:0 auto}
-        .progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-        .progress-label{font-size:13px;font-weight:600;color:var(--g700)}
-        .progress-count{font-size:13px;font-weight:700;color:var(--gold)}
-        .progress-bar{width:100%;height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
-        .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:4px;transition:width 0.5s ease}
+        .progress-section{padding:10px 16px;background:white;border-bottom:1px solid var(--g100)}
+        .progress-info{display:flex;justify-content:space-between;font-size:12px;color:var(--g500);margin-bottom:4px}
+        .progress-bar{width:100%;height:6px;background:var(--g200);border-radius:3px;overflow:hidden}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;transition:width 0.5s}
 
-        /* FILTER STRIPS */
-        .filter-strip{display:flex;overflow-x:auto;gap:6px;padding:10px 16px;background:white;border-bottom:1px solid var(--g100);-webkit-overflow-scrolling:touch;position:sticky;top:42px;z-index:90}
-        .filter-strip::-webkit-scrollbar{display:none}
-        .filter-btn{padding:6px 12px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--g200);background:white;cursor:pointer;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px}
-        .filter-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
-        .filter-btn .cnt{font-size:10px;background:var(--g200);color:var(--g600);border-radius:8px;padding:0 5px;font-weight:600;min-width:16px;text-align:center}
-        .filter-btn.active .cnt{background:var(--gold);color:white}
-
-        /* ASSIGNEE FILTER */
-        .assignee-strip{display:flex;overflow-x:auto;gap:6px;padding:6px 16px 10px;background:white;border-bottom:1px solid var(--g100);-webkit-overflow-scrolling:touch;position:sticky;top:82px;z-index:89}
-        .assignee-strip::-webkit-scrollbar{display:none}
-        .asg-btn{padding:5px 12px;border-radius:16px;font-size:11px;font-weight:500;border:1.5px solid var(--g200);background:white;cursor:pointer;white-space:nowrap;flex-shrink:0;color:var(--g600)}
-        .asg-btn.active{font-weight:600;color:white}
-        .asg-btn.active[data-a="Hepsi"]{border-color:var(--gold);background:var(--gold);color:white}
+        /* ASSIGNEE FILTERS */
+        .assignee-strip{display:flex;gap:6px;padding:8px 16px;background:white;border-bottom:1px solid var(--g100);overflow-x:auto}
+        .asg-btn{padding:6px 14px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--g200);background:white;cursor:pointer;white-space:nowrap}
+        .asg-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
         .asg-btn.active[data-a="Ibrahim"]{border-color:var(--blue);background:var(--blue);color:white}
         .asg-btn.active[data-a="Hilal"]{border-color:var(--purple);background:var(--purple);color:white}
         .asg-btn.active[data-a="Birlikte"]{border-color:var(--gold);background:var(--gold-bg);color:var(--gold)}
 
-        /* QUICK INPUT */
-        .quick-bar{padding:10px 16px;background:white;border-bottom:1px solid var(--g100);position:sticky;top:122px;z-index:80}
-        .quick-row{display:flex;gap:6px;align-items:center}
-        .quick-input{flex:1;border:1.5px solid var(--g200);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
-        .quick-input:focus{border-color:var(--gold)}
-        .qbtn{width:38px;height:38px;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .qbtn-send{background:var(--gold);color:white;font-size:20px;font-weight:300}
-        .qbtn-mic{background:var(--g100);font-size:16px}
-        .qbtn-mic.on{background:var(--red);color:white;animation:pulse 1s infinite}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        /* SEARCH */
+        .search-bar{padding:8px 16px;background:white;border-bottom:1px solid var(--g100);position:sticky;top:49px;z-index:40}
+        .search-input{width:100%;border:1.5px solid var(--g200);border-radius:10px;padding:8px 12px 8px 34px;font-size:14px;outline:none;background:var(--g50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 12px center}
+        .search-input:focus{border-color:var(--gold);background-color:white}
+
+        /* TASK LIST */
+        .tlist{padding:8px 12px 100px;max-width:640px;margin:0 auto}
+        .empty{text-align:center;color:var(--g400);padding:40px 16px;font-size:14px}
+
+        /* TASK CARD - AGENDA STYLE */
+        .tcard{background:white;border-radius:12px;border:1px solid var(--g100);margin-bottom:8px;overflow:hidden;transition:opacity 0.3s,border-color 0.2s}
+        .tcard.done{opacity:0.45}
+        .tcard.dragging{opacity:0.5;border:2px dashed var(--gold);transform:scale(0.98)}
+        .tcard.drag-over{border-top:3px solid var(--gold)}
+
+        .tc-header{display:flex;align-items:flex-start;gap:10px;padding:12px 12px 6px;cursor:pointer}
+        .tc-chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.2s}
+        .tc-chk.on{background:var(--green);border-color:var(--green);color:white}
+        .tc-chk.on::after{content:'✓';font-size:11px;font-weight:700}
+        .tc-body{flex:1;min-width:0}
+        .tc-title{font-size:14px;font-weight:600;color:var(--g900);line-height:1.3}
+        .tcard.done .tc-title{text-decoration:line-through;color:var(--g400)}
+        .tc-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
+        .tc-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+        .tc-tag-asg{background:var(--g100);color:var(--g600)}
+        .tc-tag-asg[data-a="Ibrahim"]{background:var(--blue-bg);color:var(--blue)}
+        .tc-tag-asg[data-a="Hilal"]{background:var(--purple-bg);color:var(--purple)}
+        .tc-tag-asg[data-a="Birlikte"]{background:var(--gold-bg);color:var(--gold)}
+        .tc-tag-due{background:var(--g100);color:var(--g500)}
+        .tc-tag-due.overdue{background:var(--red-bg);color:var(--red)}
+        .tc-tag-progress{background:var(--green-bg);color:var(--green);font-weight:600}
+        .tc-drag{color:var(--g300);font-size:18px;cursor:grab;padding:0 4px;touch-action:none;user-select:none;flex-shrink:0;margin-top:2px}
+        .tc-drag:active{cursor:grabbing;color:var(--g500)}
+
+        /* SUBTASKS */
+        .tc-subs{padding:0 12px 10px 42px;display:none}
+        .tcard.subs-open .tc-subs{display:block}
+        .tc-subs-toggle{display:inline-flex;align-items:center;gap:3px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+        .tc-subs-toggle .tc-arrow{font-size:8px;color:var(--g400);transition:transform 0.2s}
+        .tcard.subs-open .tc-subs-toggle .tc-arrow{transform:rotate(90deg)}
+        .tc-sub{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid var(--g50)}
+        .tc-sub:first-child{border-top:none}
+        .tc-sub-chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+        .tc-sub-chk.on{background:var(--green);border-color:var(--green);color:white}
+        .tc-sub-chk.on::after{content:'✓';font-size:9px;font-weight:700}
+        .tc-sub-text{font-size:13px;color:var(--g700);flex:1}
+        .tc-sub.done .tc-sub-text{text-decoration:line-through;color:var(--g400)}
+
+        /* HINT */
+        .tc-hint{font-size:12px;color:var(--g400);padding:0 12px 8px 42px;line-height:1.4}
+
+        /* ACTIONS (on tap) */
+        .tc-actions{display:none;padding:6px 12px 10px 42px;gap:8px}
+        .tcard.open .tc-actions{display:flex}
+        .tc-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:white;cursor:pointer;color:var(--g600)}
+        .tc-btn:active{background:var(--g50)}
+        .tc-btn-del{color:var(--red);border-color:var(--red-bg)}
+
         /* FAB */
         .fab{position:fixed;bottom:68px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(214,79,109,0.4);z-index:95;display:flex;align-items:center;justify-content:center;font-weight:300}
         .fab:active{transform:scale(0.93)}
 
-        /* TASK CARDS */
-        .tlist{padding:0 12px 120px;max-width:640px;margin:0 auto}
-        .tcard{background:white;border-radius:10px;border:1px solid var(--g100);margin-bottom:5px;overflow:hidden}
-        .tcard.urgent{border-left:3px solid var(--red)}
-        .tcard.done{opacity:0.4}
-        .tcard.done .ttitle{text-decoration:line-through}
-        .tcard.open{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-        .tmain{display:flex;align-items:flex-start;gap:8px;padding:10px 10px}
-        .tchk{width:20px;height:20px;border-radius:5px;border:2px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px}
-        .tchk:active{transform:scale(0.9)}
-        .tchk.on{background:var(--green);border-color:var(--green)}
-        .tchk.on::after{content:'\2713';color:white;font-size:12px;font-weight:700}
-        .tbody{flex:1;min-width:0;cursor:pointer}
-        .ttitle{font-size:13px;font-weight:500;line-height:1.35}
-        .tsub{font-size:11px;color:var(--g500);margin-top:1px}
-        .ttags{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap}
-        .ttag{font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600}
-        .ttag-cat{background:var(--g100);color:var(--g600)}
-        .ttag-urgent{background:var(--red-bg);color:var(--red)}
-        .ttag-due{background:var(--g100);color:var(--g600)}
-        .ttag-overdue{background:var(--red-bg);color:var(--red)}
-        .ttag-ibrahim{background:var(--blue-bg);color:var(--blue)}
-        .ttag-hilal{background:var(--purple-bg);color:var(--purple)}
-        .ttag-birlikte{background:var(--gold-bg);color:var(--gold)}
-        .tarrow{color:var(--g300);font-size:10px;padding:4px;flex-shrink:0}
-        .tcard.open .tarrow{transform:rotate(180deg)}
-
-        .tdetail{display:none;padding:0 10px 10px;border-top:1px solid var(--g100)}
-        .tcard.open .tdetail{display:block}
-        .tnote{white-space:pre-wrap;font-size:12px;color:var(--g700);padding:8px;line-height:1.5;background:var(--g50);border-radius:6px;margin-top:6px}
-        .tbtns{display:flex;gap:6px;margin-top:8px}
-        .tbtns button{padding:6px 12px;border-radius:6px;border:none;font-size:11px;cursor:pointer;font-weight:500}
-        .tbtn-edit{background:var(--g100);color:var(--g700)}
-        .tbtn-del{background:var(--red-bg);color:var(--red)}
-
         /* MODAL */
         .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center}
         .modal-bg.show{display:flex}
-        .modal{background:white;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:16px 16px 28px;animation:su 0.2s ease}
+        .modal{background:white;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:16px 16px 28px;animation:su 0.2s ease}
         @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
         .modal-bar{width:32px;height:3px;background:var(--g300);border-radius:2px;margin:0 auto 12px}
         .modal-hdr{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
         .modal-x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--g400)}
         .fg{margin-bottom:10px}
         .fg label{display:block;font-size:11px;font-weight:600;color:var(--g500);margin-bottom:3px}
-        .fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--g200);border-radius:8px;padding:8px 10px;font-size:13px;outline:none;font-family:inherit}
+        .fg input,.fg select,.fg textarea{width:100%;border:1.5px solid var(--g200);border-radius:8px;padding:8px 10px;font-size:14px;outline:none;font-family:inherit}
         .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold)}
+        .fg textarea{resize:vertical;min-height:50px}
         .btn-save{width:100%;padding:11px;border:none;border-radius:10px;background:var(--gold);color:white;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
+        .btn-save:active{opacity:0.8}
 
-        /* TEMPLATE ITEMS */
-        .tmpl-item{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid var(--g100);cursor:pointer}
-        .tmpl-item:active{background:var(--g50)}
-        .tmpl-icon{font-size:22px}
-        .tmpl-info{flex:1}
-        .tmpl-info h4{font-size:13px;font-weight:600}
-        .tmpl-info p{font-size:11px;color:var(--g500)}
-
-        /* EMPTY */
-        .empty{text-align:center;padding:40px 20px;color:var(--g400);font-size:13px}
+        /* MODAL SUBTASK EDITOR */
+        .sub-editor{margin:8px 0}
+        .sub-editor-item{display:flex;align-items:center;gap:6px;padding:5px 0}
+        .sub-editor-item input{flex:1;border:1px solid var(--g200);border-radius:6px;padding:6px 8px;font-size:13px;outline:none}
+        .sub-editor-item input:focus{border-color:var(--gold)}
+        .sub-editor-rm{width:24px;height:24px;border:none;background:var(--red-bg);color:var(--red);border-radius:6px;cursor:pointer;font-size:14px;flex-shrink:0}
+        .sub-editor-add{display:flex;align-items:center;gap:4px;padding:6px 0;font-size:12px;color:var(--gold);cursor:pointer;font-weight:500;border:none;background:none}
 
         /* BOTTOM NAV */
-        .bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);display:none;height:56px;z-index:95;box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
-        .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:500;color:var(--g400);text-decoration:none}
-        .bnav .active{color:var(--gold)}
-        .bnav .bicon{font-size:18px}
+        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);z-index:40;padding:6px 0 env(safe-area-inset-bottom);grid-template-columns:repeat(4,1fr)}
+        .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;text-decoration:none;color:var(--g400);font-size:10px;font-weight:500}
+        .bnav a.active{color:var(--gold)}
+        .bicon{font-size:20px}
     </style>
 </head>
 <body>
-
-<!-- LOGIN (hidden by default) -->
-<div id="login-screen" style="display:none">
+<!-- LOGIN -->
+<div id="login-screen" style="display:flex">
     <div class="login-card">
+        <div class="logo">💍</div>
         <h1>Gorevler</h1>
-        <p>Dugun organizasyon gorev yonetimi</p>
+        <p>Dugun gorevlerini yonetin</p>
         <button class="google-btn" onclick="signIn()">
-            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            Google ile Giris
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Google ile Giris Yap
         </button>
     </div>
 </div>
 
-<!-- LOADING (visible by default) -->
-<div id="loading-screen" style="display:flex">
-    <div class="spinner"></div>
-    <div style="font-size:14px;color:var(--g400)">Yukleniyor...</div>
-</div>
+<!-- LOADING -->
+<div id="loading-screen" style="display:none"><div class="spinner"></div><div style="font-size:14px;color:var(--g500)">Yukleniyor...</div></div>
 
 <!-- APP -->
-<div id="app" style="display:none;padding-bottom:60px">
-    <!-- HEADER -->
+<div id="app" style="display:none">
     <div class="header">
         <div class="header-row">
-            <div style="position:relative">
-                <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+            <div id="user-avatar-container" onclick="toggleDropdown()">
+                <div id="user-avatar-wrap"></div>
                 <div class="user-dropdown" id="user-dropdown">
-                    <div class="user-dropdown-name" id="user-name"></div>
+                    <div class="user-dropdown-name" id="user-dropdown-name"></div>
                     <button class="dd-btn" onclick="signOut()">Cikis Yap</button>
                 </div>
             </div>
@@ -204,28 +201,26 @@
         </div>
     </div>
 
-    <!-- PROGRESS BAR -->
+    <!-- PROGRESS -->
     <div class="progress-section">
         <div class="progress-info">
-            <span class="progress-label">Ilerleme</span>
-            <span class="progress-count" id="progressText">0 / 0</span>
+            <span>Ilerleme</span>
+            <span id="progressText">0 / 0</span>
         </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill" style="width:0%"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     </div>
 
     <!-- ASSIGNEE FILTERS -->
-    <div class="assignee-strip" id="asgFilters">
-        <button class="asg-btn active" data-a="Hepsi" onclick="setAssignee('Hepsi')">Hepsi</button>
-        <button class="asg-btn" data-a="Ibrahim" onclick="setAssignee('Ibrahim')">Ibrahim</button>
-        <button class="asg-btn" data-a="Hilal" onclick="setAssignee('Hilal')">Hilal</button>
-        <button class="asg-btn" data-a="Birlikte" onclick="setAssignee('Birlikte')">Birlikte</button>
+    <div class="assignee-strip">
+        <button class="asg-btn active" data-a="Hepsi" onclick="setAsg('Hepsi')">Hepsi</button>
+        <button class="asg-btn" data-a="Ibrahim" onclick="setAsg('Ibrahim')">Ibrahim</button>
+        <button class="asg-btn" data-a="Hilal" onclick="setAsg('Hilal')">Hilal</button>
+        <button class="asg-btn" data-a="Birlikte" onclick="setAsg('Birlikte')">Birlikte</button>
     </div>
 
     <!-- SEARCH -->
-    <div class="quick-bar">
-        <input type="text" class="quick-input" id="qi" placeholder="Gorev ara..." oninput="renderTasks()">
+    <div class="search-bar">
+        <input type="text" class="search-input" id="qi" placeholder="Gorev ara..." oninput="renderList()">
     </div>
 
     <!-- TASK LIST -->
@@ -246,44 +241,38 @@
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-    <div class="drawer-header">&#128141; Dugun Planlayici</div>
+    <div class="drawer-header">💍 Dugun Planlayici</div>
     <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">&#127968;</span>Ana Sayfa</a>
-    <a class="drawer-item active" href="gorevler.html"><span class="di-icon">&#9989;</span>Gorevler</a>
-    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">&#127963;&#65039;</span>Mekanlar</a>
-    <a class="drawer-item" href="davetliler.html"><span class="di-icon">&#128101;</span>Davetliler</a>
+    <a class="drawer-item" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
+    <a class="drawer-item active" href="gorevler.html"><span class="di-icon">✅</span>Gorevler</a>
+    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
+    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
     <div class="drawer-section">Diger</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">&#128176;</span>Butce</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">&#129681;</span>Masa Plani</a>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
 </div>
 
-<!-- ADD/EDIT MODAL -->
-<div class="modal-bg" id="modal-edit" onclick="if(event.target===this)closeModal('modal-edit')">
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="modal-edit" onclick="if(event.target===this)closeModal()">
     <div class="modal">
         <div class="modal-bar"></div>
-        <div class="modal-hdr"><span id="me-title-label">Gorev</span><button class="modal-x" onclick="closeModal('modal-edit')">&times;</button></div>
-        <div class="fg"><label>Baslik</label><input type="text" id="me-title"></div>
-        <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kisa aciklama"></div>
+        <div class="modal-hdr"><span id="modal-title">Gorev Ekle</span><button class="modal-x" onclick="closeModal()">&times;</button></div>
+        <div class="fg"><label>Baslik</label><input type="text" id="me-title" placeholder="Gorev basligi..."></div>
+        <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kisa aciklama..."></div>
         <div style="display:flex;gap:8px">
             <div class="fg" style="flex:1"><label>Sorumluluk</label><select id="me-asg"><option value="Birlikte">Birlikte</option><option value="Ibrahim">Ibrahim</option><option value="Hilal">Hilal</option></select></div>
-            <div class="fg" style="flex:1"><label>Oncelik</label><select id="me-pri"><option value="urgent">Acil</option><option value="normal" selected>Normal</option><option value="low">Dusuk</option></select></div>
+            <div class="fg" style="flex:1"><label>Son Tarih</label><input type="date" id="me-due"></div>
         </div>
-        <div class="fg"><label>Son Tarih</label><input type="date" id="me-due"></div>
-        <select id="me-cat" style="display:none"></select>
-        <div class="fg"><label>Not</label><textarea id="me-note" rows="3" placeholder="Detayli not..."></textarea></div>
+        <div class="fg"><label>Not</label><textarea id="me-note" rows="2" placeholder="Detayli not..."></textarea></div>
+        <div class="fg">
+            <label>Alt Gorevler</label>
+            <div class="sub-editor" id="sub-editor"></div>
+            <button class="sub-editor-add" onclick="addSubEditor()">+ Alt gorev ekle</button>
+        </div>
         <div style="display:flex;gap:8px">
-            <button class="btn-save" style="flex:1;background:var(--red-bg);color:var(--red)" id="me-del-btn" onclick="delTask()">Sil</button>
+            <button class="btn-save" style="flex:1;background:var(--red-bg);color:var(--red);display:none" id="me-del-btn" onclick="delTask()">Sil</button>
             <button class="btn-save" style="flex:2" onclick="saveTask()">Kaydet</button>
         </div>
-    </div>
-</div>
-
-<!-- TEMPLATE MODAL -->
-<div class="modal-bg" id="modal-templates" onclick="if(event.target===this)closeModal('modal-templates')">
-    <div class="modal">
-        <div class="modal-bar"></div>
-        <div class="modal-hdr">Sablon Ekle <button class="modal-x" onclick="closeModal('modal-templates')">&times;</button></div>
-        <div id="tmpl-list"></div>
     </div>
 </div>
 
@@ -297,96 +286,61 @@ const FIREBASE_CONFIG = {
     appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
 };
 
-const CATS = [
-    {id:'all',name:'Hepsi',color:'var(--g600)'},
-    {id:'seyahat',name:'Seyahat',color:'var(--blue)'},
-    {id:'belgeler',name:'Belgeler',color:'var(--purple)'},
-    {id:'mekanlar',name:'Mekanlar',color:'var(--gold)'},
-    {id:'belediye',name:'Belediye',color:'var(--cyan)'},
-    {id:'nisan',name:'Nisan',color:'var(--orange)'},
-    {id:'dugun',name:'Dugun',color:'var(--red)'},
-    {id:'diger',name:'Diger',color:'var(--g500)'}
-];
-
 const DEFAULT_TASKS = [
-    {id:'s1',cat:'seyahat',title:'Ucak bileti al (Istanbul \u2192 Gaziantep)',hint:'1 Mayis veya 30 Nisan. Ibrahim + Hilal birlikte.',done:false,priority:'urgent',due:'2026-04-20',note:'Pegasus, THY, AnadoluJet karsilastir.\nGidis: 30 Nisan aksam veya 1 Mayis sabah.',assignee:'Birlikte'},
-    {id:'s2',cat:'seyahat',title:'Konaklama ayarla (Gaziantep, 1-4 Mayis)',hint:'3-4 gece. Otel veya aile yaninda.',done:false,priority:'normal',due:'2026-04-20',note:'',assignee:'Birlikte'},
-    {id:'s3',cat:'seyahat',title:'Donus ucak bileti (4 veya 5 Mayis)',hint:'Belediye turu sonrasina gore.',done:false,priority:'normal',due:'2026-04-20',note:'',assignee:'Birlikte'},
-    {id:'b1',cat:'belgeler',title:'Saglik raporu randevusu al (Ibrahim)',hint:'Aile hekimi \u2014 UCRETSIZ',done:false,priority:'urgent',due:'2026-04-15',note:'Testler: Hemogram, Hepatit B/C, HIV, Sifiliz, Talasemi, SMA (ZORUNLU), akciger filmi, idrar.\nSMA testi olmadan nikah KIYILAMAZ.\nRapor 6 ay gecerli.',assignee:'Ibrahim'},
-    {id:'b2',cat:'belgeler',title:'Saglik raporu randevusu al (Hilal)',hint:'Ayni testler gerekli.',done:false,priority:'urgent',due:'2026-04-15',note:'',assignee:'Hilal'},
-    {id:'b3',cat:'belgeler',title:'TC Kimlik Karti fotokopisi (2 kisi)',hint:'Asli + fotokopi.',done:false,priority:'normal',due:'2026-04-25',note:'',assignee:'Birlikte'},
-    {id:'b4',cat:'belgeler',title:'Vesikalik fotograf cektir (4-5 adet, 2 kisi)',hint:'Renkli, son 6 ay.',done:false,priority:'normal',due:'2026-04-25',note:'',assignee:'Birlikte'},
-    {id:'b5',cat:'belgeler',title:'Ikametgah belgesi (e-Devlet)',hint:'Bazi belediyeler istiyor.',done:false,priority:'low',due:'2026-04-28',note:'',assignee:'Birlikte'},
-    {id:'b6',cat:'belgeler',title:'Nufus kayit ornegi',hint:'e-Devlet\'ten alinabilir.',done:false,priority:'low',due:'2026-04-28',note:'',assignee:'Birlikte'},
-    {id:'m1',cat:'mekanlar',title:'Mekanlarin 1-2-3 Mayis saatlerini dogrula',hint:'1 Mayis resmi tatil! Arayin.',done:false,priority:'urgent',due:'2026-04-10',note:'1 Mayis Cuma = resmi tatil.\n2 Mayis Cmt, 3 Mayis Pzr = normal.\nHer mekani tek tek arayin.',assignee:'Birlikte'},
-    {id:'m2',cat:'mekanlar',title:'MSM Erikce \u2014 randevu al',hint:'Tel: 0342 777 76 76 (dahili 2)',done:false,priority:'urgent',due:'2026-04-12',note:'Haftasonu 08:00-23:00\nKapasite: 400 kisi / 100 masa\nAdres: Gazi Mah. Zubeyde Hanim Blv. No:39, Sehitkamil',assignee:'Birlikte'},
-    {id:'m3',cat:'mekanlar',title:'Ceremony Erikce (Seremoni) \u2014 randevu al',hint:'Tel: 0533 255 66 27',done:false,priority:'urgent',due:'2026-04-12',note:'Kapasite: 1200 kisi\nAdres: Ibrahimli Mah. Erikce, Sehitkamil\nSaatleri online yok \u2014 mutlaka arayin.',assignee:'Birlikte'},
-    {id:'m4',cat:'mekanlar',title:'Selale Plaza \u2014 randevu al',hint:'@selaleplazadugunsalonu',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
-    {id:'m5',cat:'mekanlar',title:'Pembe Kosk \u2014 randevu al',hint:'@pembekoskbalosalon',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
-    {id:'m6',cat:'mekanlar',title:'Marina BKM \u2014 randevu al',hint:'@marinagaziantepbkm',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
-    {id:'m7',cat:'mekanlar',title:'Vadi Garden \u2014 randevu al',hint:'Acik hava \u2014 @vadigardengaziantep',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
-    {id:'m8',cat:'mekanlar',title:'Livas Park \u2014 randevu al',hint:'Acik hava \u2014 @livasparkdugun',done:false,priority:'normal',due:'2026-04-12',note:'',assignee:'Birlikte'},
-    {id:'m9',cat:'mekanlar',title:'Randevulari ayni gun yakin saatlere denkle',hint:'10:00-17:00 arasi, 1-1.5 saat aralik.',done:false,priority:'normal',due:'2026-04-15',note:'Oncelik: MSM Erikce + Seremoni.\nDigerlerini aralara serp.',assignee:'Birlikte'},
-    {id:'be1',cat:'belediye',title:'Nikah randevu sistemi var mi arastir',hint:'Sehitkamil, Sahinbey, Buyuksehir.',done:false,priority:'normal',due:'2026-04-15',note:'Sahinbey: 444 27 01\nBuyuksehir: ebelediye.gaziantep.bel.tr\nOnline sorgulama bulunamadi.',assignee:'Ibrahim'},
-    {id:'be2',cat:'belediye',title:'Belediyelere randevu gerekiyor mu?',hint:'Telefonla sor.',done:false,priority:'normal',due:'2026-04-20',note:'4 Mayis icin planlaniyor.',assignee:'Ibrahim'},
-    {id:'be3',cat:'belediye',title:'4 Mayis icin izin al (Ibrahim)',hint:'Is gunu \u2014 izin gerekli.',done:false,priority:'normal',due:'2026-04-25',note:'',assignee:'Ibrahim'},
-    {id:'be4',cat:'belediye',title:'Belediye listesi hazirla',hint:'Sehitkamil, Sahinbey, Buyuksehir + ilceler',done:false,priority:'low',due:'2026-05-01',note:'Uzak ilce belediyeleri de gelebilir (Nurdagi vb.).\nBuyuksehir de nikah kiyabiliyor.',assignee:'Birlikte'},
-    {id:'ni1',cat:'nisan',title:'Nisan mekani belirle',hint:'16 Mayis 2026.',done:false,priority:'normal',due:'2026-04-20',note:'',assignee:'Birlikte'},
-    {id:'ni2',cat:'nisan',title:'Nisan yuzugu al',hint:'',done:false,priority:'normal',due:'2026-05-01',note:'',assignee:'Birlikte'},
-    {id:'ni3',cat:'nisan',title:'Nisan kiyafetleri + kuafor',hint:'',done:false,priority:'normal',due:'2026-05-05',note:'',assignee:'Birlikte'},
-    {id:'ni4',cat:'nisan',title:'Davetli listesi (nisan)',hint:'Yakin aile + arkadaslar.',done:false,priority:'normal',due:'2026-05-01',note:'',assignee:'Birlikte'},
-    {id:'ni5',cat:'nisan',title:'Nisan organizasyonu',hint:'Soz kesme, cicek, pasta, fotograf.',done:false,priority:'normal',due:'2026-05-10',note:'',assignee:'Birlikte'},
-    {id:'du1',cat:'dugun',title:'Mekan gezisi sonrasi: karar matrisi',hint:'Tercihlere gore siralama.',done:false,priority:'normal',due:'2026-05-03',note:'Kriterler: fiyat, kapasite, acik/kapali, tarih, konum.\nEn begenilen 5 mekani sirala.',assignee:'Birlikte'},
-    {id:'du2',cat:'dugun',title:'En iyi mekan + nikah tarihini esle',hint:'Mekan tarihi + belediye memuru = optimum.',done:false,priority:'normal',due:'2026-05-04',note:'',assignee:'Birlikte'},
-    {id:'du3',cat:'dugun',title:'Dugun mekani kesinlestir & kapora',hint:'Sozlesmeyi oku.',done:false,priority:'normal',due:'2026-05-15',note:'',assignee:'Birlikte'},
-    {id:'du4',cat:'dugun',title:'Nikah basvurusu yap',hint:'Iki taraf birlikte.',done:false,priority:'normal',due:'2026-05-15',note:'Belgeler: TC kimlik, vesikalik, saglik raporu, evlenme beyannamesi.\nEvlilik cuzdani: ~1.202 TL',assignee:'Birlikte'},
-];
-
-const TEMPLATES = [
-    {id:'t1',icon:'\uD83C\uDFD6\uFE0F',name:'Balayi Planlama',desc:'Destinasyon, otel, ucak, vize',tasks:[
-        {cat:'diger',title:'Balayi destinasyonu arastir',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
-        {cat:'diger',title:'Balayi oteli rezervasyonu',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
-        {cat:'diger',title:'Balayi ucak bileti',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
-        {cat:'belgeler',title:'Pasaport / Vize',hint:'Yurt disi ise 2 ay once',priority:'normal',note:'',assignee:'Birlikte'},
+    {id:'g1',title:'Ofisten izin al',hint:'24 Nisan ve 27 Nisan',done:false,due:'2026-04-20',assignee:'Ibrahim',note:'',subtasks:[
+        {id:'s1a',text:'24 Nisan izin talebi',done:false},
+        {id:'s1b',text:'27 Nisan izin talebi',done:false}
     ]},
-    {id:'t2',icon:'\uD83C\uDF89',name:'Kina Gecesi',desc:'Mekan, malzeme, davetli',tasks:[
-        {cat:'dugun',title:'Kina gecesi mekani belirle',hint:'',priority:'normal',note:'',assignee:'Hilal'},
-        {cat:'dugun',title:'Kina malzemeleri',hint:'',priority:'normal',note:'',assignee:'Hilal'},
-        {cat:'dugun',title:'Kina davetli listesi',hint:'',priority:'normal',note:'',assignee:'Hilal'},
+    {id:'g2',title:'Antep ucak biletleri',hint:'Gidis + donus',done:false,due:'2026-04-20',assignee:'Birlikte',note:'Pegasus, THY, AnadoluJet karsilastir',subtasks:[
+        {id:'s2a',text:'Gidis bileti (30 Nisan veya 1 Mayis)',done:false},
+        {id:'s2b',text:'Donus bileti (4 veya 5 Mayis)',done:false},
+        {id:'s2c',text:'Fiyat karsilastirma yap',done:false}
     ]},
-    {id:'t3',icon:'\uD83D\uDCF8',name:'Fotograf & Video',desc:'Ekip, dis cekim, drone',tasks:[
-        {cat:'dugun',title:'Fotograf / Video ekibi sec',hint:'2-3 teklif al',priority:'normal',note:'',assignee:'Birlikte'},
-        {cat:'dugun',title:'Dis cekim lokasyonu + tarih',hint:'',priority:'normal',note:'',assignee:'Birlikte'},
+    {id:'g3',title:'Mekan randevulari ayarla',hint:'Tum mekanlari ara',done:false,due:'2026-04-12',assignee:'Birlikte',note:'1 Mayis resmi tatil - saatleri dogrula',subtasks:[
+        {id:'s3a',text:'MSM Erikce - 0342 777 76 76',done:false},
+        {id:'s3b',text:'Ceremony Erikce - 0533 255 66 27',done:false},
+        {id:'s3c',text:'Selale Plaza',done:false},
+        {id:'s3d',text:'Pembe Kosk',done:false},
+        {id:'s3e',text:'Marina BKM',done:false},
+        {id:'s3f',text:'Vadi Garden',done:false},
+        {id:'s3g',text:'Livas Park',done:false}
     ]},
-    {id:'t4',icon:'\uD83D\uDC57',name:'Kiyafetler',desc:'Gelinlik, damatlik, kuafor',tasks:[
-        {cat:'dugun',title:'Gelinlik arastir',hint:'3 ay once siparis',priority:'normal',note:'',assignee:'Hilal'},
-        {cat:'dugun',title:'Damatlik sec',hint:'',priority:'normal',note:'',assignee:'Ibrahim'},
-        {cat:'dugun',title:'Kuafor + makyaj provasi',hint:'',priority:'normal',note:'',assignee:'Hilal'},
+    {id:'g4',title:'Belediyeleri ara',hint:'Nikah icin belediye arastir',done:false,due:'2026-04-15',assignee:'Ibrahim',note:'4 Mayis icin planlaniyor',subtasks:[
+        {id:'s4a',text:'Sehitkamil Belediyesi',done:false},
+        {id:'s4b',text:'Sahinbey Belediyesi - 444 27 01',done:false},
+        {id:'s4c',text:'Buyuksehir Belediyesi',done:false},
+        {id:'s4d',text:'Online nikah randevu sistemi var mi?',done:false}
     ]},
+    {id:'g5',title:'Saglik raporu & evlilik belgeleri',hint:'Iki kisi icin tum belgeler',done:false,due:'2026-04-15',assignee:'Birlikte',note:'Saglik raporu 6 ay gecerli. SMA testi olmadan nikah kiyilamaz.',subtasks:[
+        {id:'s5a',text:'Ibrahim saglik raporu randevusu',done:false},
+        {id:'s5b',text:'Hilal saglik raporu randevusu',done:false},
+        {id:'s5c',text:'Hemogram, Hepatit B/C, HIV testi',done:false},
+        {id:'s5d',text:'SMA testi (ZORUNLU)',done:false},
+        {id:'s5e',text:'Akciger filmi + idrar tahlili',done:false},
+        {id:'s5f',text:'TC Kimlik fotokopisi (2 kisi)',done:false},
+        {id:'s5g',text:'Vesikalik fotograf (4-5 adet)',done:false},
+        {id:'s5h',text:'Nufus kayit ornegi (e-Devlet)',done:false}
+    ]},
+    {id:'g6',title:'Nisan oncesi alinacaklar',hint:'Alisveris listesi',done:false,due:'2026-05-10',assignee:'Birlikte',note:'',subtasks:[
+        {id:'s6a',text:'Gecelik',done:false},
+        {id:'s6b',text:'Terlik',done:false},
+        {id:'s6c',text:'Ic camasir seti',done:false},
+        {id:'s6d',text:'Nisan yuzugu',done:false},
+        {id:'s6e',text:'Kuafor randevusu',done:false}
+    ]}
 ];
 
 // STATE
-let authInstance, db, currentUser=null, tasks=[], activeCat='all', activeAsg='Hepsi', editId=null, recognition=null, isRec=false, unsub=null;
+let authInstance, dbRef, currentUser=null, tasks=[], activeAsg='Hepsi', editId=null, unsub=null, dragSrcIdx=null;
 
 // FIREBASE
 firebase.initializeApp(FIREBASE_CONFIG);
 authInstance = firebase.auth();
-db = firebase.firestore();
+const db = firebase.firestore();
+dbRef = db.collection('shared').doc('planner_tasks');
 
-function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
-function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
-document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container')&&!e.target.closest('.user-dropdown'))document.getElementById('user-dropdown')?.classList.remove('open')});
-
-function renderAvatar(user){
-    const c=document.getElementById('user-avatar-container');
-    const n=document.getElementById('user-name');
-    if(n)n.textContent=user.displayName||user.email;
-    if(user.photoURL){c.innerHTML='<img class="user-avatar" src="'+user.photoURL+'" referrerpolicy="no-referrer">';}
-    else{const i=(user.displayName||user.email||'U')[0].toUpperCase();c.innerHTML='<div class="user-avatar-fallback">'+i+'</div>';}
-}
-
+// AUTH
 authInstance.onAuthStateChanged(u=>{
-    document.getElementById('loading-screen').style.display='none';
     if(u){
         currentUser=u;
         document.getElementById('login-screen').style.display='none';
@@ -411,14 +365,35 @@ authInstance.onAuthStateChanged(u=>{
 function signIn(){authInstance.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message))}
 function signOut(){if(unsub)unsub();authInstance.signOut()}
 
+// FIRESTORE
 function listen(){
-    unsub=db.collection('shared').doc('planner_tasks').onSnapshot(doc=>{
-        if(doc.exists){tasks=doc.data().list||[];}
-        else{tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));save();}
+    unsub=dbRef.onSnapshot(doc=>{
+        document.getElementById('loading-screen').style.display='none';
+        if(doc.exists && doc.data().list && doc.data().list.length>0){
+            tasks=doc.data().list;
+            // Migration: eski format (cat field) -> yeni format (subtasks)
+            if(tasks.length>10 && tasks[0].cat && !localStorage.getItem('tasks_migrated_v2')){
+                // Eski 43 gorevi backup'la, yeni 6 gorevle degistir
+                db.collection('shared').doc('planner_tasks_backup').set({
+                    list:tasks, backupDate:new Date().toISOString(), reason:'v2 migration'
+                });
+                tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
+                localStorage.setItem('tasks_migrated_v2','true');
+                save();
+                return;
+            }
+            tasks.forEach(t=>{if(!t.subtasks) t.subtasks=[];});
+        } else {
+            tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
+            save();
+        }
         render();
     });
 }
-function save(){db.collection('shared').doc('planner_tasks').set({list:JSON.parse(JSON.stringify(tasks)),updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}
+
+function save(){
+    dbRef.set({list:tasks, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+}
 
 // RENDER
 function render(){
@@ -427,169 +402,281 @@ function render(){
 }
 
 function renderProgress(){
-    const total=tasks.length;
-    const done=tasks.filter(t=>t.done).length;
+    // Sub-task bazli ilerleme
+    let total=0, done=0;
+    tasks.forEach(t=>{
+        if(t.subtasks && t.subtasks.length>0){
+            total+=t.subtasks.length;
+            done+=t.subtasks.filter(s=>s.done).length;
+        } else {
+            total++;
+            if(t.done) done++;
+        }
+    });
     const pct=total>0?Math.round((done/total)*100):0;
     document.getElementById('progressText').textContent=done+' / '+total;
     document.getElementById('progressFill').style.width=pct+'%';
 }
 
-
-function setAssignee(a){
-    activeAsg=a;
-    document.querySelectorAll('.asg-btn').forEach(b=>b.classList.toggle('active',b.dataset.a===a));
-    render();
-}
-
-function renderTasks(){renderList();}
 function renderList(){
     const el=document.getElementById('tlist');
+    const q=(document.getElementById('qi').value||'').toLowerCase().trim();
     let list=[...tasks];
     if(activeAsg!=='Hepsi') list=list.filter(t=>(t.assignee||'Birlikte')===activeAsg);
-    const q=(document.getElementById('qi').value||'').toLowerCase().trim();
-    if(q) list=list.filter(t=>t.title.toLowerCase().includes(q)||(t.hint||'').toLowerCase().includes(q));
+    if(q) list=list.filter(t=>t.title.toLowerCase().includes(q)||(t.hint||'').toLowerCase().includes(q)||
+        (t.subtasks||[]).some(s=>s.text.toLowerCase().includes(q)));
 
-    // Sort: done last, then urgent first, then nearest due
-    list.sort((a,b)=>{
-        if(a.done!==b.done) return a.done?1:-1;
-        const p={urgent:0,normal:1,low:2};
-        if((p[a.priority]??1)!==(p[b.priority]??1)) return (p[a.priority]??1)-(p[b.priority]??1);
-        if(a.due&&b.due) return a.due.localeCompare(b.due);
-        if(a.due) return -1;
-        if(b.due) return 1;
-        return 0;
-    });
-
-    if(!list.length){el.innerHTML='<div class="empty">Bu filtrede gorev yok.</div>';return;}
-    el.innerHTML=list.map(t=>cardHTML(t)).join('');
+    if(!list.length){el.innerHTML='<div class="empty">Gorev bulunamadi</div>';return;}
+    el.innerHTML=list.map((t,i)=>cardHTML(t,tasks.indexOf(t))).join('');
 }
 
-function cardHTML(t){
-    const urg=t.priority==='urgent'&&!t.done;
+function cardHTML(t,idx){
+    const subsDone=t.subtasks?t.subtasks.filter(s=>s.done).length:0;
+    const subsTotal=t.subtasks?t.subtasks.length:0;
     const due=t.due?fmtDue(t.due):'';
     const over=t.due&&!t.done&&new Date(t.due)<new Date();
-    const asg=t.assignee||'Birlikte';
-    const asgClass=asg==='Ibrahim'?'ttag-ibrahim':asg==='Hilal'?'ttag-hilal':'ttag-birlikte';
-    return '<div class="tcard'+(t.done?' done':'')+(urg?' urgent':'')+'" id="t-'+t.id+'">'
-        +'<div class="tmain">'
-        +'<div class="tchk'+(t.done?' on':'')+'" onclick="event.stopPropagation();tog(\''+t.id+'\')"></div>'
-        +'<div class="tbody" onclick="flip(\''+t.id+'\')">'
-        +'<div class="ttitle">'+esc(t.title)+'</div>'
-        +(t.hint?'<div class="tsub">'+esc(t.hint)+'</div>':'')
-        +'<div class="ttags">'
-        +(urg?'<span class="ttag ttag-urgent">Acil</span>':'')
-        +'<span class="ttag '+asgClass+'">'+asg+'</span>'
-        +(due?'<span class="ttag '+(over?'ttag-overdue':'ttag-due')+'">'+due+'</span>':'')
-        +'</div>'
-        +'</div>'
-        +'<span class="tarrow" onclick="flip(\''+t.id+'\')">&#9660;</span>'
-        +'</div>'
-        +'<div class="tdetail">'
-        +(t.note?'<div class="tnote">'+esc(t.note)+'</div>':'')
-        +'<div class="tbtns">'
-        +'<button class="tbtn-edit" onclick="openEdit(\''+t.id+'\')">Duzenle</button>'
-        +'<button class="tbtn-del" onclick="del(\''+t.id+'\')">Sil</button>'
-        +'</div>'
-        +'</div>'
-        +'</div>';
+
+    let html='<div class="tcard'+(t.done?' done':'')+'" data-id="'+t.id+'" draggable="true" ondragstart="dStart(event,'+idx+')" ondragover="dOver(event)" ondrop="dDrop(event,'+idx+')" ondragend="dEnd(event)">';
+
+    // Header row
+    html+='<div class="tc-header">';
+    html+='<div class="tc-chk'+(t.done?' on':'')+'" onclick="event.stopPropagation();togTask(\''+t.id+'\')"></div>';
+    html+='<div class="tc-body" onclick="flipCard(\''+t.id+'\')">';
+    html+='<div class="tc-title">'+esc(t.title)+'</div>';
+    html+='<div class="tc-meta">';
+    html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+(t.assignee||'Birlikte')+'</span>';
+    if(due) html+='<span class="tc-tag tc-tag-due'+(over?' overdue':'')+'">'+due+'</span>';
+    if(subsTotal>0) html+='<span class="tc-tag tc-tag-progress tc-subs-toggle" onclick="event.stopPropagation();togSubs(\''+t.id+'\')"><span class="tc-arrow">&#9654;</span> '+subsDone+'/'+subsTotal+'</span>';
+    html+='</div></div>';
+    html+='<div class="tc-drag" ontouchstart="tStart(event,'+idx+')" ontouchmove="tMove(event)" ontouchend="tEnd(event,'+idx+')">&#9776;</div>';
+    html+='</div>';
+
+    // Hint
+    if(t.hint) html+='<div class="tc-hint">'+esc(t.hint)+'</div>';
+
+    // Subtasks
+    if(subsTotal>0){
+        html+='<div class="tc-subs">';
+        t.subtasks.forEach(s=>{
+            html+='<div class="tc-sub'+(s.done?' done':'')+'">';
+            html+='<div class="tc-sub-chk'+(s.done?' on':'')+'" onclick="togSub(\''+t.id+'\',\''+s.id+'\')"></div>';
+            html+='<span class="tc-sub-text">'+esc(s.text)+'</span>';
+            html+='</div>';
+        });
+        html+='</div>';
+    }
+
+    // Actions (expandable)
+    html+='<div class="tc-actions">';
+    html+='<button class="tc-btn" onclick="openEdit(\''+t.id+'\')">Duzenle</button>';
+    html+='<button class="tc-btn tc-btn-del" onclick="delTaskConfirm(\''+t.id+'\')">Sil</button>';
+    html+='</div>';
+
+    html+='</div>';
+    return html;
 }
 
-function fmtDue(d){
-    const dt=new Date(d+'T00:00:00'),now=new Date(),diff=Math.ceil((dt-now)/(864e5));
-    const m=['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
-    const s=dt.getDate()+' '+m[dt.getMonth()];
-    if(diff<0) return s+' (gecti!)';
-    if(diff===0) return 'Bugun!';
-    if(diff===1) return 'Yarin';
-    if(diff<=7) return diff+' gun';
-    return s;
+// INTERACTIONS
+function togTask(id){
+    const t=tasks.find(x=>x.id===id);
+    if(t){t.done=!t.done; save();}
 }
 
-// ACTIONS
-function flip(id){document.getElementById('t-'+id)?.classList.toggle('open')}
-function tog(id){const t=tasks.find(x=>x.id===id);if(t){t.done=!t.done;save();}}
-function del(id){if(confirm('Sil?')){tasks=tasks.filter(t=>t.id!==id);save();}}
+function togSub(taskId,subId){
+    const t=tasks.find(x=>x.id===taskId);
+    if(t&&t.subtasks){
+        const s=t.subtasks.find(x=>x.id===subId);
+        if(s){s.done=!s.done; save();}
+    }
+}
 
-function addQuick(){
-    const inp=document.getElementById('qi');
-    const txt=inp.value.trim();
-    if(!txt) return;
-    tasks.push({id:'t'+Date.now(),cat:activeCat==='all'?'diger':activeCat,title:txt,hint:'',done:false,priority:'normal',due:'',note:'',assignee:activeAsg==='Hepsi'?'Birlikte':activeAsg});
-    inp.value='';
-    save();
+function flipCard(id){
+    const card=document.querySelector('.tcard[data-id="'+id+'"]');
+    if(card) card.classList.toggle('open');
+}
+
+function togSubs(id){
+    const card=document.querySelector('.tcard[data-id="'+id+'"]');
+    if(card) card.classList.toggle('subs-open');
+}
+
+function delTaskConfirm(id){
+    if(confirm('Bu gorevi silmek istediginizden emin misiniz?')){
+        tasks=tasks.filter(t=>t.id!==id);
+        save();
+    }
+}
+
+// FILTER
+function setAsg(a){
+    activeAsg=a;
+    document.querySelectorAll('.asg-btn').forEach(b=>b.classList.toggle('active',b.dataset.a===a));
+    renderList();
 }
 
 // EDIT MODAL
 function openEdit(id){
     const t=id?tasks.find(x=>x.id===id):null;
     editId=id||null;
-    document.getElementById('me-title-label').textContent=t?'Gorevi Duzenle':'Yeni Gorev';
+    document.getElementById('modal-title').textContent=t?'Gorevi Duzenle':'Gorev Ekle';
     document.getElementById('me-del-btn').style.display=t?'block':'none';
-    const catSel=document.getElementById('me-cat');
-    catSel.innerHTML=CATS.filter(c=>c.id!=='all').map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');
     document.getElementById('me-title').value=t?t.title:'';
     document.getElementById('me-hint').value=t?t.hint||'':'';
-    catSel.value=t?t.cat:(activeCat==='all'?'diger':activeCat);
     document.getElementById('me-asg').value=t?(t.assignee||'Birlikte'):'Birlikte';
-    document.getElementById('me-pri').value=t?t.priority:'normal';
     document.getElementById('me-due').value=t?t.due||'':'';
     document.getElementById('me-note').value=t?t.note||'':'';
-    openModal('modal-edit');
+    // Subtask editor
+    const editor=document.getElementById('sub-editor');
+    editor.innerHTML='';
+    if(t&&t.subtasks){
+        t.subtasks.forEach(s=>addSubEditor(s.text));
+    }
+    document.getElementById('modal-edit').classList.add('show');
+}
+
+function addSubEditor(text){
+    const editor=document.getElementById('sub-editor');
+    const item=document.createElement('div');
+    item.className='sub-editor-item';
+    item.innerHTML='<input type="text" value="'+esc(text||'')+'" placeholder="Alt gorev...">'
+        +'<button class="sub-editor-rm" onclick="this.parentElement.remove()">&times;</button>';
+    editor.appendChild(item);
+    if(!text) item.querySelector('input').focus();
 }
 
 function saveTask(){
     const title=document.getElementById('me-title').value.trim();
     if(!title){alert('Baslik gerekli');return;}
-    const data={
-        cat:document.getElementById('me-cat').value,
-        title,
-        hint:document.getElementById('me-hint').value.trim(),
-        assignee:document.getElementById('me-asg').value,
-        priority:document.getElementById('me-pri').value,
-        due:document.getElementById('me-due').value,
-        note:document.getElementById('me-note').value.trim()
-    };
+
+    // Collect subtasks from editor
+    const subs=[];
+    document.querySelectorAll('#sub-editor .sub-editor-item input').forEach((inp,i)=>{
+        const txt=inp.value.trim();
+        if(txt) subs.push({id:'s'+Date.now()+'_'+i,text:txt,done:false});
+    });
+
     if(editId){
         const t=tasks.find(x=>x.id===editId);
-        if(t) Object.assign(t,data);
+        if(t){
+            t.title=title;
+            t.hint=document.getElementById('me-hint').value.trim();
+            t.assignee=document.getElementById('me-asg').value;
+            t.due=document.getElementById('me-due').value;
+            t.note=document.getElementById('me-note').value.trim();
+            // Preserve existing done states for matching subtasks
+            const oldSubs=t.subtasks||[];
+            t.subtasks=subs.map(s=>{
+                const old=oldSubs.find(o=>o.text===s.text);
+                return old?{...s,done:old.done}:s;
+            });
+        }
     } else {
-        tasks.push({...data,id:'t'+Date.now(),done:false});
+        tasks.push({
+            id:'t'+Date.now(),
+            title, hint:document.getElementById('me-hint').value.trim(),
+            done:false, due:document.getElementById('me-due').value,
+            assignee:document.getElementById('me-asg').value,
+            note:document.getElementById('me-note').value.trim(),
+            subtasks:subs
+        });
     }
     save();
-    closeModal('modal-edit');
+    closeModal();
 }
 
 function delTask(){
-    if(editId&&confirm('Sil?')){tasks=tasks.filter(t=>t.id!==editId);save();closeModal('modal-edit');}
+    if(editId&&confirm('Sil?')){
+        tasks=tasks.filter(t=>t.id!==editId);
+        save();
+        closeModal();
+    }
 }
 
-// TEMPLATES
-function renderTemplates(){
-    document.getElementById('tmpl-list').innerHTML=TEMPLATES.map(t=>
-        '<div class="tmpl-item" onclick="applyTmpl(\''+t.id+'\')">'
-        +'<span class="tmpl-icon">'+t.icon+'</span>'
-        +'<div class="tmpl-info"><h4>'+t.name+'</h4><p>'+t.desc+'</p></div>'
-        +'</div>'
-    ).join('');
+function closeModal(){document.getElementById('modal-edit').classList.remove('show')}
+
+// DRAG & DROP (desktop)
+function dStart(e,idx){
+    dragSrcIdx=idx;
+    e.dataTransfer.effectAllowed='move';
+    e.target.closest('.tcard').classList.add('dragging');
+}
+function dOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function dDrop(e,targetIdx){
+    e.preventDefault();
+    if(dragSrcIdx!==null&&dragSrcIdx!==targetIdx){
+        const item=tasks.splice(dragSrcIdx,1)[0];
+        tasks.splice(targetIdx,0,item);
+        save();
+    }
+}
+function dEnd(e){
+    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('dragging','drag-over'));
+    dragSrcIdx=null;
 }
 
-function applyTmpl(tid){
-    const tmpl=TEMPLATES.find(t=>t.id===tid);
-    if(!tmpl||!confirm(tmpl.name+' eklensin mi?')) return;
-    tmpl.tasks.forEach(t=>{tasks.push({...t,id:'t'+Date.now()+Math.random().toString(36).slice(2,5),done:false,due:''});});
-    save();
-    closeModal('modal-templates');
+// DRAG & DROP (mobile touch)
+let touchSrcIdx=null,touchClone=null;
+function tStart(e,idx){
+    touchSrcIdx=idx;
+    const card=e.target.closest('.tcard');
+    touchClone=card.cloneNode(true);
+    touchClone.style.cssText='position:fixed;z-index:999;opacity:0.8;pointer-events:none;width:'+card.offsetWidth+'px;transform:rotate(2deg)';
+    document.body.appendChild(touchClone);
+    card.classList.add('dragging');
+    e.preventDefault();
+}
+function tMove(e){
+    if(!touchClone)return;
+    const t=e.touches[0];
+    touchClone.style.left=(t.clientX-40)+'px';
+    touchClone.style.top=(t.clientY-20)+'px';
+    e.preventDefault();
+}
+function tEnd(e,idx){
+    if(touchClone){touchClone.remove();touchClone=null;}
+    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('dragging'));
+    // Find drop target
+    const touch=e.changedTouches[0];
+    const target=document.elementFromPoint(touch.clientX,touch.clientY);
+    if(target){
+        const card=target.closest('.tcard');
+        if(card){
+            const targetId=card.dataset.id;
+            const targetTaskIdx=tasks.findIndex(t=>t.id===targetId);
+            if(touchSrcIdx!==null&&targetTaskIdx>=0&&touchSrcIdx!==targetTaskIdx){
+                const item=tasks.splice(touchSrcIdx,1)[0];
+                tasks.splice(targetTaskIdx,0,item);
+                save();
+            }
+        }
+    }
+    touchSrcIdx=null;
 }
 
-// MODALS
-function openModal(id){
-    document.getElementById(id).classList.add('show');
-    if(id==='modal-templates') renderTemplates();
+// HELPERS
+function fmtDue(d){
+    if(!d)return'';
+    const now=new Date(),due=new Date(d);
+    const diff=Math.ceil((due-now)/864e5);
+    if(diff<0)return Math.abs(diff)+' gun gecti';
+    if(diff===0)return'Bugun';
+    if(diff===1)return'Yarin';
+    const months=['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
+    return due.getDate()+' '+months[due.getMonth()];
 }
-function closeModal(id){document.getElementById(id).classList.remove('show')}
-
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function renderAvatar(user){
+    const w=document.getElementById('user-avatar-wrap');
+    if(user.photoURL) w.innerHTML='<img class="user-avatar" src="'+user.photoURL+'" referrerpolicy="no-referrer">';
+    else w.innerHTML='<div class="user-avatar-fallback">'+(user.displayName||user.email||'?')[0].toUpperCase()+'</div>';
+    document.getElementById('user-dropdown-name').textContent=user.displayName||user.email||'';
+}
+
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
+function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
+document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container'))document.getElementById('user-dropdown')?.classList.remove('open')});
 </script>
 </body>
 </html>
