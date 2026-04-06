@@ -165,7 +165,19 @@
         .io-btn:active{background:var(--gray-50);transform:scale(0.97)}
         .io-btn.primary{border-color:var(--gold);background:var(--gold-bg);color:var(--gold)}
         .io-btn .io-icon{font-size:14px}
-        .io-btn.sheets{border-color:#34a853;color:#34a853;background:#f0fdf4}
+        .io-btn.sheets{border-color:#34a853;color:#34a853;background:#f0fdf4;position:relative}
+        .io-btn.sheets.syncing{opacity:0.7;pointer-events:none}
+        .io-btn.sheets.syncing .io-icon{animation:spin 1s linear infinite}
+        .io-btn.sheets.synced{border-color:#059669;color:#059669;background:#ecfdf5}
+        .io-btn.sheets.sync-error{border-color:#dc2626;color:#dc2626;background:#fef2f2}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .sync-badge{position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:#34a853;border:1.5px solid white}
+        .backup-list{max-height:300px;overflow-y:auto;margin:8px 0}
+        .backup-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px;font-size:13px}
+        .backup-item .bi-date{color:var(--gray-700);font-weight:500}
+        .backup-item .bi-info{color:var(--gray-400);font-size:11px}
+        .backup-item .bi-restore{padding:5px 10px;border:1px solid var(--gold);color:var(--gold);background:white;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600}
+        .backup-item .bi-restore:active{background:var(--gold-bg)}
 
         /* IMPORT MODAL */
         .import-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:16px}
@@ -267,7 +279,8 @@
     <div class="io-bar">
         <button class="io-btn primary" onclick="document.getElementById('file-excel').click()"><span class="io-icon">&#x1F4E5;</span>Excel Yukle</button>
         <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel Indir</button>
-        <button class="io-btn sheets" onclick="fetchFromSheets()"><span class="io-icon">&#x1F4CA;</span>Sheets'ten Cek</button>
+        <button class="io-btn sheets" id="sheets-sync-btn" onclick="autoSyncFromSheets()"><span class="io-icon">&#x1F4CA;</span><span class="sync-text">Sheets'ten Cek</span></button>
+        <button class="io-btn" onclick="showBackupHistory()" style="border-color:var(--blue);color:var(--blue);background:var(--blue-bg)"><span class="io-icon">&#x1F4BE;</span>Yedekler</button>
         <input type="file" id="file-excel" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileImport(this)">
     </div>
 
@@ -469,6 +482,7 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const guestRef = db.collection('shared').doc('guests');
+const backupRef = db.collection('shared').doc('guests_backups');
 
 let currentUser = null;
 let guests = [];
@@ -517,6 +531,7 @@ auth.onAuthStateChanged(u=>{
 });
 
 // Firestore listen
+let firstLoad = true;
 function listen(){
     unsubscribe = guestRef.onSnapshot(snap=>{
         document.getElementById('loading-screen').style.display='none';
@@ -525,12 +540,16 @@ function listen(){
         if(snap.exists && snap.data().list && snap.data().list.length > 0){
             guests = snap.data().list;
         } else {
-            // first run: seed defaults
             guests = JSON.parse(JSON.stringify(DEFAULT_GUESTS));
             saveToFirestore();
         }
         updateDashboard();
         renderList();
+        // Ilk yukleme sonrasi otomatik Sheets sync
+        if(firstLoad){
+            firstLoad = false;
+            setTimeout(()=>autoSyncFromSheets(), 1500);
+        }
     }, err=>{
         console.error(err);
         document.getElementById('loading-screen').style.display='none';
@@ -544,6 +563,76 @@ function listen(){
 
 function saveToFirestore(){
     guestRef.set({list:guests, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+}
+
+// --- BACKUP SISTEMI ---
+function createBackup(reason){
+    return backupRef.get().then(snap=>{
+        let backups = [];
+        if(snap.exists && snap.data().versions){
+            backups = snap.data().versions;
+        }
+        // Max 10 backup tut
+        if(backups.length>=10) backups = backups.slice(-9);
+        backups.push({
+            date: new Date().toISOString(),
+            reason: reason||'Manuel',
+            count: guests.length,
+            list: JSON.parse(JSON.stringify(guests))
+        });
+        return backupRef.set({versions:backups});
+    }).catch(e=>console.error('Backup error:',e));
+}
+
+function showBackupHistory(){
+    backupRef.get().then(snap=>{
+        let backups = [];
+        if(snap.exists && snap.data().versions) backups = snap.data().versions;
+
+        const modal = document.createElement('div');
+        modal.className = 'import-modal-bg show';
+        modal.onclick = function(e){if(e.target===this)this.remove();};
+
+        let listHtml = '';
+        if(backups.length===0){
+            listHtml = '<div style="text-align:center;color:var(--gray-400);padding:20px">Henuz yedek yok</div>';
+        } else {
+            backups.slice().reverse().forEach((b,i)=>{
+                const d = new Date(b.date);
+                const dateStr = d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+                const idx = backups.length-1-i;
+                listHtml += '<div class="backup-item">'+
+                    '<div><div class="bi-date">'+dateStr+'</div>'+
+                    '<div class="bi-info">'+b.count+' davetli \u2022 '+b.reason+'</div></div>'+
+                    '<button class="bi-restore" onclick="restoreBackup('+idx+')">Geri Yukle</button></div>';
+            });
+        }
+
+        modal.innerHTML = '<div class="import-modal">'+
+            '<h3>Yedek Gecmisi</h3>'+
+            '<div class="im-sub">Son 10 yedek saklanir. Geri yuklemeden once mevcut liste otomatik yedeklenir.</div>'+
+            '<div class="backup-list">'+listHtml+'</div>'+
+            '<div class="import-btns">'+
+            '<button class="ibtn-cancel" onclick="this.closest(\'.import-modal-bg\').remove()">Kapat</button>'+
+            '<button class="ibtn-go" onclick="createBackup(\'Manuel\').then(()=>{showToast(\'Yedek alindi\');this.closest(\'.import-modal-bg\').remove();showBackupHistory();})">Simdi Yedekle</button>'+
+            '</div></div>';
+        document.body.appendChild(modal);
+    });
+}
+
+function restoreBackup(idx){
+    backupRef.get().then(snap=>{
+        if(!snap.exists) return;
+        const backups = snap.data().versions;
+        if(!backups[idx]) return;
+        // Restore oncesi mevcut listeyi yedekle
+        createBackup('Geri yukleme oncesi otomatik').then(()=>{
+            guests = JSON.parse(JSON.stringify(backups[idx].list));
+            saveToFirestore();
+            showToast('Liste geri yuklendi: '+guests.length+' davetli');
+            document.querySelector('.import-modal-bg').remove();
+        });
+    });
 }
 
 // Dashboard
@@ -977,14 +1066,16 @@ function exportExcel(){
     showToast('Excel indirildi: '+guests.length+' davetli');
 }
 
-// --- GOOGLE SHEETS SYNC ---
+// --- GOOGLE SHEETS AUTO-SYNC ---
 const SHEETS_ID = '11KMNL_7cj3yCvbFs_E4J-sSWVRyMoULc';
 const SHEETS_GID = '619714713';
+let lastSheetsSync = 0;
 
-function fetchFromSheets(){
-    showToast('Google Sheets baglantisi kuruluyor...');
+// Auto-sync: backup al, sessiz merge, modal yok
+function autoSyncFromSheets(){
+    const syncBtn = document.getElementById('sheets-sync-btn');
+    if(syncBtn) syncBtn.classList.add('syncing');
 
-    // Try fetching as CSV via export URL
     const url = 'https://docs.google.com/spreadsheets/d/'+SHEETS_ID+'/gviz/tq?tqx=out:csv&gid='+SHEETS_GID;
 
     fetch(url)
@@ -996,40 +1087,146 @@ function fetchFromSheets(){
             const wb = XLSX.read(csv, {type:'string'});
             const ws = wb.Sheets[wb.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-            if(rows.length<2){showToast('Sheets bos gorunuyor');return;}
-            parseExcelRows(rows, 'Google Sheets (canli)');
+            if(rows.length<2){
+                if(syncBtn){ syncBtn.classList.remove('syncing'); }
+                return;
+            }
+            // Sync oncesi backup al, sonra merge yap
+            createBackup('Sheets sync oncesi otomatik').then(()=>{
+                silentMergeFromSheets(rows);
+                lastSheetsSync = Date.now();
+                if(syncBtn){
+                    syncBtn.classList.remove('syncing');
+                    syncBtn.classList.add('synced');
+                    syncBtn.querySelector('.sync-text').textContent = 'Senkron';
+                    setTimeout(()=>{
+                        syncBtn.classList.remove('synced');
+                        syncBtn.querySelector('.sync-text').textContent = 'Sheets Sync';
+                    }, 3000);
+                }
+            });
         })
         .catch(err=>{
-            console.error('Sheets fetch error:', err);
-            // Fallback: show instructions
-            showSheetsFallback();
+            console.error('Sheets auto-sync error:', err);
+            if(syncBtn){
+                syncBtn.classList.remove('syncing');
+                syncBtn.classList.add('sync-error');
+                syncBtn.querySelector('.sync-text').textContent = 'Baglanti yok';
+                setTimeout(()=>{
+                    syncBtn.classList.remove('sync-error');
+                    syncBtn.querySelector('.sync-text').textContent = 'Sheets Sync';
+                }, 4000);
+            }
         });
 }
 
-function showSheetsFallback(){
-    const msg = document.createElement('div');
-    msg.className = 'import-modal-bg show';
-    msg.id = 'sheets-fallback';
-    msg.onclick = function(e){if(e.target===this){this.remove();}};
-    msg.innerHTML = '<div class="import-modal">'+
-        '<h3>Google Sheets Baglantisi</h3>'+
-        '<div class="im-sub">Sheets\'e dogrudan erisim icin asagidaki adimlari izleyin:</div>'+
-        '<div style="font-size:13px;line-height:1.8;color:var(--gray-700);margin-bottom:14px">'+
-        '<b>Yontem 1 - Yayinla:</b><br>'+
-        '1. Google Sheets\'i acin<br>'+
-        '2. Dosya &gt; Paylas &gt; Web\'de yayinla<br>'+
-        '3. "Yayinla" butonuna basin<br>'+
-        '4. Sonra bu butona tekrar basin<br><br>'+
-        '<b>Yontem 2 - Daha kolay:</b><br>'+
-        '1. Google Sheets\'te Dosya &gt; Indir &gt; .xlsx<br>'+
-        '2. "Excel Yukle" butonu ile buraya yukleyin'+
-        '</div>'+
-        '<div class="import-btns">'+
-        '<button class="ibtn-cancel" onclick="this.closest(\'.import-modal-bg\').remove()">Tamam</button>'+
-        '<button class="ibtn-go" onclick="window.open(\'https://docs.google.com/spreadsheets/d/'+SHEETS_ID+'/edit?gid='+SHEETS_GID+'\',\'_blank\');this.closest(\'.import-modal-bg\').remove()">Sheets\'i Ac</button>'+
-        '</div></div>';
-    document.body.appendChild(msg);
+// Sessiz merge: modal gostermeden dogrudan birlestir
+function silentMergeFromSheets(rows){
+    // Find header row
+    let headerIdx = 0;
+    for(let i=0;i<Math.min(rows.length,5);i++){
+        const row = rows[i].map(c=>String(c||'').toLowerCase());
+        if(row.some(c=>c.includes('ad soyad') || c.includes('adsoyad') || c.includes('isim'))){
+            headerIdx=i; break;
+        }
+    }
+    const headers = rows[headerIdx].map(c=>String(c||'').toLowerCase().trim());
+
+    const colMap = {
+        name: headers.findIndex(h=>h.includes('ad soyad')||h.includes('adsoyad')||h.includes('isim')),
+        side: headers.findIndex(h=>h.includes('taraf')),
+        group: headers.findIndex(h=>h.includes('aile')||h.includes('grup')),
+        phone: headers.findIndex(h=>h.includes('telefon')||h.includes('tel')),
+        adults: headers.findIndex(h=>h.includes('yeti') && h.includes('say')),
+        children: headers.findIndex(h=>h.includes('ocuk') && h.includes('say')),
+        invited: headers.findIndex(h=>h.includes('davet') && (h.includes('gonder')||h.includes('gönd'))),
+        rsvp: headers.findIndex(h=>h.includes('kat') && h.includes('dur') || h.includes('rsvp')),
+        table: headers.findIndex(h=>h.includes('masa')),
+        note: headers.findIndex(h=>h==='not'||h.includes('notlar'))
+    };
+
+    if(colMap.name<0) return;
+
+    const sheetsGuests = [];
+    for(let i=headerIdx+1;i<rows.length;i++){
+        const r = rows[i];
+        const name = String(r[colMap.name]||'').trim();
+        if(!name) continue;
+
+        const adults = parseInt(r[colMap.adults])||1;
+        const children = parseInt(r[colMap.children])||0;
+
+        let rsvpRaw = String(r[colMap.rsvp>=0?colMap.rsvp:-1]||'').trim();
+        let rsvp = 'Beklemede';
+        if(rsvpRaw.toLowerCase().includes('evet')||rsvpRaw.toLowerCase().includes('katıl')||rsvpRaw==='Katilacak') rsvp='Katilacak';
+        else if(rsvpRaw.toLowerCase().includes('hayır')||rsvpRaw.toLowerCase().includes('hayir')||rsvpRaw==='Katilmayacak') rsvp='Katilmayacak';
+
+        let invRaw = String(r[colMap.invited>=0?colMap.invited:-1]||'').trim();
+        let invited = 'Gonderilmedi';
+        if(invRaw.toLowerCase().includes('gönderildi')||invRaw.toLowerCase().includes('gonderildi')||invRaw==='Gonderildi') invited='Gonderildi';
+
+        let sideRaw = String(r[colMap.side>=0?colMap.side:-1]||'').trim();
+        let side = 'Gelin';
+        if(sideRaw.toLowerCase().includes('damat')) side='Damat';
+
+        let phone = String(r[colMap.phone>=0?colMap.phone:-1]||'').trim();
+        if(phone && !isNaN(Number(phone))) phone = phone.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/,'$1 $2 $3 $4');
+
+        let table = '';
+        if(colMap.table>=0){
+            let tv = r[colMap.table];
+            if(tv!==undefined && tv!==null && tv!=='') table = String(Math.floor(Number(tv))||tv);
+        }
+
+        sheetsGuests.push({
+            id: 'g'+Date.now()+'_'+i,
+            name, side,
+            group: colMap.group>=0 ? String(r[colMap.group]||'').trim() : '',
+            phone, adults, children, total: adults+children,
+            invited, rsvp, table,
+            note: colMap.note>=0 ? String(r[colMap.note]||'').trim() : ''
+        });
+    }
+
+    if(sheetsGuests.length===0) return;
+
+    // Sheets = master kaynak. Sheets'teki veri app'i gunceller.
+    // App'te olup Sheets'te olmayan kisiler korunur (silinmez).
+    const norm = s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+    const existingMap = {};
+    guests.forEach(g=>{existingMap[norm(g.name)]=g;});
+
+    let added = 0, updated = 0;
+    sheetsGuests.forEach(ig=>{
+        const key = norm(ig.name);
+        if(existingMap[key]){
+            const existing = existingMap[key];
+            let changed = false;
+            // Sheets master: tum alanlari Sheets'ten al
+            if(ig.side!==existing.side){existing.side=ig.side;changed=true;}
+            if((ig.group||'')!==(existing.group||'')){existing.group=ig.group;changed=true;}
+            if((ig.phone||'')!==(existing.phone||'')){existing.phone=ig.phone;changed=true;}
+            if(ig.adults!==existing.adults){existing.adults=ig.adults;changed=true;}
+            if(ig.children!==existing.children){existing.children=ig.children;changed=true;}
+            if(ig.adults+ig.children!==existing.total){existing.total=ig.adults+ig.children;changed=true;}
+            if(ig.invited!==existing.invited){existing.invited=ig.invited;changed=true;}
+            if(ig.rsvp!==existing.rsvp){existing.rsvp=ig.rsvp;changed=true;}
+            if((ig.table||'')!==(existing.table||'')){existing.table=ig.table;changed=true;}
+            if((ig.note||'')!==(existing.note||'')){existing.note=ig.note;changed=true;}
+            if(changed) updated++;
+        } else {
+            guests.push(ig);
+            added++;
+        }
+    });
+
+    if(added>0 || updated>0){
+        saveToFirestore();
+        showToast('Sheets sync: '+(added?added+' yeni':'')+(added&&updated?', ':'')+(updated?updated+' guncellendi':''));
+    }
 }
+
+
 </script>
 </body>
 </html>
