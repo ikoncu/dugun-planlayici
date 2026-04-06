@@ -265,13 +265,11 @@
         <div class="fg"><label>Baslik</label><input type="text" id="me-title"></div>
         <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kisa aciklama"></div>
         <div style="display:flex;gap:8px">
-            <div class="fg" style="flex:1"><label>Kategori</label><select id="me-cat"></select></div>
             <div class="fg" style="flex:1"><label>Sorumluluk</label><select id="me-asg"><option value="Birlikte">Birlikte</option><option value="Ibrahim">Ibrahim</option><option value="Hilal">Hilal</option></select></div>
-        </div>
-        <div style="display:flex;gap:8px">
             <div class="fg" style="flex:1"><label>Oncelik</label><select id="me-pri"><option value="urgent">Acil</option><option value="normal" selected>Normal</option><option value="low">Dusuk</option></select></div>
-            <div class="fg" style="flex:1"><label>Son Tarih</label><input type="date" id="me-due"></div>
         </div>
+        <div class="fg"><label>Son Tarih</label><input type="date" id="me-due"></div>
+        <select id="me-cat" style="display:none"></select>
         <div class="fg"><label>Not</label><textarea id="me-note" rows="3" placeholder="Detayli not..."></textarea></div>
         <div style="display:flex;gap:8px">
             <button class="btn-save" style="flex:1;background:var(--red-bg);color:var(--red)" id="me-del-btn" onclick="delTask()">Sil</button>
@@ -451,7 +449,7 @@ function setAssignee(a){
 function renderTasks(){renderList();}
 function renderList(){
     const el=document.getElementById('tlist');
-    let list=activeCat==='all'?[...tasks]:tasks.filter(t=>t.cat===activeCat);
+    let list=[...tasks];
     if(activeAsg!=='Hepsi') list=list.filter(t=>(t.assignee||'Birlikte')===activeAsg);
     const q=(document.getElementById('qi').value||'').toLowerCase().trim();
     if(q) list=list.filter(t=>t.title.toLowerCase().includes(q)||(t.hint||'').toLowerCase().includes(q));
@@ -472,7 +470,6 @@ function renderList(){
 }
 
 function cardHTML(t){
-    const cat=CATS.find(c=>c.id===t.cat);
     const urg=t.priority==='urgent'&&!t.done;
     const due=t.due?fmtDue(t.due):'';
     const over=t.due&&!t.done&&new Date(t.due)<new Date();
@@ -485,7 +482,6 @@ function cardHTML(t){
         +'<div class="ttitle">'+esc(t.title)+'</div>'
         +(t.hint?'<div class="tsub">'+esc(t.hint)+'</div>':'')
         +'<div class="ttags">'
-        +(activeCat==='all'&&cat?'<span class="ttag ttag-cat" style="border-left:2px solid '+cat.color+'">'+cat.name+'</span>':'')
         +(urg?'<span class="ttag ttag-urgent">Acil</span>':'')
         +'<span class="ttag '+asgClass+'">'+asg+'</span>'
         +(due?'<span class="ttag '+(over?'ttag-overdue':'ttag-due')+'">'+due+'</span>':'')
