@@ -502,7 +502,7 @@ function updateCountdowns() {
         + '<div class="tl-dot past" style="left:2%"></div>'
         // Bugun
         + '<div class="tl-dot today" style="left:'+todayPos+'%"></div>'
-        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugun</div></div>'
+        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugun</div><div class="tl-date">'+fmtDateShort(now.toISOString().slice(0,10))+'</div></div>'
         // Nisan - tiklanabilir
         + '<div class="tl-dot ms" style="left:'+nisanPos+'%"></div>'
         + '<div class="tl-lbl tl-clickable" style="left:'+nisanPos+'%" onclick="openDatePicker(\'nisan\')">'
