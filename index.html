@@ -53,11 +53,24 @@
         .user-dropdown button:hover{background:var(--gray-50)}
         .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 2px}
 
-        /* COUNTDOWNS */
-        .countdowns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:8px}
-        .cd-box{background:rgba(255,255,255,0.1);border-radius:10px;padding:6px 12px;min-width:100px;text-align:center}
-        .cd-box .cd-num{font-size:18px;font-weight:800;color:var(--gold-light)}
-        .cd-box .cd-label{font-size:10px;opacity:0.8}
+        /* TIMELINE */
+        .tl-wrap{padding:8px 0 4px;margin-top:4px}
+        .tl-track{position:relative;height:52px;margin:0 20px}
+        .tl-line{position:absolute;top:8px;left:0;right:0;height:2px;background:rgba(255,255,255,0.12);border-radius:2px}
+        .tl-fill{position:absolute;top:8px;left:0;height:2px;background:linear-gradient(90deg,rgba(255,255,255,0.25),#e8829a);border-radius:2px;transition:width 1s}
+        .tl-dot{position:absolute;top:9px;transform:translate(-50%,-50%);border-radius:50%;z-index:2}
+        .tl-dot.past{width:5px;height:5px;background:rgba(255,255,255,0.2)}
+        .tl-dot.today{width:10px;height:10px;background:#d64f6d;border:2px solid white;animation:tlpulse 2s infinite}
+        .tl-dot.ms{width:10px;height:10px;border:2px solid #e8829a;background:rgba(255,255,255,0.1)}
+        .tl-dot.ms-uncertain{border-style:dashed;border-color:rgba(255,255,255,0.3)}
+        @keyframes tlpulse{0%,100%{box-shadow:0 0 4px rgba(214,79,109,0.4)}50%{box-shadow:0 0 12px rgba(214,79,109,0.9)}}
+        .tl-lbl{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap;top:18px}
+        .tl-name{font-size:11px;font-weight:700;color:white;line-height:1.2}
+        .tl-date{font-size:9px;color:rgba(255,255,255,0.45)}
+        .tl-past-lbl{font-size:7px;color:rgba(255,255,255,0.25)}
+        .tl-uncertain .tl-name{color:rgba(255,255,255,0.5);font-style:italic}
+        .tl-clickable{cursor:pointer;-webkit-tap-highlight-color:transparent}
+        .tl-clickable:active{opacity:0.7}
 
         /* DASHBOARD CARDS */
         .dash-cards{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto;padding-bottom:80px}
@@ -163,10 +176,9 @@
             <h1>Dugun Planlayici</h1>
             <button class="hamburger" onclick="toggleDrawer()">☰</button>
         </div>
-        <div class="countdowns">
-            <div class="cd-box"><div class="cd-num" id="cd-nisan">--</div><div class="cd-label">gun nisana</div></div>
-            <div class="cd-box"><div class="cd-num" id="cd-dugun">--</div><div class="cd-label">gun dugune</div></div>
-        </div>
+        <div class="tl-wrap" id="tl-wrap"></div>
+        <input type="date" id="date-nisan" style="position:absolute;opacity:0;pointer-events:none;height:0" onchange="changeNisanDate(this.value)">
+        <input type="date" id="date-dugun" style="position:absolute;opacity:0;pointer-events:none;height:0" onchange="changeDugunDate(this.value)">
     </div>
 
     <div class="dash-cards" id="dash-cards">
@@ -253,8 +265,22 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const NISAN_DATE = '2026-05-16';
-const WEDDING_DATE = '2026-09-01';
+let NISAN_DATE = '2026-05-16';
+let WEDDING_DATE = '2026-09-01';
+const datesRef = db.collection('shared').doc('dates');
+
+// Firestore'dan tarihleri yukle
+datesRef.get().then(snap => {
+    if (snap.exists) {
+        if (snap.data().nisan) NISAN_DATE = snap.data().nisan;
+        if (snap.data().dugun) WEDDING_DATE = snap.data().dugun;
+    }
+    updateCountdowns();
+}).catch(() => {});
+
+function saveDates() {
+    datesRef.set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }).catch(e => console.error(e));
+}
 
 // State
 let dashData = { tasks: [], guests: [], budget: null, venues: [] };
@@ -458,8 +484,70 @@ function updateCountdowns() {
     const now = new Date();
     const nisan = new Date(NISAN_DATE);
     const dugun = new Date(WEDDING_DATE);
-    document.getElementById('cd-nisan').textContent = Math.max(0, Math.ceil((nisan - now) / 864e5));
-    document.getElementById('cd-dugun').textContent = Math.max(0, Math.ceil((dugun - now) / 864e5));
+    const oneWeekAgo = new Date(now.getTime() - 7 * 864e5);
+
+    const nisanDays = Math.max(0, Math.ceil((nisan - now) / 864e5));
+    const dugunDays = Math.max(0, Math.ceil((dugun - now) / 864e5));
+
+    // Sabit pozisyonlar: gorsel netlik icin
+    // Sol: 1 hafta once (3%), Bugun (12%), Nisan (55%), Dugun (93%)
+    const todayPos = 12;
+    const nisanPos = 55;
+    const dugunPos = 93;
+
+    const wrap = document.getElementById('tl-wrap');
+    wrap.innerHTML = '<div class="tl-track">'
+        + '<div class="tl-line"></div>'
+        + '<div class="tl-fill" style="width:'+todayPos+'%"></div>'
+        // 1 hafta once
+        + '<div class="tl-dot past" style="left:2%"></div>'
+        + '<div class="tl-lbl" style="left:2%"><div class="tl-past-lbl">1 hafta once</div></div>'
+        // Bugun
+        + '<div class="tl-dot today" style="left:'+todayPos+'%"></div>'
+        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugun</div></div>'
+        // Nisan - tiklanabilir
+        + '<div class="tl-dot ms" style="left:'+nisanPos+'%"></div>'
+        + '<div class="tl-lbl tl-clickable" style="left:'+nisanPos+'%" onclick="openDatePicker(\'nisan\')">'
+        +   '<div class="tl-name">'+fmtDateShort(NISAN_DATE)+'</div>'
+        +   '<div class="tl-date">Nisan · '+nisanDays+' gun</div>'
+        + '</div>'
+        // Dugun - tiklanabilir
+        + '<div class="tl-dot ms ms-uncertain" style="left:'+dugunPos+'%"></div>'
+        + '<div class="tl-lbl tl-uncertain tl-clickable" style="left:'+dugunPos+'%" onclick="openDatePicker(\'dugun\')">'
+        +   '<div class="tl-name">'+fmtDateShort(WEDDING_DATE)+' ~</div>'
+        +   '<div class="tl-date">Dugun · ~'+dugunDays+' gun</div>'
+        + '</div>'
+        + '</div>';
+}
+
+// Timeline tarih formatlama
+function fmtDateShort(dateStr) {
+    const d = new Date(dateStr);
+    const months = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+    return d.getDate() + ' ' + months[d.getMonth()];
+}
+
+// Takvim ac
+function openDatePicker(type) {
+    const inp = document.getElementById('date-' + type);
+    inp.value = type === 'nisan' ? NISAN_DATE : WEDDING_DATE;
+    inp.style.pointerEvents = 'auto';
+    inp.showPicker ? inp.showPicker() : inp.click();
+    setTimeout(() => { inp.style.pointerEvents = 'none'; }, 100);
+}
+
+function changeNisanDate(val) {
+    if (!val) return;
+    NISAN_DATE = val;
+    saveDates();
+    updateCountdowns();
+}
+
+function changeDugunDate(val) {
+    if (!val) return;
+    WEDDING_DATE = val;
+    saveDates();
+    updateCountdowns();
 }
 
 // Helpers
