@@ -63,9 +63,11 @@
         /* SEARCH & FILTER */
         .search-strip{padding:10px 16px;background:white;border-bottom:1px solid var(--gray-100);position:sticky;top:49px;z-index:90}
         .search-input{width:100%;border:1.5px solid var(--gray-200);border-radius:10px;padding:9px 12px 9px 36px;font-size:14px;outline:none;background:var(--gray-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 12px center}
-        .filter-sort-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
-        .sort-select{border:1.5px solid var(--gray-200);border-radius:8px;padding:8px 28px 8px 10px;font-size:12px;font-weight:500;color:var(--gray-700);background:white;outline:none;cursor:pointer;min-height:34px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%236b7280'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;flex-shrink:0}
-        .sort-select:focus{border-color:var(--gold)}
+        .filter-sort-row{display:flex;align-items:center;gap:6px;margin-top:8px}
+        .sort-wrap{position:relative;flex-shrink:0;margin-left:auto}
+        .sort-icon-btn{width:34px;height:34px;border:1.5px solid var(--gray-200);border-radius:8px;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:16px}
+        .sort-icon-btn:active{background:var(--gray-50)}
+        .sort-select{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;-webkit-appearance:none;appearance:none}
         .search-input:focus{border-color:var(--gold);background-color:white}
         .filter-row{display:flex;gap:6px;flex-wrap:nowrap}
         .filter-btn{padding:6px 14px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--gray-200);background:white;cursor:pointer;white-space:nowrap}
@@ -294,15 +296,18 @@
                 <button class="filter-btn" data-f="Gelin" onclick="setFilter('Gelin',this)">Gelin Tarafi</button>
                 <button class="filter-btn" data-f="Damat" onclick="setFilter('Damat',this)">Damat Tarafi</button>
             </div>
-            <select class="sort-select" id="sort-select" onchange="setSort(this.value)">
-                <option value="alpha-az">A → Z</option>
-                <option value="alpha-za">Z → A</option>
-                <option value="newest">Son eklenen</option>
-                <option value="oldest">Ilk eklenen</option>
-                <option value="rsvp-yes">Katilacak</option>
-                <option value="rsvp-wait">Beklemede</option>
-                <option value="rsvp-no">Katilmayacak</option>
-            </select>
+            <div class="sort-wrap">
+                <div class="sort-icon-btn">&#8645;</div>
+                <select class="sort-select" id="sort-select" onchange="setSort(this.value)">
+                    <option value="alpha-az">A → Z</option>
+                    <option value="alpha-za">Z → A</option>
+                    <option value="newest">Son eklenen</option>
+                    <option value="oldest">Ilk eklenen</option>
+                    <option value="rsvp-yes">Katilacak</option>
+                    <option value="rsvp-wait">Beklemede</option>
+                    <option value="rsvp-no">Katilmayacak</option>
+                </select>
+            </div>
         </div>
     </div>
 

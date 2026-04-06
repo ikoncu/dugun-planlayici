@@ -116,8 +116,9 @@
         .tc-subs{padding:0 12px 6px 42px}
         .tcard.subs-closed .tc-subs{display:none}
         /* Expand/collapse toggle */
-        .tc-expand{display:flex;align-items:center;justify-content:center;padding:4px 0 8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .tc-expand-icon{font-size:10px;color:var(--g300);transition:transform 0.2s;display:inline-block;transform:rotate(180deg)}
+        .tc-expand{display:flex;align-items:center;justify-content:center;padding:6px 0 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+        .tc-expand-icon{font-size:16px;color:var(--g400);transition:transform 0.2s;display:inline-block;transform:rotate(180deg);line-height:1}
+        .tc-expand:active .tc-expand-icon{color:var(--gold)}
         .tcard.subs-closed .tc-expand-icon{transform:rotate(0deg)}
         .tc-sub{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid var(--g50)}
         .tc-sub:first-child{border-top:none}
@@ -175,7 +176,7 @@
 </head>
 <body>
 <!-- LOGIN -->
-<div id="login-screen" style="display:flex">
+<div id="login-screen" style="display:none">
     <div class="login-card">
         <div class="logo">💍</div>
         <h1>Gorevler</h1>
@@ -188,7 +189,7 @@
 </div>
 
 <!-- LOADING -->
-<div id="loading-screen" style="display:none"><div class="spinner"></div><div style="font-size:14px;color:var(--g500)">Yukleniyor...</div></div>
+<div id="loading-screen" style="display:flex"><div class="spinner"></div><div style="font-size:14px;color:var(--g500)">Yukleniyor...</div></div>
 
 <!-- APP -->
 <div id="app" style="display:none">
@@ -360,6 +361,7 @@ authInstance.onAuthStateChanged(u=>{
         listen();
     } else {
         currentUser=null;
+        document.getElementById('loading-screen').style.display='none';
         document.getElementById('login-screen').style.display='flex';
         document.getElementById('app').style.display='none';
         document.getElementById('bnav').style.display='none';
@@ -432,7 +434,15 @@ function renderList(){
         (t.subtasks||[]).some(s=>s.text.toLowerCase().includes(q)));
 
     if(!list.length){el.innerHTML='<div class="empty">Gorev bulunamadi</div>';return;}
+    // Mevcut acik/kapali durumlarini kaydet
+    const closedIds=new Set();
+    const openIds=new Set();
+    document.querySelectorAll('.tcard.subs-closed').forEach(c=>closedIds.add(c.dataset.id));
+    document.querySelectorAll('.tcard.open').forEach(c=>openIds.add(c.dataset.id));
     el.innerHTML=list.map((t,i)=>cardHTML(t,tasks.indexOf(t))).join('');
+    // Durumlari geri yukle
+    closedIds.forEach(id=>{const c=document.querySelector('.tcard[data-id="'+id+'"]');if(c)c.classList.add('subs-closed');});
+    openIds.forEach(id=>{const c=document.querySelector('.tcard[data-id="'+id+'"]');if(c)c.classList.add('open');});
 }
 
 function cardHTML(t,idx){
