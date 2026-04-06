@@ -305,11 +305,10 @@ auth.onAuthStateChanged(user => {
         renderAvatar(user);
         loadDashboard();
     } else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        // Lokal gelistirme: auth bypass
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('bnav').style.display = 'grid';
-        updateCountdowns();
+        loadDashboard();
     } else {
         document.getElementById('app').style.display = 'none';
         document.getElementById('bnav').style.display = 'none';

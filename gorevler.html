@@ -398,6 +398,7 @@ authInstance.onAuthStateChanged(u=>{
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app').style.display='block';
         document.getElementById('bnav').style.display='flex';
+        listen();
     } else {
         currentUser=null;
         document.getElementById('login-screen').style.display='flex';

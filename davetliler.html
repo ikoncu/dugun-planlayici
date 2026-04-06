@@ -539,9 +539,10 @@ auth.onAuthStateChanged(u=>{
         listen();
     } else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         document.getElementById('login-screen').style.display='none';
-        document.getElementById('loading-screen').style.display='none';
+        document.getElementById('loading-screen').style.display='flex';
         document.getElementById('app').style.display='block';
         document.getElementById('bnav').style.display='flex';
+        listen();
     } else {
         currentUser = null;
         if(unsubscribe) unsubscribe();
