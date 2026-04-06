@@ -106,15 +106,19 @@
         .tc-tag-due{background:var(--g100);color:var(--g500)}
         .tc-tag-due.overdue{background:var(--red-bg);color:var(--red)}
         .tc-tag-progress{background:var(--green-bg);color:var(--green);font-weight:600}
-        .tc-drag{color:var(--g300);font-size:18px;cursor:grab;padding:0 4px;touch-action:none;user-select:none;flex-shrink:0;margin-top:2px}
-        .tc-drag:active{cursor:grabbing;color:var(--g500)}
+        /* DRAG */
+        .tcard.dragging{opacity:0.4;transform:scale(0.97)}
+        .tcard.drag-over-top{border-top:3px solid var(--gold);margin-top:-1px}
+        .tcard.drag-over-bot{border-bottom:3px solid var(--gold);margin-bottom:-1px}
+        .drag-ghost{position:fixed;z-index:999;pointer-events:none;opacity:0.85;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);transform:rotate(1.5deg)}
 
-        /* SUBTASKS */
-        .tc-subs{padding:0 12px 10px 42px;display:none}
-        .tcard.subs-open .tc-subs{display:block}
-        .tc-subs-toggle{display:inline-flex;align-items:center;gap:3px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .tc-subs-toggle .tc-arrow{font-size:8px;color:var(--g400);transition:transform 0.2s}
-        .tcard.subs-open .tc-subs-toggle .tc-arrow{transform:rotate(90deg)}
+        /* SUBTASKS - varsayilan acik */
+        .tc-subs{padding:0 12px 6px 42px}
+        .tcard.subs-closed .tc-subs{display:none}
+        /* Expand/collapse toggle */
+        .tc-expand{display:flex;align-items:center;justify-content:center;padding:4px 0 8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+        .tc-expand-icon{font-size:10px;color:var(--g300);transition:transform 0.2s}
+        .tcard.subs-closed .tc-expand-icon{transform:rotate(180deg)}
         .tc-sub{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid var(--g50)}
         .tc-sub:first-child{border-top:none}
         .tc-sub-chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
@@ -162,7 +166,8 @@
         .sub-editor-add{display:flex;align-items:center;gap:4px;padding:6px 0;font-size:12px;color:var(--gold);cursor:pointer;font-weight:500;border:none;background:none}
 
         /* BOTTOM NAV */
-        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);z-index:40;padding:6px 0 env(safe-area-inset-bottom);grid-template-columns:repeat(4,1fr)}
+        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);z-index:40;padding:6px 0 env(safe-area-inset-bottom)}
+        .bnav{grid-template-columns:repeat(4,1fr)}
         .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;text-decoration:none;color:var(--g400);font-size:10px;font-weight:500}
         .bnav a.active{color:var(--gold)}
         .bicon{font-size:20px}
@@ -345,13 +350,13 @@ authInstance.onAuthStateChanged(u=>{
         currentUser=u;
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app').style.display='block';
-        document.getElementById('bnav').style.display='flex';
+        document.getElementById('bnav').style.display='grid';
         renderAvatar(u);
         listen();
     } else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app').style.display='block';
-        document.getElementById('bnav').style.display='flex';
+        document.getElementById('bnav').style.display='grid';
         listen();
     } else {
         currentUser=null;
@@ -436,7 +441,7 @@ function cardHTML(t,idx){
     const due=t.due?fmtDue(t.due):'';
     const over=t.due&&!t.done&&new Date(t.due)<new Date();
 
-    let html='<div class="tcard'+(t.done?' done':'')+'" data-id="'+t.id+'" draggable="true" ondragstart="dStart(event,'+idx+')" ondragover="dOver(event)" ondrop="dDrop(event,'+idx+')" ondragend="dEnd(event)">';
+    let html='<div class="tcard'+(t.done?' done':'')+'" data-id="'+t.id+'" data-idx="'+idx+'">';
 
     // Header row
     html+='<div class="tc-header">';
@@ -446,15 +451,14 @@ function cardHTML(t,idx){
     html+='<div class="tc-meta">';
     html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+(t.assignee||'Birlikte')+'</span>';
     if(due) html+='<span class="tc-tag tc-tag-due'+(over?' overdue':'')+'">'+due+'</span>';
-    if(subsTotal>0) html+='<span class="tc-tag tc-tag-progress tc-subs-toggle" onclick="event.stopPropagation();togSubs(\''+t.id+'\')"><span class="tc-arrow">&#9654;</span> '+subsDone+'/'+subsTotal+'</span>';
+    if(subsTotal>0) html+='<span class="tc-tag tc-tag-progress">'+subsDone+'/'+subsTotal+'</span>';
     html+='</div></div>';
-    html+='<div class="tc-drag" ontouchstart="tStart(event,'+idx+')" ontouchmove="tMove(event)" ontouchend="tEnd(event,'+idx+')">&#9776;</div>';
     html+='</div>';
 
     // Hint
     if(t.hint) html+='<div class="tc-hint">'+esc(t.hint)+'</div>';
 
-    // Subtasks
+    // Subtasks (varsayilan acik)
     if(subsTotal>0){
         html+='<div class="tc-subs">';
         t.subtasks.forEach(s=>{
@@ -464,9 +468,11 @@ function cardHTML(t,idx){
             html+='</div>';
         });
         html+='</div>';
+        // Expand/collapse toggle
+        html+='<div class="tc-expand" onclick="togSubs(\''+t.id+'\')"><span class="tc-expand-icon">&#9660;</span></div>';
     }
 
-    // Actions (expandable)
+    // Actions (expandable on title click)
     html+='<div class="tc-actions">';
     html+='<button class="tc-btn" onclick="openEdit(\''+t.id+'\')">Duzenle</button>';
     html+='<button class="tc-btn tc-btn-del" onclick="delTaskConfirm(\''+t.id+'\')">Sil</button>';
@@ -497,7 +503,7 @@ function flipCard(id){
 
 function togSubs(id){
     const card=document.querySelector('.tcard[data-id="'+id+'"]');
-    if(card) card.classList.toggle('subs-open');
+    if(card) card.classList.toggle('subs-closed');
 }
 
 function delTaskConfirm(id){
@@ -594,64 +600,95 @@ function delTask(){
 
 function closeModal(){document.getElementById('modal-edit').classList.remove('show')}
 
-// DRAG & DROP (desktop)
-function dStart(e,idx){
-    dragSrcIdx=idx;
-    e.dataTransfer.effectAllowed='move';
-    e.target.closest('.tcard').classList.add('dragging');
-}
-function dOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
-function dDrop(e,targetIdx){
-    e.preventDefault();
-    if(dragSrcIdx!==null&&dragSrcIdx!==targetIdx){
-        const item=tasks.splice(dragSrcIdx,1)[0];
-        tasks.splice(targetIdx,0,item);
-        save();
-    }
-}
-function dEnd(e){
-    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('dragging','drag-over'));
-    dragSrcIdx=null;
+// DRAG & DROP - long press ile baslar, dogal surukleme
+let dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+
+function initDrag(){
+    const list=document.getElementById('tlist');
+    list.addEventListener('touchstart',onTouchStart,{passive:false});
+    list.addEventListener('touchmove',onTouchMove,{passive:false});
+    list.addEventListener('touchend',onTouchEnd);
 }
 
-// DRAG & DROP (mobile touch)
-let touchSrcIdx=null,touchClone=null;
-function tStart(e,idx){
-    touchSrcIdx=idx;
+function onTouchStart(e){
     const card=e.target.closest('.tcard');
-    touchClone=card.cloneNode(true);
-    touchClone.style.cssText='position:fixed;z-index:999;opacity:0.8;pointer-events:none;width:'+card.offsetWidth+'px;transform:rotate(2deg)';
-    document.body.appendChild(touchClone);
-    card.classList.add('dragging');
-    e.preventDefault();
+    if(!card||e.target.closest('.tc-chk')||e.target.closest('.tc-sub-chk')||e.target.closest('.tc-btn')||e.target.closest('.tc-expand')) return;
+    const idx=parseInt(card.dataset.idx);
+    const touch=e.touches[0];
+    dragState.timer=setTimeout(()=>{
+        // Long press triggered - start drag
+        dragState.active=true;
+        dragState.srcIdx=idx;
+        dragState.card=card;
+        dragState.startY=touch.clientY;
+        const rect=card.getBoundingClientRect();
+        dragState.offsetY=touch.clientY-rect.top;
+        // Create ghost
+        const ghost=card.cloneNode(true);
+        ghost.className='tcard drag-ghost';
+        ghost.style.width=rect.width+'px';
+        ghost.style.left=rect.left+'px';
+        ghost.style.top=rect.top+'px';
+        document.body.appendChild(ghost);
+        dragState.ghost=ghost;
+        card.classList.add('dragging');
+        navigator.vibrate&&navigator.vibrate(30);
+    },400);
 }
-function tMove(e){
-    if(!touchClone)return;
-    const t=e.touches[0];
-    touchClone.style.left=(t.clientX-40)+'px';
-    touchClone.style.top=(t.clientY-20)+'px';
+
+function onTouchMove(e){
+    if(dragState.timer&&!dragState.active){
+        // Cancel long press if moved too much
+        const dy=Math.abs(e.touches[0].clientY-dragState.startY);
+        if(dy>10){clearTimeout(dragState.timer);dragState.timer=null;}
+        return;
+    }
+    if(!dragState.active) return;
     e.preventDefault();
+    const touch=e.touches[0];
+    dragState.ghost.style.top=(touch.clientY-dragState.offsetY)+'px';
+    // Find target card
+    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(touch.clientX,touch.clientY);
+    if(el){
+        const target=el.closest('.tcard');
+        if(target&&target!==dragState.card){
+            const rect=target.getBoundingClientRect();
+            const mid=rect.top+rect.height/2;
+            if(touch.clientY<mid) target.classList.add('drag-over-top');
+            else target.classList.add('drag-over-bot');
+        }
+    }
 }
-function tEnd(e,idx){
-    if(touchClone){touchClone.remove();touchClone=null;}
-    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('dragging'));
+
+function onTouchEnd(e){
+    clearTimeout(dragState.timer);
+    dragState.timer=null;
+    if(!dragState.active){return;}
     // Find drop target
     const touch=e.changedTouches[0];
-    const target=document.elementFromPoint(touch.clientX,touch.clientY);
-    if(target){
-        const card=target.closest('.tcard');
-        if(card){
-            const targetId=card.dataset.id;
-            const targetTaskIdx=tasks.findIndex(t=>t.id===targetId);
-            if(touchSrcIdx!==null&&targetTaskIdx>=0&&touchSrcIdx!==targetTaskIdx){
-                const item=tasks.splice(touchSrcIdx,1)[0];
-                tasks.splice(targetTaskIdx,0,item);
+    dragState.ghost.remove();
+    dragState.card.classList.remove('dragging');
+    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(touch.clientX,touch.clientY);
+    if(el){
+        const target=el.closest('.tcard');
+        if(target){
+            const targetIdx=parseInt(target.dataset.idx);
+            if(!isNaN(targetIdx)&&dragState.srcIdx!==targetIdx){
+                const item=tasks.splice(dragState.srcIdx,1)[0];
+                const rect=target.getBoundingClientRect();
+                const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
+                tasks.splice(insertIdx>dragState.srcIdx?insertIdx-1:insertIdx,0,item);
                 save();
             }
         }
     }
-    touchSrcIdx=null;
+    dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
 }
+
+// Init drag after first render
+setTimeout(initDrag,500);
 
 // HELPERS
 function fmtDue(d){
