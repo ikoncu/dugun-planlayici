@@ -96,8 +96,9 @@
         .qbtn-mic{background:var(--g100);font-size:16px}
         .qbtn-mic.on{background:var(--red);color:white;animation:pulse 1s infinite}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-        .voice-hint{font-size:11px;color:var(--red);padding:3px 0 0;display:none}
-        .voice-hint.show{display:block}
+        /* FAB */
+        .fab{position:fixed;bottom:68px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(214,79,109,0.4);z-index:95;display:flex;align-items:center;justify-content:center;font-weight:300}
+        .fab:active{transform:scale(0.93)}
 
         /* TASK CARDS */
         .tlist{padding:0 12px 120px;max-width:640px;margin:0 auto}
@@ -214,9 +215,6 @@
         </div>
     </div>
 
-    <!-- CATEGORY FILTERS -->
-    <div class="filter-strip" id="filters"></div>
-
     <!-- ASSIGNEE FILTERS -->
     <div class="assignee-strip" id="asgFilters">
         <button class="asg-btn active" data-a="Hepsi" onclick="setAssignee('Hepsi')">Hepsi</button>
@@ -225,20 +223,16 @@
         <button class="asg-btn" data-a="Birlikte" onclick="setAssignee('Birlikte')">Birlikte</button>
     </div>
 
-    <!-- QUICK INPUT -->
+    <!-- SEARCH -->
     <div class="quick-bar">
-        <div class="quick-row">
-            <input type="text" class="quick-input" id="qi" placeholder="Yeni gorev yaz veya sesle soyle..." onkeydown="if(event.key==='Enter')addQuick()">
-            <button class="qbtn qbtn-mic" id="mic" onclick="toggleMic()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-            </button>
-            <button class="qbtn qbtn-send" onclick="addQuick()">&#8593;</button>
-        </div>
-        <div class="voice-hint" id="vhint">Dinleniyor...</div>
+        <input type="text" class="quick-input" id="qi" placeholder="Gorev ara..." oninput="renderTasks()">
     </div>
 
     <!-- TASK LIST -->
     <div class="tlist" id="tlist"></div>
+
+    <!-- FAB -->
+    <button class="fab" onclick="openEdit()">+</button>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -454,10 +448,13 @@ function setAssignee(a){
     render();
 }
 
+function renderTasks(){renderList();}
 function renderList(){
     const el=document.getElementById('tlist');
     let list=activeCat==='all'?[...tasks]:tasks.filter(t=>t.cat===activeCat);
     if(activeAsg!=='Hepsi') list=list.filter(t=>(t.assignee||'Birlikte')===activeAsg);
+    const q=(document.getElementById('qi').value||'').toLowerCase().trim();
+    if(q) list=list.filter(t=>t.title.toLowerCase().includes(q)||(t.hint||'').toLowerCase().includes(q));
 
     // Sort: done last, then urgent first, then nearest due
     list.sort((a,b)=>{
@@ -600,29 +597,6 @@ function openModal(id){
 }
 function closeModal(id){document.getElementById(id).classList.remove('show')}
 
-// VOICE
-function toggleMic(){
-    if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){alert('Chrome gerekli.');return;}
-    if(isRec){stopMic();return;}
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    recognition=new SR();
-    recognition.lang='tr-TR';
-    recognition.continuous=false;
-    recognition.interimResults=true;
-    recognition.onresult=e=>{
-        let txt='';
-        for(let i=e.resultIndex;i<e.results.length;i++) txt+=e.results[i][0].transcript;
-        document.getElementById('qi').value=txt;
-    };
-    recognition.onend=()=>{isRec=false;document.getElementById('mic').classList.remove('on');document.getElementById('vhint').classList.remove('show');};
-    recognition.onerror=()=>stopMic();
-    recognition.start();
-    isRec=true;
-    document.getElementById('mic').classList.add('on');
-    document.getElementById('vhint').classList.add('show');
-    document.getElementById('vhint').textContent='Dinleniyor... konusmaya baslayin';
-}
-function stopMic(){if(recognition)recognition.stop();isRec=false;document.getElementById('mic').classList.remove('on');document.getElementById('vhint').classList.remove('show');}
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
