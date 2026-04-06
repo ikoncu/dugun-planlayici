@@ -63,6 +63,9 @@
         /* SEARCH & FILTER */
         .search-strip{padding:10px 16px;background:white;border-bottom:1px solid var(--gray-100);position:sticky;top:49px;z-index:90}
         .search-input{width:100%;border:1.5px solid var(--gray-200);border-radius:10px;padding:9px 12px 9px 36px;font-size:14px;outline:none;background:var(--gray-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 12px center}
+        .filter-sort-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+        .sort-select{border:1.5px solid var(--gray-200);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:500;color:var(--gray-700);background:white;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%236b7280'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:20px}
+        .sort-select:focus{border-color:var(--gold)}
         .search-input:focus{border-color:var(--gold);background-color:white}
         .filter-row{display:flex;gap:6px;margin-top:8px}
         .filter-btn{padding:6px 14px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--gray-200);background:white;cursor:pointer;white-space:nowrap}
@@ -278,20 +281,28 @@
 
     <!-- IMPORT/EXPORT BAR -->
     <div class="io-bar">
-        <button class="io-btn primary" onclick="document.getElementById('file-excel').click()"><span class="io-icon">&#x1F4E5;</span>Excel Yukle</button>
         <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel Indir</button>
-        <button class="io-btn sheets" id="sheets-sync-btn" onclick="autoSyncFromSheets()"><span class="io-icon">&#x1F4CA;</span><span class="sync-text">Sheets'ten Cek</span></button>
-        <button class="io-btn" onclick="showBackupHistory()" style="border-color:var(--blue);color:var(--blue);background:var(--blue-bg)"><span class="io-icon">&#x1F4BE;</span>Yedekler</button>
         <input type="file" id="file-excel" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileImport(this)">
     </div>
 
-    <!-- SEARCH & FILTER -->
+    <!-- SEARCH & FILTER & SORT -->
     <div class="search-strip">
         <input type="text" class="search-input" id="search-input" placeholder="Davetli ara..." oninput="renderList()">
-        <div class="filter-row">
-            <button class="filter-btn active" data-f="all" onclick="setFilter('all',this)">Hepsi</button>
-            <button class="filter-btn" data-f="Gelin" onclick="setFilter('Gelin',this)">Gelin Tarafi</button>
-            <button class="filter-btn" data-f="Damat" onclick="setFilter('Damat',this)">Damat Tarafi</button>
+        <div class="filter-sort-row">
+            <div class="filter-row">
+                <button class="filter-btn active" data-f="all" onclick="setFilter('all',this)">Hepsi</button>
+                <button class="filter-btn" data-f="Gelin" onclick="setFilter('Gelin',this)">Gelin Tarafi</button>
+                <button class="filter-btn" data-f="Damat" onclick="setFilter('Damat',this)">Damat Tarafi</button>
+            </div>
+            <select class="sort-select" id="sort-select" onchange="setSort(this.value)">
+                <option value="alpha-az">A → Z</option>
+                <option value="alpha-za">Z → A</option>
+                <option value="newest">Son eklenen</option>
+                <option value="oldest">Ilk eklenen</option>
+                <option value="rsvp-yes">Katilacak</option>
+                <option value="rsvp-wait">Beklemede</option>
+                <option value="rsvp-no">Katilmayacak</option>
+            </select>
         </div>
     </div>
 
@@ -322,6 +333,10 @@
     <div class="drawer-section">Diger</div>
     <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
     <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
+    <div class="drawer-section">Davetli Araclari</div>
+    <a class="drawer-item" onclick="toggleDrawer();document.getElementById('file-excel').click()"><span class="di-icon">📥</span>Excel Yukle</a>
+    <a class="drawer-item" id="sheets-sync-btn" onclick="toggleDrawer();autoSyncFromSheets()"><span class="di-icon">📊</span><span class="sync-text">Sheets'ten Cek</span></a>
+    <a class="drawer-item" onclick="toggleDrawer();showBackupHistory()"><span class="di-icon">💾</span>Yedekler</a>
 </div>
 
 <!-- ADD/EDIT MODAL -->
@@ -488,6 +503,7 @@ const backupRef = db.collection('shared').doc('guests_backups');
 let currentUser = null;
 let guests = [];
 let activeFilter = 'all';
+let activeSort = 'alpha-az'; // alpha-az, alpha-za, newest, oldest, rsvp-yes, rsvp-wait
 let openCardId = null;
 let deleteTargetId = null;
 let unsubscribe = null;
@@ -711,6 +727,40 @@ function setFilter(f, btn){
     renderList();
 }
 
+function setSort(val){
+    activeSort = val;
+    renderList();
+}
+
+function sortGuests(list){
+    const rsvpOrder = {'Katilacak':0,'Beklemede':1,'Katilmayacak':2};
+    switch(activeSort){
+        case 'alpha-az':
+            return list.sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+        case 'alpha-za':
+            return list.sort((a,b)=>b.name.localeCompare(a.name,'tr'));
+        case 'newest':
+            return list.slice().reverse();
+        case 'oldest':
+            return list;
+        case 'rsvp-yes':
+            return list.sort((a,b)=>(rsvpOrder[a.rsvp]||1)-(rsvpOrder[b.rsvp]||1));
+        case 'rsvp-wait':
+            return list.sort((a,b)=>{
+                const ao = a.rsvp==='Beklemede'?0:1;
+                const bo = b.rsvp==='Beklemede'?0:1;
+                return ao-bo;
+            });
+        case 'rsvp-no':
+            return list.sort((a,b)=>{
+                const ao = a.rsvp==='Katilmayacak'?0:1;
+                const bo = b.rsvp==='Katilmayacak'?0:1;
+                return ao-bo;
+            });
+        default: return list;
+    }
+}
+
 // Render guest list
 function renderList(){
     const q = (document.getElementById('search-input').value||'').toLowerCase().trim();
@@ -720,6 +770,7 @@ function renderList(){
         if(q && !g.name.toLowerCase().includes(q)) return false;
         return true;
     });
+    filtered = sortGuests(filtered);
 
     if(filtered.length===0){
         container.innerHTML = '<div class="empty-msg">Davetli bulunamadi</div>';
