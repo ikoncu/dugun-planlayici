@@ -1392,6 +1392,34 @@ function silentMergeFromSheets(rows){
 
 // --- DRAG & DROP (long-press, dogal surukleme) ---
 let gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+let gAutoScrollTimer=null;
+
+function gAutoScroll(clientY){
+    // Ekranin ust/alt kenarina yakinsa otomatik scroll
+    const edge=80; // kenar mesafesi
+    const speed=12; // px her frame
+    const vh=window.innerHeight;
+    let dir=0;
+    if(clientY<edge) dir=-Math.max(2,(edge-clientY)/edge*speed);
+    else if(clientY>vh-edge) dir=Math.max(2,(clientY-(vh-edge))/edge*speed);
+    if(dir!==0){
+        if(!gAutoScrollTimer){
+            gAutoScrollTimer=setInterval(()=>{
+                window.scrollBy(0,gAutoScrollDir);
+                if(gDragState.ghost){
+                    // Ghost ekrani takip etmesin, parmak/cursor pozisyonunu koru
+                }
+            },16);
+        }
+        gAutoScrollDir=dir;
+    } else {
+        gStopAutoScroll();
+    }
+}
+let gAutoScrollDir=0;
+function gStopAutoScroll(){
+    if(gAutoScrollTimer){clearInterval(gAutoScrollTimer);gAutoScrollTimer=null;gAutoScrollDir=0;}
+}
 
 function initGuestDrag(){
     const list=document.getElementById('glist');
@@ -1446,6 +1474,7 @@ function gOnTouchMove(e){
     e.preventDefault();
     const touch=e.touches[0];
     gDragState.ghost.style.top=(touch.clientY-gDragState.offsetY)+'px';
+    gAutoScroll(touch.clientY);
     document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
     const el=document.elementFromPoint(touch.clientX,touch.clientY);
     if(el){
@@ -1462,6 +1491,7 @@ function gOnTouchMove(e){
 function gOnTouchEnd(e){
     clearTimeout(gDragState.timer);
     gDragState.timer=null;
+    gStopAutoScroll();
     if(!gDragState.active){gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};return;}
     const touch=e.changedTouches[0];
     if(gDragState.ghost) gDragState.ghost.remove();
@@ -1530,6 +1560,7 @@ function gOnMouseMove(e){
     if(!gDragState.active) return;
     e.preventDefault();
     gDragState.ghost.style.top=(e.clientY-gDragState.offsetY)+'px';
+    gAutoScroll(e.clientY);
     document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
     const el=document.elementFromPoint(e.clientX,e.clientY);
     if(el){
@@ -1545,6 +1576,7 @@ function gOnMouseMove(e){
 function gOnMouseUp(e){
     document.removeEventListener('mousemove',gOnMouseMove);
     document.removeEventListener('mouseup',gOnMouseUp);
+    gStopAutoScroll();
     if(!gDragState.active){return;}
     if(gDragState.ghost) gDragState.ghost.remove();
     if(gDragState.card) gDragState.card.classList.remove('dragging');

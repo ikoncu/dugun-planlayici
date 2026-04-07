@@ -608,6 +608,20 @@ function closeModal(){document.getElementById('modal-edit').classList.remove('sh
 
 // DRAG & DROP - long press ile baslar, dogal surukleme
 let dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+let autoScrollTimer=null,autoScrollDir=0;
+function dragAutoScroll(clientY){
+    const edge=80,speed=12,vh=window.innerHeight;
+    let dir=0;
+    if(clientY<edge) dir=-Math.max(2,(edge-clientY)/edge*speed);
+    else if(clientY>vh-edge) dir=Math.max(2,(clientY-(vh-edge))/edge*speed);
+    if(dir!==0){
+        autoScrollDir=dir;
+        if(!autoScrollTimer) autoScrollTimer=setInterval(()=>window.scrollBy(0,autoScrollDir),16);
+    } else {
+        stopAutoScroll();
+    }
+}
+function stopAutoScroll(){if(autoScrollTimer){clearInterval(autoScrollTimer);autoScrollTimer=null;autoScrollDir=0;}}
 
 function initDrag(){
     const list=document.getElementById('tlist');
@@ -653,6 +667,7 @@ function onTouchMove(e){
     e.preventDefault();
     const touch=e.touches[0];
     dragState.ghost.style.top=(touch.clientY-dragState.offsetY)+'px';
+    dragAutoScroll(touch.clientY);
     // Find target card
     document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
     const el=document.elementFromPoint(touch.clientX,touch.clientY);
@@ -670,6 +685,7 @@ function onTouchMove(e){
 function onTouchEnd(e){
     clearTimeout(dragState.timer);
     dragState.timer=null;
+    stopAutoScroll();
     if(!dragState.active){return;}
     // Find drop target
     const touch=e.changedTouches[0];
