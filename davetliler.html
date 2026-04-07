@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Davetliler - Dugun Planlayici</title>
+    <title>Davetliler - Düğün Planlayıcı</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -57,6 +57,7 @@
         .stat-card.wait{border-color:var(--orange);background:var(--orange-bg)}
         .stat-card.no .stat-num{color:var(--red)}
         .stat-card.no{border-color:var(--red);background:var(--red-bg)}
+        .stat-sub{font-size:9px;color:var(--gray-400);margin-top:1px;font-weight:500}
         .side-breakdown{display:flex;gap:12px;justify-content:center;font-size:12px;color:var(--gray-500)}
         .side-breakdown span{font-weight:600;color:var(--gray-700)}
 
@@ -228,7 +229,7 @@
 <div id="login-screen" style="display:none">
     <div class="login-card">
         <div class="logo">💍</div>
-        <h1>Davetli Listesi</h1>
+        <h1>Düğün Planlayıcı</h1>
         <p>Dugun davetlilerini yonetin</p>
         <button class="google-btn" onclick="signIn()">
             <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -240,7 +241,7 @@
 <!-- LOADING (visible by default - first thing user sees) -->
 <div id="loading-screen" style="display:flex">
     <div class="spinner"></div>
-    <div style="font-size:14px;color:var(--gray-500)">Yukleniyor...</div>
+    <div style="font-size:14px;color:var(--gray-500)">Yükleniyor...</div>
 </div>
 
 <!-- APP -->
@@ -265,11 +266,12 @@
         <div class="stats-row">
             <div class="stat-card total">
                 <div class="stat-num" id="s-total">0</div>
-                <div class="stat-label">Toplam Kisi</div>
+                <div class="stat-label">Toplam Kişi</div>
+                <div class="stat-sub" id="s-total-sub">0 davet</div>
             </div>
             <div class="stat-card yes">
                 <div class="stat-num" id="s-yes">0</div>
-                <div class="stat-label">Katilacak</div>
+                <div class="stat-label">Katılacak</div>
             </div>
             <div class="stat-card wait">
                 <div class="stat-num" id="s-wait">0</div>
@@ -277,7 +279,7 @@
             </div>
             <div class="stat-card no">
                 <div class="stat-num" id="s-no">0</div>
-                <div class="stat-label">Katilmayacak</div>
+                <div class="stat-label">Katılmayacak</div>
             </div>
         </div>
         <div class="side-breakdown">
@@ -285,10 +287,9 @@
         </div>
     </div>
 
-    <!-- IMPORT/EXPORT BAR -->
+    <!-- EXPORT BAR -->
     <div class="io-bar">
-        <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel Indir</button>
-        <input type="file" id="file-excel" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileImport(this)">
+        <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel İndir</button>
     </div>
 
     <!-- SEARCH & FILTER & SORT -->
@@ -297,20 +298,20 @@
         <div class="filter-sort-row">
             <div class="filter-row">
                 <button class="filter-btn active" data-f="all" onclick="setFilter('all',this)">Hepsi</button>
-                <button class="filter-btn" data-f="Gelin" onclick="setFilter('Gelin',this)">Gelin Tarafi</button>
-                <button class="filter-btn" data-f="Damat" onclick="setFilter('Damat',this)">Damat Tarafi</button>
+                <button class="filter-btn" data-f="Gelin" onclick="setFilter('Gelin',this)">Gelin Tarafı</button>
+                <button class="filter-btn" data-f="Damat" onclick="setFilter('Damat',this)">Damat Tarafı</button>
             </div>
             <div class="sort-wrap">
                 <div class="sort-icon-btn">&#8645;</div>
                 <select class="sort-select" id="sort-select" onchange="setSort(this.value)">
-                    <option value="manual">Manuel (sirala)</option>
+                    <option value="manual">Manuel (sırala)</option>
                     <option value="alpha-az">A → Z</option>
                     <option value="alpha-za">Z → A</option>
                     <option value="newest">Son eklenen</option>
-                    <option value="oldest">Ilk eklenen</option>
-                    <option value="rsvp-yes">Katilacak</option>
+                    <option value="oldest">İlk eklenen</option>
+                    <option value="rsvp-yes">Katılacak</option>
                     <option value="rsvp-wait">Beklemede</option>
-                    <option value="rsvp-no">Katilmayacak</option>
+                    <option value="rsvp-no">Katılmayacak</option>
                 </select>
             </div>
         </div>
@@ -342,10 +343,8 @@
     <a class="drawer-item active" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
     <div class="drawer-section">Diger</div>
     <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
-    <div class="drawer-section">Davetli Araclari</div>
-    <a class="drawer-item" onclick="toggleDrawer();document.getElementById('file-excel').click()"><span class="di-icon">📥</span>Excel Yukle</a>
-    <a class="drawer-item" id="sheets-sync-btn" onclick="toggleDrawer();autoSyncFromSheets()"><span class="di-icon">📊</span><span class="sync-text">Sheets'ten Cek</span></a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
+    <div class="drawer-section">Davetli Araçları</div>
     <a class="drawer-item" onclick="toggleDrawer();showBackupHistory()"><span class="di-icon">💾</span>Yedekler</a>
 </div>
 
@@ -358,7 +357,7 @@
             <input type="hidden" id="f-id">
             <div class="field">
                 <label>Ad Soyad</label>
-                <input type="text" id="f-name" placeholder="Ornek: Ahmet Yilmaz">
+                <input type="text" id="f-name" placeholder="Örnek: Ahmet Yılmaz">
             </div>
             <div class="field-row">
                 <div class="field">
@@ -370,7 +369,7 @@
                 </div>
                 <div class="field">
                     <label>Grup</label>
-                    <input type="text" id="f-group" placeholder="Aile, Arkadas...">
+                    <input type="text" id="f-group" placeholder="Aile, Arkadaş...">
                 </div>
             </div>
             <div class="field">
@@ -379,11 +378,11 @@
             </div>
             <div class="field-row3">
                 <div class="field">
-                    <label>Yetiskin</label>
+                    <label>Yetişkin</label>
                     <input type="number" id="f-adults" min="0" value="1">
                 </div>
                 <div class="field">
-                    <label>Cocuk</label>
+                    <label>Çocuk</label>
                     <input type="number" id="f-children" min="0" value="0">
                 </div>
                 <div class="field">
@@ -395,22 +394,22 @@
                 <div class="field">
                     <label>Davetiye</label>
                     <select id="f-invited">
-                        <option value="Gonderilmedi">Gonderilmedi</option>
-                        <option value="Gonderildi">Gonderildi</option>
+                        <option value="Gonderilmedi">Gönderilmedi</option>
+                        <option value="Gonderildi">Gönderildi</option>
                     </select>
                 </div>
                 <div class="field">
                     <label>RSVP</label>
                     <select id="f-rsvp">
                         <option value="Beklemede">Beklemede</option>
-                        <option value="Katilacak">Katilacak</option>
-                        <option value="Katilmayacak">Katilmayacak</option>
+                        <option value="Katilacak">Katılacak</option>
+                        <option value="Katilmayacak">Katılmayacak</option>
                     </select>
                 </div>
             </div>
             <div class="field">
                 <label>Masa No</label>
-                <input type="text" id="f-table" placeholder="Ornek: 5">
+                <input type="text" id="f-table" placeholder="Örnek: 5">
             </div>
             <div class="field">
                 <label>Not</label>
@@ -421,33 +420,15 @@
     </div>
 </div>
 
-<!-- IMPORT PREVIEW MODAL -->
-<div class="import-modal-bg" id="import-modal" onclick="if(event.target===this)closeImportModal()">
-    <div class="import-modal">
-        <h3>Excel Icerik Onizleme</h3>
-        <div class="im-sub" id="im-source"></div>
-        <div class="import-stats" id="im-stats"></div>
-        <div class="import-preview" id="im-preview"></div>
-        <div class="import-mode">
-            <label><input type="radio" name="im-mode" value="replace" checked><span>Uzerine Yaz</span></label>
-            <label><input type="radio" name="im-mode" value="merge"><span>Birlestir</span></label>
-        </div>
-        <div class="import-btns">
-            <button class="ibtn-cancel" onclick="closeImportModal()">Vazgec</button>
-            <button class="ibtn-go" onclick="confirmImport()">Aktar</button>
-        </div>
-    </div>
-</div>
-
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <!-- CONFIRM DELETE -->
 <div class="confirm-bg" id="confirm-del" onclick="if(event.target===this)this.classList.remove('show')">
     <div class="confirm-box">
-        <p id="confirm-text">Bu davetliyi silmek istediginize emin misiniz?</p>
+        <p id="confirm-text">Bu davetliyi silmek istediğinize emin misiniz?</p>
         <div class="confirm-btns">
-            <button class="cbtn-cancel" onclick="document.getElementById('confirm-del').classList.remove('show')">Vazgec</button>
+            <button class="cbtn-cancel" onclick="document.getElementById('confirm-del').classList.remove('show')">Vazgeç</button>
             <button class="cbtn-del" id="cbtn-confirm" onclick="confirmDelete()">Sil</button>
         </div>
     </div>
@@ -583,11 +564,10 @@ function listen(){
         }
         updateDashboard();
         renderList();
-        // Ilk yukleme: migration + otomatik Sheets sync
+        // Ilk yukleme: migration (Sheets auto-sync kaldirildi - veri kaybi riski)
         if(firstLoad){
             firstLoad = false;
             applyMigration_20260406();
-            setTimeout(()=>autoSyncFromSheets(), 1500);
         }
     }, err=>{
         console.error(err);
@@ -650,7 +630,7 @@ function applyMigration_20260406(){
     if(changed){
         createBackup('Migration 06.04.2026 oncesi').then(()=>{
             saveToFirestore();
-            showToast('Liste guncellendi: yeni kisiler eklendi, cikarilan kisiler kaldirildi');
+            showToast('Liste güncellendi: yeni kişiler eklendi, çıkarılan kişiler kaldırıldı');
         });
     }
     localStorage.setItem(MIGRATION_KEY, 'true');
@@ -686,7 +666,7 @@ function showBackupHistory(){
 
         let listHtml = '';
         if(backups.length===0){
-            listHtml = '<div style="text-align:center;color:var(--gray-400);padding:20px">Henuz yedek yok</div>';
+            listHtml = '<div style="text-align:center;color:var(--gray-400);padding:20px">Henüz yedek yok</div>';
         } else {
             backups.slice().reverse().forEach((b,i)=>{
                 const d = new Date(b.date);
@@ -695,21 +675,21 @@ function showBackupHistory(){
                 listHtml += '<div class="backup-item">'+
                     '<div><div class="bi-date">'+dateStr+'</div>'+
                     '<div class="bi-info">'+b.count+' davetli \u2022 '+b.reason+'</div></div>'+
-                    '<button class="bi-restore" onclick="restoreBackup('+idx+')">Geri Yukle</button></div>';
+                    '<button class="bi-restore" onclick="restoreBackup('+idx+')">Geri Yükle</button></div>';
             });
         }
 
         modal.innerHTML = '<div class="import-modal">'+
-            '<h3>Yedek Gecmisi</h3>'+
-            '<div class="im-sub">Son 10 yedek saklanir. Geri yuklemeden once mevcut liste otomatik yedeklenir.</div>'+
+            '<h3>Yedek Geçmişi</h3>'+
+            '<div class="im-sub">Son 10 yedek saklanır. Geri yüklemeden önce mevcut liste otomatik yedeklenir.</div>'+
             '<div style="margin:10px 0">'+
-            '<input id="backup-search" type="text" placeholder="Yedeklerde isim ara (orn: Simay)..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px" oninput="searchInBackups(this.value)">'+
+            '<input id="backup-search" type="text" placeholder="Yedeklerde isim ara (örn: Simay)..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px" oninput="searchInBackups(this.value)">'+
             '<div id="backup-search-result" style="margin-top:6px;font-size:12px;color:var(--gray-700)"></div>'+
             '</div>'+
             '<div class="backup-list">'+listHtml+'</div>'+
             '<div class="import-btns">'+
             '<button class="ibtn-cancel" onclick="this.closest(\'.import-modal-bg\').remove()">Kapat</button>'+
-            '<button class="ibtn-go" onclick="createBackup(\'Manuel\').then(()=>{showToast(\'Yedek alindi\');this.closest(\'.import-modal-bg\').remove();showBackupHistory();})">Simdi Yedekle</button>'+
+            '<button class="ibtn-go" onclick="createBackup(\'Manuel\').then(()=>{showToast(\'Yedek alındı\');this.closest(\'.import-modal-bg\').remove();showBackupHistory();})">Şimdi Yedekle</button>'+
             '</div></div>';
         document.body.appendChild(modal);
     });
@@ -731,7 +711,7 @@ function searchInBackups(query){
             });
         });
         if(found.length===0){
-            result.innerHTML='<span style="color:var(--red)">Bulunamadi</span>';
+            result.innerHTML='<span style="color:var(--red)">Bulunamadı</span>';
         } else {
             const unique = {};
             found.forEach(f=>{unique[f.name]=f;});
@@ -753,7 +733,7 @@ function restoreBackup(idx){
         createBackup('Geri yukleme oncesi otomatik').then(()=>{
             guests = JSON.parse(JSON.stringify(backups[idx].list));
             saveToFirestore();
-            showToast('Liste geri yuklendi: '+guests.length+' davetli');
+            showToast('Liste geri yüklendi: '+guests.length+' davetli');
             document.querySelector('.import-modal-bg').remove();
         });
     });
@@ -772,6 +752,7 @@ function updateDashboard(){
         else damat += t;
     });
     document.getElementById('s-total').textContent = totalP;
+    document.getElementById('s-total-sub').textContent = guests.length+' davet';
     document.getElementById('s-yes').textContent = yes;
     document.getElementById('s-wait').textContent = wait;
     document.getElementById('s-no').textContent = no;
@@ -825,7 +806,7 @@ function renderList(){
     filtered = sortGuests(filtered);
 
     if(filtered.length===0){
-        container.innerHTML = '<div class="empty-msg">Davetli bulunamadi</div>';
+        container.innerHTML = '<div class="empty-msg">Davetli bulunamadı</div>';
         return;
     }
 
@@ -835,7 +816,7 @@ function renderList(){
         const initials = g.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
         const sideClass = g.side==='Gelin'?'gside-gelin':'gside-damat';
         const rsvpClass = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
-        const rsvpLabel = g.rsvp;
+        const rsvpLabel = trLabel(g.rsvp);
 
         html += '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'" data-idx="'+guests.indexOf(g)+'">';
         html += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
@@ -844,7 +825,7 @@ function renderList(){
         html += '<div class="gname">'+esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
         html += '<div class="gmeta">';
         if(g.phone) html += '<span>'+esc(g.phone)+'</span>';
-        html += '<span>'+g.adults+' yetiskin'+(g.children>0?', '+g.children+' cocuk':'')+'</span>';
+        html += '<span>'+g.adults+' yetişkin'+(g.children>0?', '+g.children+' çocuk':'')+'</span>';
         html += '</div></div>';
         html += '<div class="grsvp"><button class="rsvp-chip '+rsvpClass+'" onclick="event.stopPropagation();cycleRsvp(\''+g.id+'\')">'+rsvpLabel+'</button></div>';
         html += '<div class="garrow">&#x25BC;</div>';
@@ -853,20 +834,33 @@ function renderList(){
         // Detail
         html += '<div class="gdetail">';
         html += '<div class="gdetail-grid">';
-        html += '<div class="gd-item"><div class="gd-label">Davetiye</div><div class="gd-val">'+(g.invited||'Gonderilmedi')+'</div></div>';
+        html += '<div class="gd-item"><div class="gd-label">Davetiye</div><div class="gd-val">'+trLabel(g.invited||'Gonderilmedi')+'</div></div>';
         html += '<div class="gd-item"><div class="gd-label">Masa</div><div class="gd-val">'+(g.table||'-')+'</div></div>';
         html += '<div class="gd-item"><div class="gd-label">Grup</div><div class="gd-val">'+(g.group||'-')+'</div></div>';
-        html += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kisi</div></div>';
+        html += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kişi</div></div>';
         html += '</div>';
         if(g.note) html += '<div class="gnote">'+esc(g.note)+'</div>';
         html += '<div class="gbtns">';
-        html += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Duzenle</button>';
+        html += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Düzenle</button>';
         html += '<button class="gbtn-del" onclick="event.stopPropagation();askDelete(\''+g.id+'\')">Sil</button>';
         html += '</div></div>';
         html += '</div>';
     });
     container.innerHTML = html;
 }
+
+// Veri degeri -> Turkce gosterim
+const TR_LABELS = {
+    'Katilacak':'Katılacak',
+    'Katilmayacak':'Katılmayacak',
+    'Beklemede':'Beklemede',
+    'Gonderildi':'Gönderildi',
+    'Gonderilmedi':'Gönderilmedi',
+    'Ibrahim':'İbrahim',
+    'Hilal':'Hilal',
+    'Birlikte':'Birlikte'
+};
+function trLabel(s){return TR_LABELS[s]||s;}
 
 function toggleDrawer(){
     document.getElementById('drawer').classList.toggle('open');
@@ -897,7 +891,7 @@ function cycleRsvp(id){
             chip.classList.remove('rsvp-katilacak','rsvp-katilmayacak','rsvp-beklemede');
             const cls = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
             chip.classList.add(cls);
-            chip.textContent = g.rsvp;
+            chip.textContent = trLabel(g.rsvp);
         }
     }
     updateDashboard();
@@ -925,7 +919,7 @@ function openAddModal(){
 function openEditModal(id){
     const g = guests.find(x=>x.id===id);
     if(!g) return;
-    document.getElementById('modal-title').textContent='Davetli Duzenle';
+    document.getElementById('modal-title').textContent='Davetli Düzenle';
     document.getElementById('f-id').value=g.id;
     document.getElementById('f-name').value=g.name;
     document.getElementById('f-side').value=g.side;
@@ -957,7 +951,7 @@ function calcTotal(){
 function saveGuest(){
     const id = document.getElementById('f-id').value;
     const name = document.getElementById('f-name').value.trim();
-    if(!name){alert('Ad soyad gerekli');return;}
+    if(!name){alert('Ad Soyad gerekli');return;}
     const adults = parseInt(document.getElementById('f-adults').value)||1;
     const children = parseInt(document.getElementById('f-children').value)||0;
     const obj = {
@@ -1003,9 +997,7 @@ function confirmDelete(){
     document.getElementById('confirm-del').classList.remove('show');
 }
 
-// ===== IMPORT / EXPORT / SHEETS =====
-
-let pendingImportGuests = [];
+// ===== EXPORT =====
 
 function showToast(msg){
     const t=document.getElementById('toast');
@@ -1014,193 +1006,24 @@ function showToast(msg){
     setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// --- EXCEL IMPORT ---
-function handleFileImport(input){
-    const file = input.files[0];
-    if(!file) return;
-    input.value='';
-    const reader = new FileReader();
-    reader.onload = function(e){
-        try{
-            const wb = XLSX.read(e.target.result, {type:'array'});
-            // Find the guest sheet
-            const sheetName = wb.SheetNames.find(n=>n.includes('Davetli')) || wb.SheetNames[0];
-            const ws = wb.Sheets[sheetName];
-            const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-            if(rows.length<2){showToast('Excel bos gorunuyor');return;}
-            parseExcelRows(rows, 'Excel: '+file.name);
-        }catch(err){
-            console.error(err);
-            showToast('Excel okunamadi: '+err.message);
-        }
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-function parseExcelRows(rows, sourceName){
-    // Find header row
-    let headerIdx = 0;
-    for(let i=0;i<Math.min(rows.length,5);i++){
-        const row = rows[i].map(c=>String(c||'').toLowerCase());
-        if(row.some(c=>c.includes('ad soyad') || c.includes('adsoyad') || c.includes('isim'))){
-            headerIdx=i; break;
-        }
-    }
-    const headers = rows[headerIdx].map(c=>String(c||'').toLowerCase().trim());
-
-    // Map columns
-    const colMap = {
-        name: headers.findIndex(h=>h.includes('ad soyad')||h.includes('adsoyad')||h.includes('isim')),
-        side: headers.findIndex(h=>h.includes('taraf')),
-        group: headers.findIndex(h=>h.includes('aile')||h.includes('grup')),
-        phone: headers.findIndex(h=>h.includes('telefon')||h.includes('tel')),
-        adults: headers.findIndex(h=>h.includes('yeti') && h.includes('say')),
-        children: headers.findIndex(h=>h.includes('ocuk') && h.includes('say')),
-        invited: headers.findIndex(h=>h.includes('davet') && (h.includes('gonder')||h.includes('gönd'))),
-        rsvp: headers.findIndex(h=>h.includes('kat') && h.includes('dur') || h.includes('rsvp')),
-        table: headers.findIndex(h=>h.includes('masa')),
-        note: headers.findIndex(h=>h==='not'||h.includes('notlar'))
-    };
-
-    if(colMap.name<0){showToast('Ad Soyad sutunu bulunamadi');return;}
-
-    // Parse data rows
-    pendingImportGuests = [];
-    for(let i=headerIdx+1;i<rows.length;i++){
-        const r = rows[i];
-        const name = String(r[colMap.name]||'').trim();
-        if(!name) continue;
-
-        const adults = parseInt(r[colMap.adults])||1;
-        const children = parseInt(r[colMap.children])||0;
-
-        // Map RSVP values
-        let rsvpRaw = String(r[colMap.rsvp>=0?colMap.rsvp:-1]||'').trim();
-        let rsvp = 'Beklemede';
-        if(rsvpRaw.toLowerCase().includes('evet')||rsvpRaw.toLowerCase().includes('katıl')||rsvpRaw==='Katilacak') rsvp='Katilacak';
-        else if(rsvpRaw.toLowerCase().includes('hayır')||rsvpRaw.toLowerCase().includes('hayir')||rsvpRaw==='Katilmayacak') rsvp='Katilmayacak';
-
-        // Map invited values
-        let invRaw = String(r[colMap.invited>=0?colMap.invited:-1]||'').trim();
-        let invited = 'Gonderilmedi';
-        if(invRaw.toLowerCase().includes('gönderildi')||invRaw.toLowerCase().includes('gonderildi')||invRaw==='Gonderildi') invited='Gonderildi';
-
-        // Map side
-        let sideRaw = String(r[colMap.side>=0?colMap.side:-1]||'').trim();
-        let side = 'Gelin';
-        if(sideRaw.toLowerCase().includes('damat')) side='Damat';
-
-        // Phone: normalize
-        let phone = String(r[colMap.phone>=0?colMap.phone:-1]||'').trim();
-        if(phone && !isNaN(Number(phone))) phone = phone.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/,'$1 $2 $3 $4');
-
-        // Table
-        let table = '';
-        if(colMap.table>=0){
-            let tv = r[colMap.table];
-            if(tv!==undefined && tv!==null && tv!=='') table = String(Math.floor(Number(tv))||tv);
-        }
-
-        pendingImportGuests.push({
-            id: 'g'+Date.now()+'_'+i,
-            name, side,
-            group: colMap.group>=0 ? String(r[colMap.group]||'').trim() : '',
-            phone, adults, children, total: adults+children,
-            invited, rsvp, table,
-            note: colMap.note>=0 ? String(r[colMap.note]||'').trim() : ''
-        });
-    }
-
-    if(pendingImportGuests.length===0){showToast('Davetli bulunamadi');return;}
-
-    // Show preview modal
-    showImportPreview(sourceName);
-}
-
-function showImportPreview(source){
-    document.getElementById('im-source').textContent = source;
-
-    const gelin = pendingImportGuests.filter(g=>g.side==='Gelin').length;
-    const damat = pendingImportGuests.filter(g=>g.side==='Damat').length;
-    const totalP = pendingImportGuests.reduce((s,g)=>s+g.total,0);
-    document.getElementById('im-stats').innerHTML =
-        '<span><span class="is-num">'+pendingImportGuests.length+'</span> davetli</span>' +
-        '<span><span class="is-num">'+totalP+'</span> kisi</span>' +
-        '<span>Gelin: '+gelin+' | Damat: '+damat+'</span>';
-
-    // Preview table (first 10)
-    let html = '<table><tr><th>Ad Soyad</th><th>Taraf</th><th>Tel</th><th>Kisi</th></tr>';
-    pendingImportGuests.slice(0,10).forEach(g=>{
-        html += '<tr><td>'+esc(g.name)+'</td><td>'+g.side+'</td><td>'+esc(g.phone)+'</td><td>'+g.total+'</td></tr>';
-    });
-    if(pendingImportGuests.length>10) html += '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">... ve '+(pendingImportGuests.length-10)+' daha</td></tr>';
-    html += '</table>';
-    document.getElementById('im-preview').innerHTML = html;
-
-    document.getElementById('import-modal').classList.add('show');
-}
-
-function closeImportModal(){
-    document.getElementById('import-modal').classList.remove('show');
-    pendingImportGuests = [];
-}
-
-function confirmImport(){
-    const mode = document.querySelector('input[name="im-mode"]:checked').value;
-
-    if(mode==='replace'){
-        guests = pendingImportGuests;
-    } else {
-        // Merge: match by normalized name
-        const norm = s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
-        const existingMap = {};
-        guests.forEach(g=>{existingMap[norm(g.name)]=g;});
-
-        pendingImportGuests.forEach(ig=>{
-            const key = norm(ig.name);
-            if(existingMap[key]){
-                // Update existing guest fields from Excel (keep app id)
-                const existing = existingMap[key];
-                existing.side = ig.side;
-                existing.group = ig.group || existing.group;
-                existing.phone = ig.phone || existing.phone;
-                existing.adults = ig.adults;
-                existing.children = ig.children;
-                existing.total = ig.total;
-                if(ig.invited!=='Gonderilmedi') existing.invited = ig.invited;
-                if(ig.rsvp!=='Beklemede') existing.rsvp = ig.rsvp;
-                if(ig.table) existing.table = ig.table;
-                if(ig.note) existing.note = ig.note;
-            } else {
-                guests.push(ig);
-            }
-        });
-    }
-
-    saveToFirestore();
-    closeImportModal();
-    showToast((mode==='replace'?'Liste guncellendi':'Birlestirme tamamlandi')+': '+pendingImportGuests.length+' davetli');
-    pendingImportGuests = [];
-}
-
 // --- EXCEL EXPORT ---
 function exportExcel(){
-    if(guests.length===0){showToast('Liste bos');return;}
+    if(guests.length===0){showToast('Liste boş');return;}
 
-    const header = ['No','Ad Soyad','Taraf (Gelin/Damat)','Aile / Grup','Telefon','Yetiskin Sayisi','Cocuk Sayisi','Toplam Kisi','Davet Gonderildi','Katilim Durumu','Masa No','Not'];
+    const header = ['No','Ad Soyad','Taraf (Gelin/Damat)','Aile / Grup','Telefon','Yetişkin Sayısı','Çocuk Sayısı','Toplam Kişi','Davet Gönderildi','Katılım Durumu','Masa No','Not'];
     const data = [header];
     guests.forEach((g,i)=>{
         // Map app values back to Excel-friendly Turkish
         let rsvp = g.rsvp;
         if(rsvp==='Katilacak') rsvp='Evet';
-        else if(rsvp==='Katilmayacak') rsvp='Hayir';
+        else if(rsvp==='Katilmayacak') rsvp='Hayır';
         else rsvp='Beklemede';
 
         let invited = g.invited;
-        if(invited==='Gonderildi') invited='Gonderildi';
-        else invited='Gonderilmedi';
+        if(invited==='Gonderildi') invited='Gönderildi';
+        else invited='Gönderilmedi';
 
-        data.push([i+1, g.name, g.side, g.group||'', g.phone||'', g.adults||1, g.children||0, g.total||1, invited, rsvp, g.table||'', g.note||'']);
+        data.push([i+1, g.name, g.side, g.group||'', g.phone||'', g.adults??1, g.children??0, g.total??1, invited, rsvp, g.table||'', g.note||'']);
     });
 
     const ws = XLSX.utils.aoa_to_sheet(data);
@@ -1212,182 +1035,23 @@ function exportExcel(){
 
     // Add RSVP summary sheet
     const summaryData = [
-        ['Nisan Davet Dashboard',''],
+        ['Nişan Davet Dashboard',''],
         ['',''],
-        ['Toplam Davetli', guests.reduce((s,g)=>s+g.total,0)],
-        ['Katilacak', guests.filter(g=>g.rsvp==='Katilacak').reduce((s,g)=>s+g.total,0)],
-        ['Beklemede', guests.filter(g=>g.rsvp==='Beklemede').reduce((s,g)=>s+g.total,0)],
-        ['Katilmayacak', guests.filter(g=>g.rsvp==='Katilmayacak').reduce((s,g)=>s+g.total,0)],
+        ['Toplam Kişi', guests.reduce((s,g)=>s+(g.total??1),0)],
+        ['Toplam Davet', guests.length],
+        ['Katılacak', guests.filter(g=>g.rsvp==='Katilacak').reduce((s,g)=>s+(g.total??1),0)],
+        ['Beklemede', guests.filter(g=>g.rsvp==='Beklemede').reduce((s,g)=>s+(g.total??1),0)],
+        ['Katılmayacak', guests.filter(g=>g.rsvp==='Katilmayacak').reduce((s,g)=>s+(g.total??1),0)],
         ['',''],
-        ['Gelin Tarafi', guests.filter(g=>g.side==='Gelin').reduce((s,g)=>s+g.total,0)],
-        ['Damat Tarafi', guests.filter(g=>g.side==='Damat').reduce((s,g)=>s+g.total,0)]
+        ['Gelin Tarafı', guests.filter(g=>g.side==='Gelin').reduce((s,g)=>s+(g.total??1),0)],
+        ['Damat Tarafı', guests.filter(g=>g.side==='Damat').reduce((s,g)=>s+(g.total??1),0)]
     ];
     const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
     ws2['!cols'] = [{wch:18},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws2, 'RSVP Ozeti');
+    XLSX.utils.book_append_sheet(wb, ws2, 'RSVP Özeti');
 
     XLSX.writeFile(wb, 'davetli_listesi_'+new Date().toISOString().slice(0,10)+'.xlsx');
     showToast('Excel indirildi: '+guests.length+' davetli');
-}
-
-// --- GOOGLE SHEETS AUTO-SYNC ---
-const SHEETS_ID = '11KMNL_7cj3yCvbFs_E4J-sSWVRyMoULc';
-const SHEETS_GID = '619714713';
-let lastSheetsSync = 0;
-
-// Auto-sync: backup al, sessiz merge, modal yok
-function autoSyncFromSheets(){
-    const syncBtn = document.getElementById('sheets-sync-btn');
-    if(syncBtn) syncBtn.classList.add('syncing');
-
-    const url = 'https://docs.google.com/spreadsheets/d/'+SHEETS_ID+'/gviz/tq?tqx=out:csv&gid='+SHEETS_GID;
-
-    fetch(url)
-        .then(resp=>{
-            if(!resp.ok) throw new Error('HTTP '+resp.status);
-            return resp.text();
-        })
-        .then(csv=>{
-            const wb = XLSX.read(csv, {type:'string'});
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-            if(rows.length<2){
-                if(syncBtn){ syncBtn.classList.remove('syncing'); }
-                return;
-            }
-            // Sync oncesi backup al, sonra merge yap
-            createBackup('Sheets sync oncesi otomatik').then(()=>{
-                silentMergeFromSheets(rows);
-                lastSheetsSync = Date.now();
-                if(syncBtn){
-                    syncBtn.classList.remove('syncing');
-                    syncBtn.classList.add('synced');
-                    syncBtn.querySelector('.sync-text').textContent = 'Senkron';
-                    setTimeout(()=>{
-                        syncBtn.classList.remove('synced');
-                        syncBtn.querySelector('.sync-text').textContent = 'Sheets Sync';
-                    }, 3000);
-                }
-            });
-        })
-        .catch(err=>{
-            console.error('Sheets auto-sync error:', err);
-            if(syncBtn){
-                syncBtn.classList.remove('syncing');
-                syncBtn.classList.add('sync-error');
-                syncBtn.querySelector('.sync-text').textContent = 'Baglanti yok';
-                setTimeout(()=>{
-                    syncBtn.classList.remove('sync-error');
-                    syncBtn.querySelector('.sync-text').textContent = 'Sheets Sync';
-                }, 4000);
-            }
-        });
-}
-
-// Sessiz merge: modal gostermeden dogrudan birlestir
-function silentMergeFromSheets(rows){
-    // Find header row
-    let headerIdx = 0;
-    for(let i=0;i<Math.min(rows.length,5);i++){
-        const row = rows[i].map(c=>String(c||'').toLowerCase());
-        if(row.some(c=>c.includes('ad soyad') || c.includes('adsoyad') || c.includes('isim'))){
-            headerIdx=i; break;
-        }
-    }
-    const headers = rows[headerIdx].map(c=>String(c||'').toLowerCase().trim());
-
-    const colMap = {
-        name: headers.findIndex(h=>h.includes('ad soyad')||h.includes('adsoyad')||h.includes('isim')),
-        side: headers.findIndex(h=>h.includes('taraf')),
-        group: headers.findIndex(h=>h.includes('aile')||h.includes('grup')),
-        phone: headers.findIndex(h=>h.includes('telefon')||h.includes('tel')),
-        adults: headers.findIndex(h=>h.includes('yeti') && h.includes('say')),
-        children: headers.findIndex(h=>h.includes('ocuk') && h.includes('say')),
-        invited: headers.findIndex(h=>h.includes('davet') && (h.includes('gonder')||h.includes('gönd'))),
-        rsvp: headers.findIndex(h=>h.includes('kat') && h.includes('dur') || h.includes('rsvp')),
-        table: headers.findIndex(h=>h.includes('masa')),
-        note: headers.findIndex(h=>h==='not'||h.includes('notlar'))
-    };
-
-    if(colMap.name<0) return;
-
-    const sheetsGuests = [];
-    for(let i=headerIdx+1;i<rows.length;i++){
-        const r = rows[i];
-        const name = String(r[colMap.name]||'').trim();
-        if(!name) continue;
-
-        const adults = parseInt(r[colMap.adults])||1;
-        const children = parseInt(r[colMap.children])||0;
-
-        let rsvpRaw = String(r[colMap.rsvp>=0?colMap.rsvp:-1]||'').trim();
-        let rsvp = 'Beklemede';
-        if(rsvpRaw.toLowerCase().includes('evet')||rsvpRaw.toLowerCase().includes('katıl')||rsvpRaw==='Katilacak') rsvp='Katilacak';
-        else if(rsvpRaw.toLowerCase().includes('hayır')||rsvpRaw.toLowerCase().includes('hayir')||rsvpRaw==='Katilmayacak') rsvp='Katilmayacak';
-
-        let invRaw = String(r[colMap.invited>=0?colMap.invited:-1]||'').trim();
-        let invited = 'Gonderilmedi';
-        if(invRaw.toLowerCase().includes('gönderildi')||invRaw.toLowerCase().includes('gonderildi')||invRaw==='Gonderildi') invited='Gonderildi';
-
-        let sideRaw = String(r[colMap.side>=0?colMap.side:-1]||'').trim();
-        let side = 'Gelin';
-        if(sideRaw.toLowerCase().includes('damat')) side='Damat';
-
-        let phone = String(r[colMap.phone>=0?colMap.phone:-1]||'').trim();
-        if(phone && !isNaN(Number(phone))) phone = phone.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/,'$1 $2 $3 $4');
-
-        let table = '';
-        if(colMap.table>=0){
-            let tv = r[colMap.table];
-            if(tv!==undefined && tv!==null && tv!=='') table = String(Math.floor(Number(tv))||tv);
-        }
-
-        sheetsGuests.push({
-            id: 'g'+Date.now()+'_'+i,
-            name, side,
-            group: colMap.group>=0 ? String(r[colMap.group]||'').trim() : '',
-            phone, adults, children, total: adults+children,
-            invited, rsvp, table,
-            note: colMap.note>=0 ? String(r[colMap.note]||'').trim() : ''
-        });
-    }
-
-    if(sheetsGuests.length===0) return;
-
-    // Sheets = master kaynak. Sheets'teki veri app'i gunceller.
-    // App'te olup Sheets'te olmayan kisiler korunur (silinmez).
-    const norm = s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
-    const existingMap = {};
-    guests.forEach(g=>{existingMap[norm(g.name)]=g;});
-
-    let added = 0, updated = 0;
-    sheetsGuests.forEach(ig=>{
-        const key = norm(ig.name);
-        if(existingMap[key]){
-            const existing = existingMap[key];
-            let changed = false;
-            // Sheets master: tum alanlari Sheets'ten al
-            if(ig.side!==existing.side){existing.side=ig.side;changed=true;}
-            if((ig.group||'')!==(existing.group||'')){existing.group=ig.group;changed=true;}
-            if((ig.phone||'')!==(existing.phone||'')){existing.phone=ig.phone;changed=true;}
-            if(ig.adults!==existing.adults){existing.adults=ig.adults;changed=true;}
-            if(ig.children!==existing.children){existing.children=ig.children;changed=true;}
-            if(ig.adults+ig.children!==existing.total){existing.total=ig.adults+ig.children;changed=true;}
-            if(ig.invited!==existing.invited){existing.invited=ig.invited;changed=true;}
-            if(ig.rsvp!==existing.rsvp){existing.rsvp=ig.rsvp;changed=true;}
-            if((ig.table||'')!==(existing.table||'')){existing.table=ig.table;changed=true;}
-            if((ig.note||'')!==(existing.note||'')){existing.note=ig.note;changed=true;}
-            if(changed) updated++;
-        } else {
-            guests.push(ig);
-            added++;
-        }
-    });
-
-    if(added>0 || updated>0){
-        saveToFirestore();
-        showToast('Sheets sync: '+(added?added+' yeni':'')+(added&&updated?', ':'')+(updated?updated+' guncellendi':''));
-    }
 }
 
 // --- DRAG & DROP (long-press, dogal surukleme) ---
@@ -1459,7 +1123,7 @@ function gOnTouchStart(e){
         if(activeSort!=='manual'){
             activeSort='manual';
             document.getElementById('sort-select').value='manual';
-            showToast('Manuel siralamaya gecildi');
+            showToast('Manuel sıralamaya geçildi');
         }
     },400);
 }
@@ -1539,7 +1203,7 @@ function gOnMouseDown(e){
         if(activeSort!=='manual'){
             activeSort='manual';
             document.getElementById('sort-select').value='manual';
-            showToast('Manuel siralamaya gecildi');
+            showToast('Manuel sıralamaya geçildi');
         }
         document.addEventListener('mousemove',gOnMouseMove);
         document.addEventListener('mouseup',gOnMouseUp);

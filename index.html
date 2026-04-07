@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dugun Planlayici</title>
+    <title>Düğün Planlayıcı</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -147,8 +147,8 @@
 <div id="login-screen" style="display:none">
     <div class="login-card">
         <div class="logo">💍</div>
-        <h1>Dugun Planlayici</h1>
-        <p>Dugunuzu birlikte planlayalim</p>
+        <h1>Düğün Planlayıcı</h1>
+        <p>Düğününüzü birlikte planlayalım</p>
         <button class="google-btn" onclick="doGoogleLogin()">
             <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
             Google ile Giris Yap
@@ -159,7 +159,7 @@
 <!-- LOADING -->
 <div id="loading-screen" style="display:flex">
     <div class="spinner"></div>
-    <div class="loading-text">Yukleniyor...</div>
+    <div class="loading-text">Yükleniyor...</div>
 </div>
 
 <!-- APP -->
@@ -170,10 +170,10 @@
                 <div id="user-avatar-wrap"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-dropdown-name"></div>
-                    <button onclick="doSignOut()">Cikis Yap</button>
+                    <button onclick="doSignOut()">Çıkış Yap</button>
                 </div>
             </div>
-            <h1>Dugun Planlayici</h1>
+            <h1>Düğün Planlayıcı</h1>
             <button class="hamburger" onclick="toggleDrawer()">☰</button>
         </div>
         <div class="tl-wrap" id="tl-wrap"></div>
@@ -182,48 +182,48 @@
     </div>
 
     <div class="dash-cards" id="dash-cards">
-        <!-- Genel Ilerleme -->
+        <!-- Genel İlerleme -->
         <div class="dash-card">
-            <div class="dash-card-title">Genel Ilerleme <a href="gorevler.html">Tumu &rarr;</a></div>
+            <div class="dash-card-title">Genel İlerleme <a href="gorevler.html">Tümü &rarr;</a></div>
             <div class="progress-wrap">
                 <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
                 <div class="progress-text"><span id="prog-label">0 / 0 gorev</span><span id="prog-pct">0%</span></div>
             </div>
         </div>
 
-        <!-- Yaklasan Gorevler -->
+        <!-- Yaklaşan Görevler -->
         <div class="dash-card">
-            <div class="dash-card-title">Yaklasan Gorevler <a href="gorevler.html">Tumu &rarr;</a></div>
-            <div id="upcoming-tasks"><div class="empty-state">Gorev bulunamadi</div></div>
+            <div class="dash-card-title">Yaklaşan Görevler <a href="gorevler.html">Tümü &rarr;</a></div>
+            <div id="upcoming-tasks"><div class="empty-state">Görev bulunamadı</div></div>
         </div>
 
-        <!-- Davetli Ozeti -->
+        <!-- Davetli Özeti -->
         <div class="dash-card">
-            <div class="dash-card-title">Davetli Ozeti <a href="davetliler.html">Tumu &rarr;</a></div>
+            <div class="dash-card-title">Davetli Özeti <a href="davetliler.html">Tümü &rarr;</a></div>
             <div class="mini-stats" id="guest-stats">
-                <div class="mini-stat blue"><div class="ms-num" id="gs-total">0</div><div class="ms-label">Toplam Kisi</div></div>
-                <div class="mini-stat green"><div class="ms-num" id="gs-confirmed">0</div><div class="ms-label">Katilacak</div></div>
+                <div class="mini-stat blue"><div class="ms-num" id="gs-total">0</div><div class="ms-label">Toplam Kişi</div></div>
+                <div class="mini-stat green"><div class="ms-num" id="gs-confirmed">0</div><div class="ms-label">Katılacak</div></div>
                 <div class="mini-stat orange"><div class="ms-num" id="gs-pending">0</div><div class="ms-label">Beklemede</div></div>
-                <div class="mini-stat red"><div class="ms-num" id="gs-declined">0</div><div class="ms-label">Katilmayacak</div></div>
+                <div class="mini-stat red"><div class="ms-num" id="gs-declined">0</div><div class="ms-label">Katılmayacak</div></div>
             </div>
         </div>
 
-        <!-- Butce Ozeti -->
+        <!-- Bütçe Özeti -->
         <div class="dash-card">
-            <div class="dash-card-title">Butce Ozeti <a href="butce.html">Detay &rarr;</a></div>
+            <div class="dash-card-title">Bütçe Özeti <a href="butce.html">Detay &rarr;</a></div>
             <div class="budget-row" id="budget-stats">
-                <div class="budget-item"><div class="bi-num" id="bs-total">0</div><div class="bi-label">Toplam Butce</div></div>
+                <div class="budget-item"><div class="bi-num" id="bs-total">0</div><div class="bi-label">Toplam Bütçe</div></div>
                 <div class="budget-item"><div class="bi-num" id="bs-estimated">0</div><div class="bi-label">Tahmini</div></div>
-                <div class="budget-item"><div class="bi-num" id="bs-paid">0</div><div class="bi-label">Odenen</div></div>
+                <div class="budget-item"><div class="bi-num" id="bs-paid">0</div><div class="bi-label">Ödenen</div></div>
                 <div class="budget-item"><div class="bi-num" id="bs-remaining">0</div><div class="bi-label">Kalan</div></div>
             </div>
         </div>
 
         <!-- Mekan Durumu -->
         <div class="dash-card">
-            <div class="dash-card-title">Mekan Durumu <a href="mekanlar.html">Mekanlari Gor &rarr;</a></div>
+            <div class="dash-card-title">Mekan Durumu <a href="mekanlar.html">Mekanları Gör &rarr;</a></div>
             <div class="venue-summary" id="venue-summary">
-                <span class="vs-text">Henuz mekan eklenmedi</span>
+                <span class="vs-text">Henüz mekan eklenmedi</span>
             </div>
         </div>
     </div>
@@ -232,7 +232,7 @@
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="bnav">
     <a class="active" href="index.html"><span class="bicon">🏠</span>Ana Sayfa</a>
-    <a href="gorevler.html"><span class="bicon">✅</span>Gorevler</a>
+    <a href="gorevler.html"><span class="bicon">✅</span>Görevler</a>
     <a href="mekanlar.html"><span class="bicon">🏛️</span>Mekanlar</a>
     <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
 </nav>
@@ -240,15 +240,15 @@
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Dugun Planlayici</div>
+    <div class="drawer-header">💍 Düğün Planlayıcı</div>
     <div class="drawer-section">Sayfalar</div>
     <a class="drawer-item active" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
-    <a class="drawer-item" href="gorevler.html"><span class="di-icon">✅</span>Gorevler</a>
+    <a class="drawer-item" href="gorevler.html"><span class="di-icon">✅</span>Görevler</a>
     <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
     <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <div class="drawer-section">Diger</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
+    <div class="drawer-section">Diğer</div>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Bütçe</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
 </div>
 
 <script>
@@ -410,13 +410,13 @@ function renderUpcomingTasks() {
         .slice(0, 5);
 
     if (upcoming.length === 0) {
-        container.innerHTML = '<div class="empty-state">Yaklasan gorev yok</div>';
+        container.innerHTML = '<div class="empty-state">Yaklaşan görev yok</div>';
         return;
     }
 
     container.innerHTML = upcoming.map(t => {
         const pClass = t.priority === 'urgent' ? 'urgent' : (t.priority === 'low' ? 'low' : 'normal');
-        const assignee = t.assignee ? '<span class="tp-tag assignee">' + esc(t.assignee) + '</span>' : '';
+        const assignee = t.assignee ? '<span class="tp-tag assignee">' + esc(trLabel(t.assignee)) + '</span>' : '';
         return '<div class="task-preview" onclick="location.href=\'gorevler.html\'">' +
             '<div class="tp-dot ' + pClass + '"></div>' +
             '<div class="tp-info">' +
@@ -474,9 +474,9 @@ function renderVenueSummary() {
     const total = venues.length;
     const favs = venues.filter(v => v.favorite || v.fav).length;
     if (total === 0) {
-        container.innerHTML = '<span class="vs-text">Henuz mekan eklenmedi</span><a href="mekanlar.html">Mekan Ekle &rarr;</a>';
+        container.innerHTML = '<span class="vs-text">Henüz mekan eklenmedi</span><a href="mekanlar.html">Mekan Ekle &rarr;</a>';
     } else {
-        container.innerHTML = '<span class="vs-text"><strong>' + total + '</strong> mekan listelendi, <strong>' + favs + '</strong> favori</span><a href="mekanlar.html">Mekanlari Gor &rarr;</a>';
+        container.innerHTML = '<span class="vs-text"><strong>' + total + '</strong> mekan listelendi, <strong>' + favs + '</strong> favori</span><a href="mekanlar.html">Mekanları Gör &rarr;</a>';
     }
 }
 
@@ -501,20 +501,20 @@ function updateCountdowns() {
         + '<div class="tl-fill" style="width:'+todayPos+'%"></div>'
         // 1 hafta once - sadece nokta
         + '<div class="tl-dot past" style="left:2%"></div>'
-        // Bugun
+        // Bugün
         + '<div class="tl-dot today" style="left:'+todayPos+'%"></div>'
-        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugun</div><div class="tl-date">'+fmtDateShort(now.toISOString().slice(0,10))+'</div></div>'
+        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugün</div><div class="tl-date">'+fmtDateShort(now.toISOString().slice(0,10))+'</div></div>'
         // Nisan - tiklanabilir
         + '<div class="tl-dot ms" style="left:'+nisanPos+'%"></div>'
         + '<div class="tl-lbl tl-clickable" style="left:'+nisanPos+'%" onclick="openDatePicker(\'nisan\')">'
         +   '<div class="tl-name">'+fmtDateShort(NISAN_DATE)+'</div>'
-        +   '<div class="tl-date">Nisan · '+nisanDays+' gun</div>'
+        +   '<div class="tl-date">Nişan · '+nisanDays+' gün</div>'
         + '</div>'
         // Dugun - tiklanabilir
         + '<div class="tl-dot ms ms-uncertain" style="left:'+dugunPos+'%"></div>'
         + '<div class="tl-lbl tl-uncertain tl-clickable" style="left:'+dugunPos+'%" onclick="openDatePicker(\'dugun\')">'
         +   '<div class="tl-name">'+fmtDateShort(WEDDING_DATE)+' ~</div>'
-        +   '<div class="tl-date">Dugun · ~'+dugunDays+' gun</div>'
+        +   '<div class="tl-date">Düğün · ~'+dugunDays+' gün</div>'
         + '</div>'
         + '</div>';
 }
@@ -555,10 +555,10 @@ function fmtDue(d) {
     const now = new Date();
     const due = new Date(d);
     const diff = Math.ceil((due - now) / 864e5);
-    if (diff < 0) return Math.abs(diff) + ' gun gecti';
-    if (diff === 0) return 'Bugun';
-    if (diff === 1) return 'Yarin';
-    if (diff <= 7) return diff + ' gun sonra';
+    if (diff < 0) return Math.abs(diff) + ' gün geçti';
+    if (diff === 0) return 'Bugün';
+    if (diff === 1) return 'Yarın';
+    if (diff <= 7) return diff + ' gün sonra';
     if (diff <= 30) return Math.ceil(diff / 7) + ' hafta sonra';
     return Math.ceil(diff / 30) + ' ay sonra';
 }
@@ -574,6 +574,10 @@ function esc(s) {
     d.textContent = s;
     return d.innerHTML;
 }
+
+// Veri degeri -> Turkce gosterim
+const TR_LABELS = {'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte','Katilacak':'Katılacak','Katilmayacak':'Katılmayacak','Beklemede':'Beklemede','Gonderildi':'Gönderildi','Gonderilmedi':'Gönderilmedi'};
+function trLabel(s){return TR_LABELS[s]||s;}
 
 // Update countdowns every minute
 setInterval(updateCountdowns, 60000);

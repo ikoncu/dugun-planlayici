@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gorevler - Dugun Planlayici</title>
+    <title>Görevler - Düğün Planlayıcı</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -175,8 +175,8 @@
 <div id="login-screen" style="display:none">
     <div class="login-card">
         <div class="logo">💍</div>
-        <h1>Gorevler</h1>
-        <p>Dugun gorevlerini yonetin</p>
+        <h1>Görevler</h1>
+        <p>Düğün görevlerini yönetin</p>
         <button class="google-btn" onclick="signIn()">
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
             Google ile Giris Yap
@@ -185,7 +185,7 @@
 </div>
 
 <!-- LOADING -->
-<div id="loading-screen" style="display:flex"><div class="spinner"></div><div style="font-size:14px;color:var(--g500)">Yukleniyor...</div></div>
+<div id="loading-screen" style="display:flex"><div class="spinner"></div><div style="font-size:14px;color:var(--g500)">Yükleniyor...</div></div>
 
 <!-- APP -->
 <div id="app" style="display:none">
@@ -195,10 +195,10 @@
                 <div id="user-avatar-wrap"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-dropdown-name"></div>
-                    <button class="dd-btn" onclick="signOut()">Cikis Yap</button>
+                    <button class="dd-btn" onclick="signOut()">Çıkış Yap</button>
                 </div>
             </div>
-            <h1>Gorevler</h1>
+            <h1>Görevler</h1>
             <button class="hamburger" onclick="toggleDrawer()">&#9776;</button>
         </div>
     </div>
@@ -206,7 +206,7 @@
     <!-- PROGRESS -->
     <div class="progress-section">
         <div class="progress-info">
-            <span>Ilerleme</span>
+            <span>İlerleme</span>
             <span id="progressText">0 / 0</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
@@ -215,14 +215,14 @@
     <!-- ASSIGNEE FILTERS -->
     <div class="assignee-strip">
         <button class="asg-btn active" data-a="Hepsi" onclick="setAsg('Hepsi')">Hepsi</button>
-        <button class="asg-btn" data-a="Ibrahim" onclick="setAsg('Ibrahim')">Ibrahim</button>
+        <button class="asg-btn" data-a="Ibrahim" onclick="setAsg('Ibrahim')">İbrahim</button>
         <button class="asg-btn" data-a="Hilal" onclick="setAsg('Hilal')">Hilal</button>
         <button class="asg-btn" data-a="Birlikte" onclick="setAsg('Birlikte')">Birlikte</button>
     </div>
 
     <!-- SEARCH -->
     <div class="search-bar">
-        <input type="text" class="search-input" id="qi" placeholder="Gorev ara..." oninput="renderList()">
+        <input type="text" class="search-input" id="qi" placeholder="Görev ara..." oninput="renderList()">
     </div>
 
     <!-- TASK LIST -->
@@ -243,33 +243,33 @@
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Dugun Planlayici</div>
+    <div class="drawer-header">💍 Düğün Planlayıcı</div>
     <div class="drawer-section">Sayfalar</div>
     <a class="drawer-item" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
-    <a class="drawer-item active" href="gorevler.html"><span class="di-icon">✅</span>Gorevler</a>
+    <a class="drawer-item active" href="gorevler.html"><span class="di-icon">✅</span>Görevler</a>
     <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
     <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
     <div class="drawer-section">Diger</div>
     <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Butce</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Plani</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
 </div>
 
 <!-- EDIT MODAL -->
 <div class="modal-bg" id="modal-edit" onclick="if(event.target===this)closeModal()">
     <div class="modal">
         <div class="modal-bar"></div>
-        <div class="modal-hdr"><span id="modal-title">Gorev Ekle</span><button class="modal-x" onclick="closeModal()">&times;</button></div>
-        <div class="fg"><label>Baslik</label><input type="text" id="me-title" placeholder="Gorev basligi..."></div>
-        <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kisa aciklama..."></div>
+        <div class="modal-hdr"><span id="modal-title">Görev Ekle</span><button class="modal-x" onclick="closeModal()">&times;</button></div>
+        <div class="fg"><label>Başlık</label><input type="text" id="me-title" placeholder="Görev başlığı..."></div>
+        <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kısa açıklama..."></div>
         <div style="display:flex;gap:8px">
-            <div class="fg" style="flex:1"><label>Sorumluluk</label><select id="me-asg"><option value="Birlikte">Birlikte</option><option value="Ibrahim">Ibrahim</option><option value="Hilal">Hilal</option></select></div>
+            <div class="fg" style="flex:1"><label>Sorumluluk</label><select id="me-asg"><option value="Birlikte">Birlikte</option><option value="Ibrahim">İbrahim</option><option value="Hilal">Hilal</option></select></div>
             <div class="fg" style="flex:1"><label>Son Tarih</label><input type="date" id="me-due"></div>
         </div>
-        <div class="fg"><label>Not</label><textarea id="me-note" rows="2" placeholder="Detayli not..."></textarea></div>
+        <div class="fg"><label>Not</label><textarea id="me-note" rows="2" placeholder="Detaylı not..."></textarea></div>
         <div class="fg">
-            <label>Alt Gorevler</label>
+            <label>Alt Görevler</label>
             <div class="sub-editor" id="sub-editor"></div>
-            <button class="sub-editor-add" onclick="addSubEditor()">+ Alt gorev ekle</button>
+            <button class="sub-editor-add" onclick="addSubEditor()">+ Alt görev ekle</button>
         </div>
         <div style="display:flex;gap:8px">
             <button class="btn-save" style="flex:1;background:var(--red-bg);color:var(--red);display:none" id="me-del-btn" onclick="delTask()">Sil</button>
@@ -380,7 +380,7 @@ function listen(){
                 db.collection('shared').doc('planner_tasks_backup').set({
                     list:tasks, backupDate:new Date().toISOString(), reason:'v2 migration'
                 });
-                if(confirm('Gorevler yeni formata gecirilecek. Eski gorevleriniz yedeklenecek ve yenileri yuklenecek. Devam edilsin mi?')){
+                if(confirm('Görevler yeni formata geçirilecek. Eski görevleriniz yedeklenecek ve yenileri yüklenecek. Devam edilsin mi?')){
                     tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
                     localStorage.setItem('tasks_migrated_v2','true');
                     save();
@@ -439,7 +439,7 @@ function renderList(){
     if(q) list=list.filter(t=>t.title.toLowerCase().includes(q)||(t.hint||'').toLowerCase().includes(q)||
         (t.subtasks||[]).some(s=>s.text.toLowerCase().includes(q)));
 
-    if(!list.length){el.innerHTML='<div class="empty">Gorev bulunamadi</div>';return;}
+    if(!list.length){el.innerHTML='<div class="empty">Görev bulunamadı</div>';return;}
     // Acik kartlari koru
     const openIds=new Set();
     document.querySelectorAll('.tcard.open').forEach(c=>openIds.add(c.dataset.id));
@@ -461,7 +461,7 @@ function cardHTML(t,idx){
     html+='<div class="tc-body">';
     html+='<div class="tc-title">'+esc(t.title)+'</div>';
     html+='<div class="tc-meta">';
-    html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+(t.assignee||'Birlikte')+'</span>';
+    html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+trLabel(t.assignee||'Birlikte')+'</span>';
     if(due) html+='<span class="tc-tag tc-tag-due'+(over?' overdue':'')+'">'+due+'</span>';
     if(subsTotal>0) html+='<span class="tc-tag tc-tag-progress">'+subsDone+'/'+subsTotal+'</span>';
     html+='</div></div>';
@@ -481,7 +481,7 @@ function cardHTML(t,idx){
         html+='</div>';
     }
     html+='<div class="tc-actions">';
-    html+='<button class="tc-btn" onclick="openEdit(\''+t.id+'\')">Duzenle</button>';
+    html+='<button class="tc-btn" onclick="openEdit(\''+t.id+'\')">Düzenle</button>';
     html+='<button class="tc-btn tc-btn-del" onclick="delTaskConfirm(\''+t.id+'\')">Sil</button>';
     html+='</div>';
     html+='</div>';
@@ -513,7 +513,9 @@ function flipCard(id){
 }
 
 function delTaskConfirm(id){
-    if(confirm('Bu gorevi silmek istediginizden emin misiniz?')){
+    const t=tasks.find(x=>x.id===id);
+    const name=t?t.title:'Bu görev';
+    if(confirm(name+' silinsin mi?')){
         tasks=tasks.filter(t=>t.id!==id);
         save();
     }
@@ -530,7 +532,7 @@ function setAsg(a){
 function openEdit(id){
     const t=id?tasks.find(x=>x.id===id):null;
     editId=id||null;
-    document.getElementById('modal-title').textContent=t?'Gorevi Duzenle':'Gorev Ekle';
+    document.getElementById('modal-title').textContent=t?'Görevi Düzenle':'Görev Ekle';
     document.getElementById('me-del-btn').style.display=t?'block':'none';
     document.getElementById('me-title').value=t?t.title:'';
     document.getElementById('me-hint').value=t?t.hint||'':'';
@@ -558,7 +560,7 @@ function addSubEditor(text){
 
 function saveTask(){
     const title=document.getElementById('me-title').value.trim();
-    if(!title){alert('Baslik gerekli');return;}
+    if(!title){alert('Başlık gerekli');return;}
 
     // Collect subtasks from editor
     const subs=[];
@@ -597,10 +599,14 @@ function saveTask(){
 }
 
 function delTask(){
-    if(editId&&confirm('Sil?')){
-        tasks=tasks.filter(t=>t.id!==editId);
-        save();
-        closeModal();
+    if(editId){
+        const t=tasks.find(x=>x.id===editId);
+        const name=t?t.title:'Bu görev';
+        if(confirm(name+' silinsin mi?')){
+            tasks=tasks.filter(t=>t.id!==editId);
+            save();
+            closeModal();
+        }
     }
 }
 
@@ -717,10 +723,10 @@ function fmtDue(d){
     if(!d)return'';
     const now=new Date(),due=new Date(d);
     const diff=Math.ceil((due-now)/864e5);
-    if(diff<0)return Math.abs(diff)+' gun gecti';
-    if(diff===0)return'Bugun';
-    if(diff===1)return'Yarin';
-    const months=['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
+    if(diff<0)return Math.abs(diff)+' gün geçti';
+    if(diff===0)return'Bugün';
+    if(diff===1)return'Yarın';
+    const months=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
     return due.getDate()+' '+months[due.getMonth()];
 }
 
@@ -736,6 +742,10 @@ function renderAvatar(user){
 function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
 function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
 document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container'))document.getElementById('user-dropdown')?.classList.remove('open')});
+
+// Veri degeri -> Turkce gosterim
+const TR_LABELS={'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte'};
+function trLabel(s){return TR_LABELS[s]||s;}
 </script>
 </body>
 </html>

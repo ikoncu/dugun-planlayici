@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mekanlar - Dugun Planlayici</title>
+    <title>Mekanlar - Düğün Planlayıcı</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -134,7 +134,7 @@
     <div class="login-card">
         <div class="logo">💍</div>
         <h1>Mekanlar</h1>
-        <p>Dugun mekanlarini kesfet ve karsilastir</p>
+        <p>Düğün mekanlarını keşfet ve karşılaştır</p>
         <button class="google-btn" onclick="signIn()">
             <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
             Google ile Giris Yap
@@ -145,7 +145,7 @@
 <!-- LOADING -->
 <div id="loading-screen" style="display:flex">
     <div class="spinner"></div>
-    <div style="font-size:14px;color:var(--gray-500)">Yukleniyor...</div>
+    <div style="font-size:14px;color:var(--gray-500)">Yükleniyor...</div>
 </div>
 
 <!-- APP -->
@@ -157,7 +157,7 @@
                 <div id="user-avatar-container" onclick="toggleDropdown()"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-name"></div>
-                    <button class="dd-btn" onclick="signOut()">Cikis Yap</button>
+                    <button class="dd-btn" onclick="signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Mekanlar</h1>
@@ -178,7 +178,7 @@
 <!-- BOTTOM NAV -->
 <nav class="bnav" id="bnav" style="display:none">
     <a href="index.html"><span class="bicon">&#127968;</span>Ana Sayfa</a>
-    <a href="gorevler.html"><span class="bicon">&#9989;</span>Gorevler</a>
+    <a href="gorevler.html"><span class="bicon">&#9989;</span>Görevler</a>
     <a class="active" href="mekanlar.html"><span class="bicon">&#127963;&#65039;</span>Mekanlar</a>
     <a href="davetliler.html"><span class="bicon">&#128101;</span>Davetliler</a>
 </nav>
@@ -186,15 +186,15 @@
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-    <div class="drawer-header">&#128141; Dugun Planlayici</div>
+    <div class="drawer-header">&#128141; Düğün Planlayıcı</div>
     <div class="drawer-section">Sayfalar</div>
     <a class="drawer-item" href="index.html"><span class="di-icon">&#127968;</span>Ana Sayfa</a>
-    <a class="drawer-item" href="gorevler.html"><span class="di-icon">&#9989;</span>Gorevler</a>
+    <a class="drawer-item" href="gorevler.html"><span class="di-icon">&#9989;</span>Görevler</a>
     <a class="drawer-item active" href="mekanlar.html"><span class="di-icon">&#127963;&#65039;</span>Mekanlar</a>
     <a class="drawer-item" href="davetliler.html"><span class="di-icon">&#128101;</span>Davetliler</a>
-    <div class="drawer-section">Diger</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">&#128176;</span>Butce</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">&#129681;</span>Masa Plani</a>
+    <div class="drawer-section">Diğer</div>
+    <a class="drawer-item" href="butce.html"><span class="di-icon">&#128176;</span>Bütçe</a>
+    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">&#129681;</span>Masa Planı</a>
 </div>
 
 <!-- ADD VENUE MODAL -->
@@ -202,19 +202,19 @@
     <div class="modal" onclick="event.stopPropagation()">
         <h2>Yeni Mekan Ekle</h2>
         <div class="modal-field">
-            <label>Mekan Adi *</label>
-            <input type="text" id="inp-name" placeholder="Ornek: Vadi Garden">
+            <label>Mekan Adı *</label>
+            <input type="text" id="inp-name" placeholder="Örnek: Vadi Garden">
         </div>
         <div class="modal-field">
             <label>Instagram URL</label>
             <input type="url" id="inp-ig" placeholder="https://www.instagram.com/...">
         </div>
         <div class="modal-field">
-            <label>Ozellikler (virgul ile ayirin)</label>
-            <input type="text" id="inp-features" placeholder="Salon, Bahce, Acik Hava">
+            <label>Özellikler (virgül ile ayırın)</label>
+            <input type="text" id="inp-features" placeholder="Salon, Bahçe, Açık Hava">
         </div>
         <div class="modal-btns">
-            <button class="btn-cancel" onclick="closeModal()">Iptal</button>
+            <button class="btn-cancel" onclick="closeModal()">İptal</button>
             <button class="btn-save" onclick="saveNewVenue()">Kaydet</button>
         </div>
     </div>
@@ -351,7 +351,7 @@ function renderVenues(){
     document.getElementById('venue-count').textContent = sorted.length + ' mekan';
 
     if(sorted.length === 0){
-        grid.innerHTML = '<div class="empty-state"><div class="icon">&#127963;&#65039;</div><p>Henuz mekan eklenmemis.<br>Yeni mekan ekleyerek baslayabilirsiniz.</p></div>';
+        grid.innerHTML = '<div class="empty-state"><div class="icon">&#127963;&#65039;</div><p>Henüz mekan eklenmemiş.<br>Yeni mekan ekleyerek başlayabilirsiniz.</p></div>';
         return;
     }
 
@@ -378,7 +378,7 @@ function renderVenues(){
 
         // Expand button
         html += '<button class="vc-expand-btn" onclick="toggleExpand(\''+v.id+'\')">';
-        html += '<span>'+(isExpanded ? 'Detaylari Gizle' : 'Detaylari Gor')+'</span>';
+        html += '<span>'+(isExpanded ? 'Detayları Gizle' : 'Detayları Gör')+'</span>';
         html += '<span class="vc-expand-arrow">&#9660;</span>';
         html += '</button>';
 
@@ -386,7 +386,7 @@ function renderVenues(){
         html += '<div class="vc-detail">';
         html += '<div class="vc-row"><span>Fiyat</span><input type="text" value="'+esc(v.price)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'price\',this.value)"></div>';
         html += '<div class="vc-row"><span>Kapasite</span><input type="text" value="'+esc(v.capacity)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'capacity\',this.value)"></div>';
-        html += '<div class="vc-row"><span>Iletisim</span><input type="text" value="'+esc(v.contact)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'contact\',this.value)"></div>';
+        html += '<div class="vc-row"><span>İletişim</span><input type="text" value="'+esc(v.contact)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'contact\',this.value)"></div>';
         html += '<textarea class="vc-note" placeholder="Notlar..." onchange="updVenue(\''+v.id+'\',\'notes\',this.value)">'+esc(v.notes)+'</textarea>';
 
         html += '<div class="vc-actions">';
@@ -411,7 +411,7 @@ function toggleFav(id){
     if(v){
         v.favorite = !v.favorite;
         saveVenues();
-        showToast(v.favorite ? 'Favorilere eklendi' : 'Favorilerden cikarildi');
+        showToast(v.favorite ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı');
     }
 }
 
@@ -454,7 +454,7 @@ function closeModal(e){
 function saveNewVenue(){
     const name = document.getElementById('inp-name').value.trim();
     if(!name){
-        alert('Mekan adi zorunludur.');
+        alert('Mekan adı zorunludur.');
         return;
     }
     const ig = document.getElementById('inp-ig').value.trim();
