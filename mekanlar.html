@@ -259,7 +259,9 @@ function signIn(){
     auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message));
 }
 function signOut(){
-    auth.signOut();
+    if(confirm('Çıkış yapmak istediğinize emin misiniz?')){
+        auth.signOut();
+    }
 }
 function toggleDropdown(){
     document.getElementById('user-dropdown').classList.toggle('open');
@@ -309,9 +311,12 @@ function listen(){
         document.getElementById('loading-screen').style.display='none';
         document.getElementById('app').style.display='block';
         document.getElementById('bnav').style.display='flex';
-        if(snap.exists && snap.data().list && snap.data().list.length > 0){
-            venues = snap.data().list;
+        if(snap.exists){
+            // Doc var: list bos olabilir (kullanici hepsini sildiyse), saygi goster
+            const data = snap.data();
+            venues = (data.list && Array.isArray(data.list)) ? data.list : [];
         } else {
+            // Doc hic yok: ilk kez aciliyor, default seed
             venues = JSON.parse(JSON.stringify(DEFAULT_VENUES));
             saveVenues();
         }

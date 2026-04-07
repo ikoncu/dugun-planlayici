@@ -349,10 +349,10 @@
 </div>
 
 <!-- ADD/EDIT MODAL -->
-<div class="modal-bg" id="modal-guest" onclick="if(event.target===this)closeModal()">
+<div class="modal-bg" id="modal-guest" onclick="if(event.target===this)tryCloseModal()">
     <div class="modal">
         <div class="modal-bar"></div>
-        <div class="modal-hdr"><span id="modal-title">Davetli Ekle</span><button class="modal-x" onclick="closeModal()">&times;</button></div>
+        <div class="modal-hdr"><span id="modal-title">Davetli Ekle</span><button class="modal-x" onclick="tryCloseModal()">&times;</button></div>
         <div class="modal-body">
             <input type="hidden" id="f-id">
             <div class="field">
@@ -505,7 +505,9 @@ function signIn(){
     auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message));
 }
 function signOut(){
-    auth.signOut();
+    if(confirm('Çıkış yapmak istediğinize emin misiniz?')){
+        auth.signOut();
+    }
 }
 function toggleDropdown(){
     document.getElementById('user-dropdown').classList.toggle('open');
@@ -800,7 +802,10 @@ function renderList(){
     const container = document.getElementById('glist');
     let filtered = guests.filter(g=>{
         if(activeFilter!=='all' && g.side!==activeFilter) return false;
-        if(q && !g.name.toLowerCase().includes(q)) return false;
+        if(q){
+            const haystack = (g.name+' '+(g.phone||'')+' '+(g.group||'')+' '+(g.table||'')+' '+(g.note||'')).toLowerCase();
+            if(!haystack.includes(q)) return false;
+        }
         return true;
     });
     filtered = sortGuests(filtered);
@@ -899,6 +904,27 @@ function cycleRsvp(id){
 }
 
 // Modal
+let modalSnapshot = null; // Acilan andaki form snapshot'i (dirty check)
+
+function captureModalSnapshot(){
+    return JSON.stringify({
+        name: document.getElementById('f-name').value,
+        side: document.getElementById('f-side').value,
+        group: document.getElementById('f-group').value,
+        phone: document.getElementById('f-phone').value,
+        adults: document.getElementById('f-adults').value,
+        children: document.getElementById('f-children').value,
+        invited: document.getElementById('f-invited').value,
+        rsvp: document.getElementById('f-rsvp').value,
+        table: document.getElementById('f-table').value,
+        note: document.getElementById('f-note').value
+    });
+}
+
+function isModalDirty(){
+    return modalSnapshot && captureModalSnapshot() !== modalSnapshot;
+}
+
 function openAddModal(){
     document.getElementById('modal-title').textContent='Davetli Ekle';
     document.getElementById('f-id').value='';
@@ -914,6 +940,7 @@ function openAddModal(){
     document.getElementById('f-table').value='';
     document.getElementById('f-note').value='';
     document.getElementById('modal-guest').classList.add('show');
+    modalSnapshot = captureModalSnapshot();
 }
 
 function openEditModal(id){
@@ -933,10 +960,21 @@ function openEditModal(id){
     document.getElementById('f-table').value=g.table||'';
     document.getElementById('f-note').value=g.note||'';
     document.getElementById('modal-guest').classList.add('show');
+    modalSnapshot = captureModalSnapshot();
+}
+
+function tryCloseModal(){
+    if(isModalDirty()){
+        if(!confirm('Kaydedilmemiş değişiklikler var. Çıkmak istediğinize emin misiniz?')){
+            return;
+        }
+    }
+    closeModal();
 }
 
 function closeModal(){
     document.getElementById('modal-guest').classList.remove('show');
+    modalSnapshot = null;
 }
 
 // Auto-calc total
@@ -952,10 +990,12 @@ function saveGuest(){
     const id = document.getElementById('f-id').value;
     const name = document.getElementById('f-name').value.trim();
     if(!name){alert('Ad Soyad gerekli');return;}
-    const adults = parseInt(document.getElementById('f-adults').value)||1;
-    const children = parseInt(document.getElementById('f-children').value)||0;
+    let adults = parseInt(document.getElementById('f-adults').value);
+    if(isNaN(adults) || adults < 1) adults = 1; // En az 1 yetiskin
+    let children = parseInt(document.getElementById('f-children').value);
+    if(isNaN(children) || children < 0) children = 0;
     const obj = {
-        id: id || 'g'+Date.now(),
+        id: id || 'g'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
         name: name,
         side: document.getElementById('f-side').value,
         group: document.getElementById('f-group').value.trim(),
@@ -1096,15 +1136,25 @@ function initGuestDrag(){
     list.addEventListener('mousedown',gOnMouseDown);
 }
 
+function canDrag(){
+    // Filtre/arama acikken drag-drop devre disi (yanlis kisiyi tasiyabilir)
+    const q=(document.getElementById('search-input').value||'').trim();
+    if(activeFilter!=='all' || q){
+        showToast('Sürüklemek için filtre ve aramayı temizleyin');
+        return false;
+    }
+    return true;
+}
+
 function gOnTouchStart(e){
     const card=e.target.closest('.gcard');
     if(!card) return;
-    // RSVP butonu, ok, detay butonlari icinde sürükleme baslatma
     if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
     const idx=parseInt(card.dataset.idx);
     const touch=e.touches[0];
     gDragState.startY=touch.clientY;
     gDragState.timer=setTimeout(()=>{
+        if(!canDrag()) return;
         gDragState.active=true;
         gDragState.srcIdx=idx;
         gDragState.card=card;
@@ -1119,7 +1169,6 @@ function gOnTouchStart(e){
         gDragState.ghost=ghost;
         card.classList.add('dragging');
         navigator.vibrate&&navigator.vibrate(30);
-        // Sıralama Manuel degilse otomatik gec
         if(activeSort!=='manual'){
             activeSort='manual';
             document.getElementById('sort-select').value='manual';
@@ -1187,6 +1236,7 @@ function gOnMouseDown(e){
     const idx=parseInt(card.dataset.idx);
     gDragState.startY=e.clientY;
     gDragState.timer=setTimeout(()=>{
+        if(!canDrag()) return;
         gDragState.active=true;
         gDragState.srcIdx=idx;
         gDragState.card=card;

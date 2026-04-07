@@ -292,6 +292,7 @@ function doGoogleLogin() {
     auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message));
 }
 function doSignOut() {
+    if(!confirm('Çıkış yapmak istediğinize emin misiniz?')) return;
     unsubscribers.forEach(fn => fn());
     unsubscribers = [];
     auth.signOut();
@@ -482,12 +483,12 @@ function renderVenueSummary() {
 
 function updateCountdowns() {
     const now = new Date();
-    const nisan = new Date(NISAN_DATE);
-    const dugun = new Date(WEDDING_DATE);
-    const oneWeekAgo = new Date(now.getTime() - 7 * 864e5);
+    const nisan = parseLocalDate(NISAN_DATE);
+    const dugun = parseLocalDate(WEDDING_DATE);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const nisanDays = Math.max(0, Math.ceil((nisan - now) / 864e5));
-    const dugunDays = Math.max(0, Math.ceil((dugun - now) / 864e5));
+    const nisanDays = Math.max(0, Math.round((nisan - today) / 864e5));
+    const dugunDays = Math.max(0, Math.round((dugun - today) / 864e5));
 
     // Sabit pozisyonlar: gorsel netlik icin
     // Sol: 1 hafta once (3%), Bugun (12%), Nisan (55%), Dugun (93%)
@@ -503,7 +504,7 @@ function updateCountdowns() {
         + '<div class="tl-dot past" style="left:2%"></div>'
         // Bugün
         + '<div class="tl-dot today" style="left:'+todayPos+'%"></div>'
-        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugün</div><div class="tl-date">'+fmtDateShort(now.toISOString().slice(0,10))+'</div></div>'
+        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugün</div><div class="tl-date">'+now.getDate()+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][now.getMonth()]+'</div></div>'
         // Nisan - tiklanabilir
         + '<div class="tl-dot ms" style="left:'+nisanPos+'%"></div>'
         + '<div class="tl-lbl tl-clickable" style="left:'+nisanPos+'%" onclick="openDatePicker(\'nisan\')">'
@@ -519,10 +520,10 @@ function updateCountdowns() {
         + '</div>';
 }
 
-// Timeline tarih formatlama
+// Timeline tarih formatlama (local timezone)
 function fmtDateShort(dateStr) {
-    const d = new Date(dateStr);
-    const months = ['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+    const d = parseLocalDate(dateStr) || new Date(dateStr);
+    const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     return d.getDate() + ' ' + months[d.getMonth()];
 }
 
@@ -535,8 +536,32 @@ function openDatePicker(type) {
     setTimeout(() => { inp.style.pointerEvents = 'none'; }, 100);
 }
 
+function fmtDateLong(d){
+    const date = new Date(d);
+    const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    return date.getDate()+' '+months[date.getMonth()]+' '+date.getFullYear();
+}
+
 function changeNisanDate(val) {
     if (!val) return;
+    if (val === NISAN_DATE) return;
+    // Validate: gecmiş tarih degil
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const newDate = new Date(val);
+    if(newDate < today){
+        if(!confirm('Seçtiğiniz tarih geçmişte. Yine de '+fmtDateLong(val)+' olarak güncellensin mi?')){
+            return;
+        }
+    }
+    // Validate: dugun tarihinden once
+    if(WEDDING_DATE && newDate >= new Date(WEDDING_DATE)){
+        alert('Nişan tarihi düğün tarihinden önce olmalı.');
+        return;
+    }
+    if(!confirm('Nişan tarihi '+fmtDateLong(NISAN_DATE)+' iken '+fmtDateLong(val)+' olarak değiştirilecek. Onaylıyor musunuz?')){
+        return;
+    }
     NISAN_DATE = val;
     saveDates();
     updateCountdowns();
@@ -544,17 +569,41 @@ function changeNisanDate(val) {
 
 function changeDugunDate(val) {
     if (!val) return;
+    if (val === WEDDING_DATE) return;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const newDate = new Date(val);
+    if(newDate < today){
+        if(!confirm('Seçtiğiniz tarih geçmişte. Yine de '+fmtDateLong(val)+' olarak güncellensin mi?')){
+            return;
+        }
+    }
+    // Validate: nisan tarihinden sonra
+    if(NISAN_DATE && newDate <= new Date(NISAN_DATE)){
+        alert('Düğün tarihi nişan tarihinden sonra olmalı.');
+        return;
+    }
+    if(!confirm('Düğün tarihi '+fmtDateLong(WEDDING_DATE)+' iken '+fmtDateLong(val)+' olarak değiştirilecek. Onaylıyor musunuz?')){
+        return;
+    }
     WEDDING_DATE = val;
     saveDates();
     updateCountdowns();
 }
 
 // Helpers
+function parseLocalDate(s){
+    if(!s) return null;
+    const [y,m,d] = s.split('-').map(Number);
+    return new Date(y, m-1, d);
+}
+
 function fmtDue(d) {
     if (!d) return '';
+    const due = parseLocalDate(d);
     const now = new Date();
-    const due = new Date(d);
-    const diff = Math.ceil((due - now) / 864e5);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.round((due - today) / 864e5);
     if (diff < 0) return Math.abs(diff) + ' gün geçti';
     if (diff === 0) return 'Bugün';
     if (diff === 1) return 'Yarın';

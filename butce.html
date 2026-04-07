@@ -357,7 +357,7 @@ auth.onAuthStateChanged(user=>{
 });
 
 function signIn(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message))}
-function signOut(){if(unsub)unsub();auth.signOut()}
+function signOut(){if(confirm('Çıkış yapmak istediğinize emin misiniz?')){if(unsub)unsub();auth.signOut();}}
 
 function startListener(){
     unsub = docRef.onSnapshot(snap=>{

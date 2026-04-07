@@ -224,7 +224,7 @@ function signIn() {
     });
 }
 
-function signOut(){auth.signOut()}
+function signOut(){if(confirm('Çıkış yapmak istediğinize emin misiniz?'))auth.signOut();}
 function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
 function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
 document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container')&&!e.target.closest('.user-dropdown'))document.getElementById('user-dropdown')?.classList.remove('open')});
@@ -263,10 +263,12 @@ function startListening() {
     let tablesReady = false, guestsReady = false;
 
     unsubTables = db.collection('shared').doc('tables').onSnapshot(snap => {
-        const data = snap.data();
-        if (data && data.list) {
-            tables = data.list;
+        if (snap.exists) {
+            // Doc var: liste bos olabilir (kullanici sildiyse), saygi goster
+            const data = snap.data();
+            tables = (data.list && Array.isArray(data.list)) ? data.list : [];
         } else {
+            // Doc hic yok: ilk kez, default seed
             tables = generateDefaultTables();
             saveTables();
         }
@@ -314,6 +316,27 @@ function saveTables() {
     }).catch(e=>{console.error(e);skipNextTablesRender=false;});
 }
 
+// Transaction ile guvenli guncelleme: sadece ilgili davetlilerin 'table' field'ini degistirir
+// Diger field'lari (rsvp, not, telefon vs.) korur
+function updateGuestTable(guestId, newTable) {
+    const ref = db.collection('shared').doc('guests');
+    return db.runTransaction(t => {
+        return t.get(ref).then(doc => {
+            if(!doc.exists) return;
+            const data = doc.data();
+            const list = data.list || [];
+            const idx = list.findIndex(g => g.id === guestId);
+            if(idx < 0) return;
+            list[idx] = {...list[idx], table: newTable};
+            t.set(ref, {list: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+        });
+    }).catch(e => {
+        console.error('Transaction failed:', e);
+        showToast('Kaydedilemedi, tekrar deneyin');
+    });
+}
+
+// Eski saveGuests artik kullanilmayacak ama backward compat icin var
 function saveGuests() {
     skipNextGuestsRender=true;
     db.collection('shared').doc('guests').set({ list: guests }).catch(e=>{console.error(e);skipNextGuestsRender=false;});
@@ -434,21 +457,31 @@ function addGuestToTable(tableId) {
     if (!sel || !sel.value) return;
     const guestId = sel.value;
 
+    // Optimistic UI update
     const gi = guests.findIndex(g => g.id === guestId);
     if (gi === -1) return;
-
     guests[gi].table = tableId;
-    saveGuests();
-    showToast('Misafir masaya eklendi');
+    render();
+
+    // Transaction ile guvenli kaydet (sadece table field'ini degistirir)
+    updateGuestTable(guestId, tableId).then(()=>{
+        showToast('Misafir masaya eklendi');
+    });
 }
 
 function removeGuestFromTable(guestId, tableId) {
+    if (!guestId) return;
     const gi = guests.findIndex(g => g.id === guestId && g.table === tableId);
     if (gi === -1) return;
 
+    // Optimistic UI
     delete guests[gi].table;
-    saveGuests();
-    showToast('Misafir masadan kaldirildi');
+    render();
+
+    // Transaction ile guvenli sifirla
+    updateGuestTable(guestId, '').then(()=>{
+        showToast('Misafir masadan kaldırıldı');
+    });
 }
 
 function addTable() {

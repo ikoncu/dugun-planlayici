@@ -116,7 +116,8 @@
         .tc-detail{max-height:0;overflow:hidden;transition:max-height 0.25s ease}
         .tcard.open .tc-detail{max-height:800px}
         .tc-subs{padding:4px 12px 2px 42px}
-        .tc-sub{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--g50)}
+        .tc-sub{display:flex;align-items:center;gap:8px;padding:8px 4px;border-top:1px solid var(--g50);cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px}
+        .tc-sub:active{background:var(--g50)}
         .tc-sub:first-child{border-top:none}
         .tc-sub-chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
         .tc-sub-chk.on{background:var(--green);border-color:var(--green);color:white}
@@ -255,10 +256,10 @@
 </div>
 
 <!-- EDIT MODAL -->
-<div class="modal-bg" id="modal-edit" onclick="if(event.target===this)closeModal()">
+<div class="modal-bg" id="modal-edit" onclick="if(event.target===this)tryCloseModal()">
     <div class="modal">
         <div class="modal-bar"></div>
-        <div class="modal-hdr"><span id="modal-title">Görev Ekle</span><button class="modal-x" onclick="closeModal()">&times;</button></div>
+        <div class="modal-hdr"><span id="modal-title">Görev Ekle</span><button class="modal-x" onclick="tryCloseModal()">&times;</button></div>
         <div class="fg"><label>Başlık</label><input type="text" id="me-title" placeholder="Görev başlığı..."></div>
         <div class="fg"><label>Detay</label><input type="text" id="me-hint" placeholder="Kısa açıklama..."></div>
         <div style="display:flex;gap:8px">
@@ -366,31 +367,20 @@ authInstance.onAuthStateChanged(u=>{
 });
 
 function signIn(){authInstance.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message))}
-function signOut(){if(unsub)unsub();authInstance.signOut()}
+function signOut(){if(confirm('Çıkış yapmak istediğinize emin misiniz?')){if(unsub)unsub();authInstance.signOut();}}
 
 // FIRESTORE
 function listen(){
     unsub=dbRef.onSnapshot(doc=>{
         document.getElementById('loading-screen').style.display='none';
-        if(doc.exists && doc.data().list && doc.data().list.length>0){
-            tasks=doc.data().list;
-            // Migration: eski format (cat field) -> yeni format (subtasks)
-            if(tasks.length>10 && tasks[0].cat && !localStorage.getItem('tasks_migrated_v2')){
-                // Eski gorevleri backup'la, yeni format icin onay iste
-                db.collection('shared').doc('planner_tasks_backup').set({
-                    list:tasks, backupDate:new Date().toISOString(), reason:'v2 migration'
-                });
-                if(confirm('Görevler yeni formata geçirilecek. Eski görevleriniz yedeklenecek ve yenileri yüklenecek. Devam edilsin mi?')){
-                    tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
-                    localStorage.setItem('tasks_migrated_v2','true');
-                    save();
-                    return;
-                } else {
-                    localStorage.setItem('tasks_migrated_v2','true');
-                }
-            }
+        if(doc.exists){
+            // Doc var: liste bos olabilir (kullanici sildiyse), saygi goster
+            const data = doc.data();
+            tasks = (data.list && Array.isArray(data.list)) ? data.list : [];
+            // Yeni format kontrolu: subtasks yoksa ekle (geriye uyumluluk)
             tasks.forEach(t=>{if(!t.subtasks) t.subtasks=[];});
         } else {
+            // Doc hic yok: ilk kez aciliyor
             tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
             save();
         }
@@ -451,7 +441,8 @@ function cardHTML(t,idx){
     const subsDone=t.subtasks?t.subtasks.filter(s=>s.done).length:0;
     const subsTotal=t.subtasks?t.subtasks.length:0;
     const due=t.due?fmtDue(t.due):'';
-    const over=t.due&&!t.done&&new Date(t.due)<new Date();
+    const today=new Date();today.setHours(0,0,0,0);
+    const over=t.due&&!t.done&&parseLocalDate(t.due)<today;
 
     let html='<div class="tcard'+(t.done?' done':'')+'" data-id="'+t.id+'" data-idx="'+idx+'">';
 
@@ -473,8 +464,8 @@ function cardHTML(t,idx){
     if(subsTotal>0){
         html+='<div class="tc-subs">';
         t.subtasks.forEach(s=>{
-            html+='<div class="tc-sub'+(s.done?' done':'')+'">';
-            html+='<div class="tc-sub-chk'+(s.done?' on':'')+'" onclick="togSub(\''+t.id+'\',\''+s.id+'\')"></div>';
+            html+='<div class="tc-sub'+(s.done?' done':'')+'" onclick="togSub(\''+t.id+'\',\''+s.id+'\')">';
+            html+='<div class="tc-sub-chk'+(s.done?' on':'')+'"></div>';
             html+='<span class="tc-sub-text">'+esc(s.text)+'</span>';
             html+='</div>';
         });
@@ -529,6 +520,33 @@ function setAsg(a){
 }
 
 // EDIT MODAL
+let modalSnapshot = null;
+function captureSnapshot(){
+    const subs = [];
+    document.querySelectorAll('#sub-editor .sub-editor-item').forEach(it=>{
+        subs.push(it.querySelector('input').value);
+    });
+    return JSON.stringify({
+        title: document.getElementById('me-title').value,
+        hint: document.getElementById('me-hint').value,
+        asg: document.getElementById('me-asg').value,
+        due: document.getElementById('me-due').value,
+        note: document.getElementById('me-note').value,
+        subs: subs
+    });
+}
+function isModalDirty(){
+    return modalSnapshot && captureSnapshot() !== modalSnapshot;
+}
+function tryCloseModal(){
+    if(isModalDirty()){
+        if(!confirm('Kaydedilmemiş değişiklikler var. Çıkmak istediğinize emin misiniz?')){
+            return;
+        }
+    }
+    closeModal();
+}
+
 function openEdit(id){
     const t=id?tasks.find(x=>x.id===id):null;
     editId=id||null;
@@ -543,15 +561,18 @@ function openEdit(id){
     const editor=document.getElementById('sub-editor');
     editor.innerHTML='';
     if(t&&t.subtasks){
-        t.subtasks.forEach(s=>addSubEditor(s.text));
+        t.subtasks.forEach(s=>addSubEditor(s.text, s.id, s.done));
     }
     document.getElementById('modal-edit').classList.add('show');
+    modalSnapshot = captureSnapshot();
 }
 
-function addSubEditor(text){
+function addSubEditor(text, sid, done){
     const editor=document.getElementById('sub-editor');
     const item=document.createElement('div');
     item.className='sub-editor-item';
+    item.dataset.sid = sid || '';
+    item.dataset.done = done ? '1' : '0';
     item.innerHTML='<input type="text" value="'+esc(text||'')+'" placeholder="Alt gorev...">'
         +'<button class="sub-editor-rm" onclick="this.parentElement.remove()">&times;</button>';
     editor.appendChild(item);
@@ -562,11 +583,19 @@ function saveTask(){
     const title=document.getElementById('me-title').value.trim();
     if(!title){alert('Başlık gerekli');return;}
 
-    // Collect subtasks from editor
+    // Collect subtasks from editor (preserve id and done state via data attributes)
     const subs=[];
-    document.querySelectorAll('#sub-editor .sub-editor-item input').forEach((inp,i)=>{
-        const txt=inp.value.trim();
-        if(txt) subs.push({id:'s'+Date.now()+'_'+i,text:txt,done:false});
+    document.querySelectorAll('#sub-editor .sub-editor-item').forEach((item,i)=>{
+        const inp = item.querySelector('input');
+        const txt = inp.value.trim();
+        if(!txt) return;
+        const existingSid = item.dataset.sid;
+        const wasDone = item.dataset.done === '1';
+        subs.push({
+            id: existingSid || ('s'+Date.now()+'_'+i+'_'+Math.random().toString(36).slice(2,5)),
+            text: txt,
+            done: wasDone
+        });
     });
 
     if(editId){
@@ -577,12 +606,7 @@ function saveTask(){
             t.assignee=document.getElementById('me-asg').value;
             t.due=document.getElementById('me-due').value;
             t.note=document.getElementById('me-note').value.trim();
-            // Preserve existing done states for matching subtasks
-            const oldSubs=t.subtasks||[];
-            t.subtasks=subs.map(s=>{
-                const old=oldSubs.find(o=>o.text===s.text);
-                return old?{...s,done:old.done}:s;
-            });
+            t.subtasks=subs;
         }
     } else {
         tasks.push({
@@ -610,7 +634,7 @@ function delTask(){
     }
 }
 
-function closeModal(){document.getElementById('modal-edit').classList.remove('show')}
+function closeModal(){document.getElementById('modal-edit').classList.remove('show');modalSnapshot=null;}
 
 // DRAG & DROP - long press ile baslar, dogal surukleme
 let dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
@@ -719,10 +743,19 @@ function onTouchEnd(e){
 setTimeout(initDrag,500);
 
 // HELPERS
+function parseLocalDate(s){
+    // YYYY-MM-DD -> local date (00:00 local), UTC degil
+    if(!s) return null;
+    const [y,m,d] = s.split('-').map(Number);
+    return new Date(y, m-1, d);
+}
+
 function fmtDue(d){
     if(!d)return'';
-    const now=new Date(),due=new Date(d);
-    const diff=Math.ceil((due-now)/864e5);
+    const due=parseLocalDate(d);
+    const now=new Date();
+    const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const diff=Math.round((due-today)/864e5);
     if(diff<0)return Math.abs(diff)+' gün geçti';
     if(diff===0)return'Bugün';
     if(diff===1)return'Yarın';
