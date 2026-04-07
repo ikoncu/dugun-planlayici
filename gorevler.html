@@ -376,26 +376,36 @@ function listen(){
             tasks=doc.data().list;
             // Migration: eski format (cat field) -> yeni format (subtasks)
             if(tasks.length>10 && tasks[0].cat && !localStorage.getItem('tasks_migrated_v2')){
-                // Eski 43 gorevi backup'la, yeni 6 gorevle degistir
+                // Eski gorevleri backup'la, yeni format icin onay iste
                 db.collection('shared').doc('planner_tasks_backup').set({
                     list:tasks, backupDate:new Date().toISOString(), reason:'v2 migration'
                 });
-                tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
-                localStorage.setItem('tasks_migrated_v2','true');
-                save();
-                return;
+                if(confirm('Gorevler yeni formata gecirilecek. Eski gorevleriniz yedeklenecek ve yenileri yuklenecek. Devam edilsin mi?')){
+                    tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
+                    localStorage.setItem('tasks_migrated_v2','true');
+                    save();
+                    return;
+                } else {
+                    localStorage.setItem('tasks_migrated_v2','true');
+                }
             }
             tasks.forEach(t=>{if(!t.subtasks) t.subtasks=[];});
         } else {
             tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
             save();
         }
+        if(skipNextRender){skipNextRender=false;return;}
         render();
     });
 }
 
+let skipNextRender=false;
 function save(){
-    dbRef.set({list:tasks, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+    skipNextRender=true;
+    dbRef.set({list:tasks, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>{
+        console.error(e);
+        skipNextRender=false;
+    });
 }
 
 // RENDER

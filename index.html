@@ -279,7 +279,8 @@ datesRef.get().then(snap => {
 }).catch(() => {});
 
 function saveDates() {
-    datesRef.set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }).catch(e => console.error(e));
+    // merge:true ile diger alanlari korur
+    datesRef.set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }, { merge: true }).catch(e => console.error(e));
 }
 
 // State

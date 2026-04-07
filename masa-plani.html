@@ -272,6 +272,7 @@ function startListening() {
         }
         tablesReady = true;
         if (guestsReady) showApp();
+        if(skipNextTablesRender){skipNextTablesRender=false;return;}
         render();
     });
 
@@ -280,9 +281,12 @@ function startListening() {
         guests = (data && data.list) ? data.list : [];
         guestsReady = true;
         if (tablesReady) showApp();
+        if(skipNextGuestsRender){skipNextGuestsRender=false;return;}
         render();
     });
 }
+
+let skipNextTablesRender=false, skipNextGuestsRender=false;
 
 function stopListening() {
     if (unsubTables) { unsubTables(); unsubTables = null; }
@@ -303,14 +307,16 @@ function generateDefaultTables() {
 }
 
 function saveTables() {
+    skipNextTablesRender=true;
     db.collection('shared').doc('tables').set({
         list: tables,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }).catch(e=>{console.error(e);skipNextTablesRender=false;});
 }
 
 function saveGuests() {
-    db.collection('shared').doc('guests').set({ list: guests });
+    skipNextGuestsRender=true;
+    db.collection('shared').doc('guests').set({ list: guests }).catch(e=>{console.error(e);skipNextGuestsRender=false;});
 }
 
 // ---- RENDER ----

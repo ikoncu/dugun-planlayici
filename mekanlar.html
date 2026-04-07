@@ -303,6 +303,7 @@ auth.onAuthStateChanged(u=>{
 });
 
 // Firestore listen
+let skipNextRender=false;
 function listen(){
     unsubscribe = venueRef.onSnapshot(snap=>{
         document.getElementById('loading-screen').style.display='none';
@@ -314,6 +315,7 @@ function listen(){
             venues = JSON.parse(JSON.stringify(DEFAULT_VENUES));
             saveVenues();
         }
+        if(skipNextRender){skipNextRender=false;return;}
         renderVenues();
     }, err=>{
         console.error(err);
@@ -324,7 +326,11 @@ function listen(){
 }
 
 function saveVenues(){
-    venueRef.set({list: venues}).catch(e=>console.error('Save error:',e));
+    skipNextRender=true;
+    venueRef.set({list: venues}).catch(e=>{
+        console.error('Save error:',e);
+        skipNextRender=false;
+    });
 }
 
 function sortedVenues(){

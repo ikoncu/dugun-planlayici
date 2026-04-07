@@ -349,6 +349,7 @@ auth.onAuthStateChanged(user => {
     }
 });
 
+let skipNextRender = false;
 function startListener() {
     unsubscribe = docRef.onSnapshot(snap => {
         document.getElementById('loading-screen').style.display = 'none';
@@ -360,16 +361,18 @@ function startListener() {
         } else {
             budgetData = { list: [], totalBudget: 0 };
         }
+        if(skipNextRender){skipNextRender=false;return;}
         render();
     });
 }
 
 function save() {
+    skipNextRender = true;
     docRef.set({
         list: budgetData.list,
         totalBudget: budgetData.totalBudget,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }).catch(e=>{console.error(e);skipNextRender=false;});
 }
 
 function fmt(n) {

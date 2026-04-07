@@ -509,6 +509,7 @@ let currentUser = null;
 let guests = [];
 let activeFilter = 'all';
 let activeSort = 'alpha-az'; // alpha-az, alpha-za, newest, oldest, rsvp-yes, rsvp-wait
+let skipNextRender = false;
 let openCardId = null;
 let deleteTargetId = null;
 let unsubscribe = null;
@@ -571,6 +572,10 @@ function listen(){
             guests = JSON.parse(JSON.stringify(DEFAULT_GUESTS));
             saveToFirestore();
         }
+        if(skipNextRender){
+            skipNextRender = false;
+            return;
+        }
         updateDashboard();
         renderList();
         // Ilk yukleme: migration + otomatik Sheets sync
@@ -591,7 +596,12 @@ function listen(){
 }
 
 function saveToFirestore(){
-    guestRef.set({list:guests, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.error(e));
+    // Local state zaten guncel, bizim save'imizden gelen snapshot'i skip et
+    skipNextRender = true;
+    guestRef.set({list:guests, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>{
+        console.error(e);
+        skipNextRender = false; // hata olursa render'a izin ver
+    });
 }
 
 // Tek seferlik migration - davetli ekle/cikar (06 Nisan 2026)
@@ -687,12 +697,45 @@ function showBackupHistory(){
         modal.innerHTML = '<div class="import-modal">'+
             '<h3>Yedek Gecmisi</h3>'+
             '<div class="im-sub">Son 10 yedek saklanir. Geri yuklemeden once mevcut liste otomatik yedeklenir.</div>'+
+            '<div style="margin:10px 0">'+
+            '<input id="backup-search" type="text" placeholder="Yedeklerde isim ara (orn: Simay)..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px" oninput="searchInBackups(this.value)">'+
+            '<div id="backup-search-result" style="margin-top:6px;font-size:12px;color:var(--gray-700)"></div>'+
+            '</div>'+
             '<div class="backup-list">'+listHtml+'</div>'+
             '<div class="import-btns">'+
             '<button class="ibtn-cancel" onclick="this.closest(\'.import-modal-bg\').remove()">Kapat</button>'+
             '<button class="ibtn-go" onclick="createBackup(\'Manuel\').then(()=>{showToast(\'Yedek alindi\');this.closest(\'.import-modal-bg\').remove();showBackupHistory();})">Simdi Yedekle</button>'+
             '</div></div>';
         document.body.appendChild(modal);
+    });
+}
+
+function searchInBackups(query){
+    const result = document.getElementById('backup-search-result');
+    if(!query || query.length<2){result.innerHTML='';return;}
+    backupRef.get().then(snap=>{
+        if(!snap.exists){result.innerHTML='Yedek yok';return;}
+        const backups = snap.data().versions || [];
+        const q = query.toLowerCase();
+        const found = [];
+        backups.forEach((b,i)=>{
+            (b.list||[]).forEach(g=>{
+                if(g.name && g.name.toLowerCase().includes(q)){
+                    found.push({name:g.name, backupIdx:i, date:b.date});
+                }
+            });
+        });
+        if(found.length===0){
+            result.innerHTML='<span style="color:var(--red)">Bulunamadi</span>';
+        } else {
+            const unique = {};
+            found.forEach(f=>{unique[f.name]=f;});
+            result.innerHTML='<span style="color:var(--green)">Bulundu:</span><br>'+
+                Object.values(unique).map(f=>{
+                    const d=new Date(f.date);
+                    return '<div style="padding:4px 0">&#10003; <b>'+esc(f.name)+'</b> - Yedek #'+(f.backupIdx+1)+' ('+d.toLocaleDateString('tr-TR')+')</div>';
+                }).join('');
+        }
     });
 }
 
@@ -715,12 +758,13 @@ function restoreBackup(idx){
 function updateDashboard(){
     let totalP=0, yes=0, wait=0, no=0, gelin=0, damat=0;
     guests.forEach(g=>{
-        totalP += g.total||1;
-        if(g.rsvp==='Katilacak') yes += g.total||1;
-        else if(g.rsvp==='Katilmayacak') no += g.total||1;
-        else wait += g.total||1;
-        if(g.side==='Gelin') gelin += g.total||1;
-        else damat += g.total||1;
+        const t = g.total ?? 1;
+        totalP += t;
+        if(g.rsvp==='Katilacak') yes += t;
+        else if(g.rsvp==='Katilmayacak') no += t;
+        else wait += t;
+        if(g.side==='Gelin') gelin += t;
+        else damat += t;
     });
     document.getElementById('s-total').textContent = totalP;
     document.getElementById('s-yes').textContent = yes;
@@ -744,30 +788,21 @@ function setSort(val){
 }
 
 function sortGuests(list){
-    const rsvpOrder = {'Katilacak':0,'Beklemede':1,'Katilmayacak':2};
+    const byName = (a,b)=>a.name.localeCompare(b.name,'tr');
+    const groupSort = (priority)=>(a,b)=>{
+        const ap = a.rsvp===priority?0:1;
+        const bp = b.rsvp===priority?0:1;
+        if(ap!==bp) return ap-bp;
+        return byName(a,b);
+    };
     switch(activeSort){
-        case 'alpha-az':
-            return list.sort((a,b)=>a.name.localeCompare(b.name,'tr'));
-        case 'alpha-za':
-            return list.sort((a,b)=>b.name.localeCompare(a.name,'tr'));
-        case 'newest':
-            return list.slice().reverse();
-        case 'oldest':
-            return list;
-        case 'rsvp-yes':
-            return list.sort((a,b)=>(rsvpOrder[a.rsvp]||1)-(rsvpOrder[b.rsvp]||1));
-        case 'rsvp-wait':
-            return list.sort((a,b)=>{
-                const ao = a.rsvp==='Beklemede'?0:1;
-                const bo = b.rsvp==='Beklemede'?0:1;
-                return ao-bo;
-            });
-        case 'rsvp-no':
-            return list.sort((a,b)=>{
-                const ao = a.rsvp==='Katilmayacak'?0:1;
-                const bo = b.rsvp==='Katilmayacak'?0:1;
-                return ao-bo;
-            });
+        case 'alpha-az': return list.sort(byName);
+        case 'alpha-za': return list.sort((a,b)=>b.name.localeCompare(a.name,'tr'));
+        case 'newest': return list.slice().reverse();
+        case 'oldest': return list;
+        case 'rsvp-yes': return list.sort(groupSort('Katilacak'));
+        case 'rsvp-wait': return list.sort(groupSort('Beklemede'));
+        case 'rsvp-no': return list.sort(groupSort('Katilmayacak'));
         default: return list;
     }
 }
@@ -848,6 +883,18 @@ function cycleRsvp(id){
     if(g.rsvp==='Beklemede') g.rsvp='Katilacak';
     else if(g.rsvp==='Katilacak') g.rsvp='Katilmayacak';
     else g.rsvp='Beklemede';
+    // Sadece o kartin chip'ini guncelle, tum listeyi yeniden render etme
+    const card = document.querySelector('.gcard[data-id="'+id+'"]');
+    if(card){
+        const chip = card.querySelector('.rsvp-chip');
+        if(chip){
+            chip.classList.remove('rsvp-katilacak','rsvp-katilmayacak','rsvp-beklemede');
+            const cls = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
+            chip.classList.add(cls);
+            chip.textContent = g.rsvp;
+        }
+    }
+    updateDashboard();
     saveToFirestore();
 }
 
