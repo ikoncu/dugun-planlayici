@@ -77,6 +77,10 @@
         #app{display:none;padding-bottom:68px}
         .glist{padding:8px 12px 120px;max-width:640px;margin:0 auto}
         .gcard{background:white;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:border-color 0.15s}
+        .gcard.dragging{opacity:0.4;transform:scale(0.97)}
+        .gcard.drag-over-top{border-top:3px solid var(--gold);margin-top:-1px}
+        .gcard.drag-over-bot{border-bottom:3px solid var(--gold);margin-bottom:-1px}
+        .gcard.drag-ghost{position:fixed;z-index:999;pointer-events:none;opacity:0.85;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.2);transform:rotate(1.5deg)}
         .gcard.open{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
         .gmain{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
         .gavatar{width:36px;height:36px;border-radius:50%;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
@@ -299,6 +303,7 @@
             <div class="sort-wrap">
                 <div class="sort-icon-btn">&#8645;</div>
                 <select class="sort-select" id="sort-select" onchange="setSort(this.value)">
+                    <option value="manual">Manuel (sirala)</option>
                     <option value="alpha-az">A → Z</option>
                     <option value="alpha-za">Z → A</option>
                     <option value="newest">Son eklenen</option>
@@ -796,6 +801,7 @@ function sortGuests(list){
         return byName(a,b);
     };
     switch(activeSort){
+        case 'manual': return list; // Orijinal sira (drag-drop ile degisir)
         case 'alpha-az': return list.sort(byName);
         case 'alpha-za': return list.sort((a,b)=>b.name.localeCompare(a.name,'tr'));
         case 'newest': return list.slice().reverse();
@@ -831,7 +837,7 @@ function renderList(){
         const rsvpClass = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
         const rsvpLabel = g.rsvp;
 
-        html += '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'">';
+        html += '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'" data-idx="'+guests.indexOf(g)+'">';
         html += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
         html += '<div class="gavatar">'+initials+'</div>';
         html += '<div class="ginfo">';
@@ -1384,6 +1390,185 @@ function silentMergeFromSheets(rows){
     }
 }
 
+// --- DRAG & DROP (long-press, dogal surukleme) ---
+let gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+
+function initGuestDrag(){
+    const list=document.getElementById('glist');
+    if(!list||list.dataset.dragInit) return;
+    list.dataset.dragInit='1';
+    list.addEventListener('touchstart',gOnTouchStart,{passive:false});
+    list.addEventListener('touchmove',gOnTouchMove,{passive:false});
+    list.addEventListener('touchend',gOnTouchEnd);
+    // Mouse desktop
+    list.addEventListener('mousedown',gOnMouseDown);
+}
+
+function gOnTouchStart(e){
+    const card=e.target.closest('.gcard');
+    if(!card) return;
+    // RSVP butonu, ok, detay butonlari icinde sürükleme baslatma
+    if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
+    const idx=parseInt(card.dataset.idx);
+    const touch=e.touches[0];
+    gDragState.startY=touch.clientY;
+    gDragState.timer=setTimeout(()=>{
+        gDragState.active=true;
+        gDragState.srcIdx=idx;
+        gDragState.card=card;
+        const rect=card.getBoundingClientRect();
+        gDragState.offsetY=touch.clientY-rect.top;
+        const ghost=card.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.width=rect.width+'px';
+        ghost.style.left=rect.left+'px';
+        ghost.style.top=rect.top+'px';
+        document.body.appendChild(ghost);
+        gDragState.ghost=ghost;
+        card.classList.add('dragging');
+        navigator.vibrate&&navigator.vibrate(30);
+        // Sıralama Manuel degilse otomatik gec
+        if(activeSort!=='manual'){
+            activeSort='manual';
+            document.getElementById('sort-select').value='manual';
+            showToast('Manuel siralamaya gecildi');
+        }
+    },400);
+}
+
+function gOnTouchMove(e){
+    if(gDragState.timer&&!gDragState.active){
+        const dy=Math.abs(e.touches[0].clientY-gDragState.startY);
+        if(dy>10){clearTimeout(gDragState.timer);gDragState.timer=null;}
+        return;
+    }
+    if(!gDragState.active) return;
+    e.preventDefault();
+    const touch=e.touches[0];
+    gDragState.ghost.style.top=(touch.clientY-gDragState.offsetY)+'px';
+    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(touch.clientX,touch.clientY);
+    if(el){
+        const target=el.closest('.gcard');
+        if(target&&target!==gDragState.card&&!target.classList.contains('drag-ghost')){
+            const rect=target.getBoundingClientRect();
+            const mid=rect.top+rect.height/2;
+            if(touch.clientY<mid) target.classList.add('drag-over-top');
+            else target.classList.add('drag-over-bot');
+        }
+    }
+}
+
+function gOnTouchEnd(e){
+    clearTimeout(gDragState.timer);
+    gDragState.timer=null;
+    if(!gDragState.active){gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};return;}
+    const touch=e.changedTouches[0];
+    if(gDragState.ghost) gDragState.ghost.remove();
+    if(gDragState.card) gDragState.card.classList.remove('dragging');
+    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(touch.clientX,touch.clientY);
+    if(el){
+        const target=el.closest('.gcard');
+        if(target&&!target.classList.contains('drag-ghost')){
+            const targetIdx=parseInt(target.dataset.idx);
+            if(!isNaN(targetIdx)&&gDragState.srcIdx!==targetIdx){
+                const item=guests.splice(gDragState.srcIdx,1)[0];
+                const rect=target.getBoundingClientRect();
+                const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
+                guests.splice(insertIdx>gDragState.srcIdx?insertIdx-1:insertIdx,0,item);
+                saveToFirestore();
+                renderList();
+            }
+        }
+    }
+    gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+}
+
+// Mouse drag (desktop)
+function gOnMouseDown(e){
+    const card=e.target.closest('.gcard');
+    if(!card) return;
+    if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
+    const idx=parseInt(card.dataset.idx);
+    gDragState.startY=e.clientY;
+    gDragState.timer=setTimeout(()=>{
+        gDragState.active=true;
+        gDragState.srcIdx=idx;
+        gDragState.card=card;
+        const rect=card.getBoundingClientRect();
+        gDragState.offsetY=e.clientY-rect.top;
+        const ghost=card.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.width=rect.width+'px';
+        ghost.style.left=rect.left+'px';
+        ghost.style.top=rect.top+'px';
+        document.body.appendChild(ghost);
+        gDragState.ghost=ghost;
+        card.classList.add('dragging');
+        if(activeSort!=='manual'){
+            activeSort='manual';
+            document.getElementById('sort-select').value='manual';
+            showToast('Manuel siralamaya gecildi');
+        }
+        document.addEventListener('mousemove',gOnMouseMove);
+        document.addEventListener('mouseup',gOnMouseUp);
+    },400);
+    document.addEventListener('mousemove',gMouseCancelCheck,{once:false});
+    document.addEventListener('mouseup',gMouseCancelLong,{once:true});
+}
+function gMouseCancelCheck(e){
+    if(gDragState.timer&&!gDragState.active){
+        if(Math.abs(e.clientY-gDragState.startY)>10){clearTimeout(gDragState.timer);gDragState.timer=null;document.removeEventListener('mousemove',gMouseCancelCheck);}
+    }
+}
+function gMouseCancelLong(){
+    if(gDragState.timer){clearTimeout(gDragState.timer);gDragState.timer=null;}
+    document.removeEventListener('mousemove',gMouseCancelCheck);
+}
+function gOnMouseMove(e){
+    if(!gDragState.active) return;
+    e.preventDefault();
+    gDragState.ghost.style.top=(e.clientY-gDragState.offsetY)+'px';
+    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    if(el){
+        const target=el.closest('.gcard');
+        if(target&&target!==gDragState.card&&!target.classList.contains('drag-ghost')){
+            const rect=target.getBoundingClientRect();
+            const mid=rect.top+rect.height/2;
+            if(e.clientY<mid) target.classList.add('drag-over-top');
+            else target.classList.add('drag-over-bot');
+        }
+    }
+}
+function gOnMouseUp(e){
+    document.removeEventListener('mousemove',gOnMouseMove);
+    document.removeEventListener('mouseup',gOnMouseUp);
+    if(!gDragState.active){return;}
+    if(gDragState.ghost) gDragState.ghost.remove();
+    if(gDragState.card) gDragState.card.classList.remove('dragging');
+    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    if(el){
+        const target=el.closest('.gcard');
+        if(target&&!target.classList.contains('drag-ghost')){
+            const targetIdx=parseInt(target.dataset.idx);
+            if(!isNaN(targetIdx)&&gDragState.srcIdx!==targetIdx){
+                const item=guests.splice(gDragState.srcIdx,1)[0];
+                const rect=target.getBoundingClientRect();
+                const insertIdx=e.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
+                guests.splice(insertIdx>gDragState.srcIdx?insertIdx-1:insertIdx,0,item);
+                saveToFirestore();
+                renderList();
+            }
+        }
+    }
+    gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+}
+
+// Init drag
+setTimeout(initGuestDrag,500);
 
 </script>
 </body>
