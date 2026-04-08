@@ -137,7 +137,7 @@
         <p>Düğün mekanlarını keşfet ve karşılaştır</p>
         <button class="google-btn" onclick="signIn()">
             <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
-            Google ile Giris Yap
+            Google ile Giriş Yap
         </button>
     </div>
 </div>
@@ -234,14 +234,43 @@ const FIREBASE_CONFIG = {
 };
 
 const DEFAULT_VENUES = [
-    {id:'v1',name:'Selale Plaza Dugun Salonu',instagram:'https://www.instagram.com/selaleplazadugunsalonu/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v2',name:'Pembe Kosk Balo Salon',instagram:'https://www.instagram.com/pembekoskbalosalon/',features:['Balo Salonu'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:'v1',name:'Şelale Plaza Düğün Salonu',instagram:'https://www.instagram.com/selaleplazadugunsalonu/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:'v2',name:'Pembe Köşk Balo Salonu',instagram:'https://www.instagram.com/pembekoskbalosalon/',features:['Balo Salonu'],notes:'',favorite:false,price:'',capacity:'',contact:''},
     {id:'v3',name:'Marina Gaziantep BKM',instagram:'https://www.instagram.com/marinagaziantepbkm/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v4',name:'Vadi Garden Gaziantep',instagram:'https://www.instagram.com/vadigardengaziantep/',features:['Bahce','Acik Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v5',name:'Livas Park Dugun',instagram:'https://www.instagram.com/livasparkdugun/',features:['Park','Acik Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v6',name:'Ceremony Erikce',instagram:'https://www.instagram.com/ceremonyerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v7',name:'MSM Erikce',instagram:'https://www.instagram.com/msmerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''}
+    {id:'v4',name:'Vadi Garden Gaziantep',instagram:'https://www.instagram.com/vadigardengaziantep/',features:['Bahçe','Açık Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:'v5',name:'Livas Park Düğün',instagram:'https://www.instagram.com/livasparkdugun/',features:['Park','Açık Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:'v6',name:'Ceremony Erikçe',instagram:'https://www.instagram.com/ceremonyerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
+    {id:'v7',name:'MSM Erikçe',instagram:'https://www.instagram.com/msmerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''}
 ];
+
+// ASCII -> Türkçe tek seferlik migration (seed verisi için)
+const VENUE_NAME_MIGRATION = {
+    'Selale Plaza Dugun Salonu': 'Şelale Plaza Düğün Salonu',
+    'Pembe Kosk Balo Salon': 'Pembe Köşk Balo Salonu',
+    'Livas Park Dugun': 'Livas Park Düğün',
+    'Ceremony Erikce': 'Ceremony Erikçe',
+    'MSM Erikce': 'MSM Erikçe'
+};
+const FEATURE_MIGRATION = {
+    'Acik Hava': 'Açık Hava',
+    'Bahce': 'Bahçe'
+};
+function migrateVenueLocalizations(list){
+    let changed = false;
+    list.forEach(v=>{
+        if(VENUE_NAME_MIGRATION[v.name]){
+            v.name = VENUE_NAME_MIGRATION[v.name];
+            changed = true;
+        }
+        if(Array.isArray(v.features)){
+            v.features = v.features.map(f=>{
+                if(FEATURE_MIGRATION[f]){changed = true; return FEATURE_MIGRATION[f];}
+                return f;
+            });
+        }
+    });
+    return changed;
+}
 
 // Firebase init
 firebase.initializeApp(FIREBASE_CONFIG);
@@ -304,8 +333,7 @@ auth.onAuthStateChanged(u=>{
     }
 });
 
-// Firestore listen
-let skipNextRender=false;
+// Firestore listen - skipNextRender removed: uses snap.metadata.hasPendingWrites
 function listen(){
     unsubscribe = venueRef.onSnapshot(snap=>{
         document.getElementById('loading-screen').style.display='none';
@@ -315,12 +343,17 @@ function listen(){
             // Doc var: list bos olabilir (kullanici hepsini sildiyse), saygi goster
             const data = snap.data();
             venues = (data.list && Array.isArray(data.list)) ? data.list : [];
+            // Seed datası ASCII ise tek seferlik Türkçeleştirme
+            if(migrateVenueLocalizations(venues)){
+                saveVenues();
+            }
         } else {
             // Doc hic yok: ilk kez aciliyor, default seed
             venues = JSON.parse(JSON.stringify(DEFAULT_VENUES));
             saveVenues();
         }
-        if(skipNextRender){skipNextRender=false;return;}
+        // Kendi pending yazmamızsa re-render'ı atla (focus/scroll korunur).
+        if(snap.metadata.hasPendingWrites) return;
         renderVenues();
     }, err=>{
         console.error(err);
@@ -331,10 +364,9 @@ function listen(){
 }
 
 function saveVenues(){
-    skipNextRender=true;
     venueRef.set({list: venues}).catch(e=>{
         console.error('Save error:',e);
-        skipNextRender=false;
+        showToast('Kaydedilemedi');
     });
 }
 
@@ -427,9 +459,10 @@ function toggleExpand(id){
 
 function updVenue(id, field, val){
     const v = venues.find(x=>x.id===id);
-    if(v){
+    if(v && v[field] !== val){
         v[field] = val;
         saveVenues();
+        showToast('Kaydedildi');
     }
 }
 

@@ -98,9 +98,17 @@
         .t-guest-rm:hover{color:var(--red);background:var(--red-bg)}
         .t-empty-hint{font-size:12px;color:var(--g400);padding:8px 0;text-align:center;font-style:italic}
 
-        .t-foot{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--g100);align-items:center}
-        .t-add-select{flex:1;border:1px solid var(--g200);border-radius:8px;padding:7px 8px;font-size:12px;font-family:inherit;background:white;color:var(--g700);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px}
-        .t-add-select:focus{outline:none;border-color:var(--gold)}
+        .t-foot{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--g100);align-items:center;position:relative}
+        .t-add-wrap{flex:1;position:relative;min-width:0}
+        .t-add-search{width:100%;border:1px solid var(--g200);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-family:inherit;background:white;color:var(--g700);box-sizing:border-box;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+        .t-add-search:focus{outline:none;border-color:var(--gold)}
+        .t-add-search:disabled{background-color:var(--g100);cursor:not-allowed}
+        .t-add-dd{position:fixed;background:white;border:1px solid var(--g200);border-radius:8px;max-height:240px;overflow-y:auto;box-shadow:0 8px 24px rgba(15,23,42,0.16);z-index:9999;display:none}
+        .t-add-dd.open{display:block}
+        .t-add-dd-item{padding:10px 12px;font-size:13px;color:var(--g700);cursor:pointer;border-bottom:1px solid var(--g100)}
+        .t-add-dd-item:last-child{border-bottom:none}
+        .t-add-dd-item:hover,.t-add-dd-item.active{background:var(--gold-bg);color:var(--gold)}
+        .t-add-dd-empty{padding:12px;font-size:12px;color:var(--g400);text-align:center;font-style:italic}
         .t-add-btn{padding:7px 12px;border-radius:8px;border:none;background:var(--gold);color:white;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
         .t-add-btn:disabled{opacity:0.4;cursor:default}
         .t-del-btn{background:none;border:none;color:var(--g300);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px}
@@ -136,7 +144,7 @@
         <p>Düğün oturma düzeni</p>
         <button class="google-btn" onclick="signIn()">
             <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Google ile Giris Yap
+            Google ile Giriş Yap
         </button>
     </div>
 </div>
@@ -220,7 +228,7 @@ function signIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch(e => {
         console.error('Sign-in error:', e);
-        showToast('Giris basarisiz');
+        showToast('Giriş başarısız');
     });
 }
 
@@ -389,15 +397,11 @@ function renderTables() {
         const guestRows = seated.length > 0
             ? seated.map(g => `
                 <div class="t-guest">
-                    <span class="t-guest-name">${esc(g.name || g.title || 'Isimsiz')}</span>
+                    <span class="t-guest-name">${esc(g.name || g.title || 'İsimsiz')}</span>
                     <button class="t-guest-rm" onclick="removeGuestFromTable('${g.id || ''}','${t.id}')" title="Kaldir">&times;</button>
                 </div>
             `).join('')
             : '<div class="t-empty-hint">Henüz kimse oturmuyor</div>';
-
-        const options = ua.map(g =>
-            `<option value="${g.id || ''}">${esc(g.name || g.title || 'Isimsiz')}</option>`
-        ).join('');
 
         const canDelete = count === 0;
 
@@ -416,10 +420,11 @@ function renderTables() {
             </div>
             <div class="t-body">${guestRows}</div>
             <div class="t-foot">
-                <select class="t-add-select" id="sel-${t.id}" ${isFull ? 'disabled' : ''}>
-                    <option value="">Kisi Sec...</option>
-                    ${options}
-                </select>
+                <div class="t-add-wrap">
+                    <input type="text" class="t-add-search" id="selinp-${t.id}" placeholder="Kişi ara..." autocomplete="off" ${isFull ? 'disabled' : ''} oninput="onGuestSearchInput('${t.id}')" onfocus="openGuestDropdown('${t.id}')" />
+                    <input type="hidden" id="selval-${t.id}" value="">
+                    <div class="t-add-dd" id="seldd-${t.id}"></div>
+                </div>
                 <button class="t-add-btn" onclick="addGuestToTable('${t.id}')" ${isFull ? 'disabled' : ''}>Ekle</button>
                 <button class="t-del-btn" onclick="deleteTable(${idx})" ${canDelete ? '' : 'disabled'} title="${canDelete ? 'Masayı sil' : 'Önce misafirleri kaldırın'}">🗑</button>
             </div>
@@ -441,9 +446,9 @@ function renderUnassigned() {
 
     const chips = ua.length > 0
         ? '<div class="ua-list">' + ua.map(g =>
-            `<div class="ua-chip"><span class="ua-icon">👤</span>${esc(g.name || g.title || 'Isimsiz')}</div>`
+            `<div class="ua-chip"><span class="ua-icon">👤</span>${esc(g.name || g.title || 'İsimsiz')}</div>`
         ).join('') + '</div>'
-        : '<div class="ua-empty">Tum davetliler bir masaya oturdu!</div>';
+        : '<div class="ua-empty">Tüm davetliler bir masaya oturdu!</div>';
 
     section.innerHTML = `
         <div class="ua-header"><span class="ua-dot"></span> Masasız Davetliler (${ua.length})</div>
@@ -451,11 +456,108 @@ function renderUnassigned() {
     `;
 }
 
+// ---- GUEST SEARCH DROPDOWN ----
+function getGuestSearchQuery(tableId) {
+    const inp = document.getElementById('selinp-' + tableId);
+    if (!inp) return '';
+    // Eğer seçilmişse input'ta seçilen ismin kendisi var, filtreleme yapma
+    const hidden = document.getElementById('selval-' + tableId);
+    if (hidden && hidden.value) return '';
+    return (inp.value || '').toLowerCase().trim();
+}
+
+function renderGuestDropdown(tableId) {
+    const dd = document.getElementById('seldd-' + tableId);
+    if (!dd) return;
+    const q = getGuestSearchQuery(tableId);
+    const ua = unassignedGuests();
+    const filtered = q
+        ? ua.filter(g => (g.name || g.title || '').toLowerCase().includes(q))
+        : ua;
+
+    if (filtered.length === 0) {
+        dd.innerHTML = '<div class="t-add-dd-empty">' + (ua.length === 0 ? 'Masasız davetli yok' : 'Eşleşme yok') + '</div>';
+        return;
+    }
+    dd.innerHTML = filtered.slice(0, 50).map(g =>
+        '<div class="t-add-dd-item" onmousedown="selectGuestForTable(\''+tableId+'\',\''+g.id+'\')">'+esc(g.name || g.title || 'İsimsiz')+'</div>'
+    ).join('');
+}
+
+function positionGuestDropdown(tableId) {
+    const inp = document.getElementById('selinp-' + tableId);
+    const dd = document.getElementById('seldd-' + tableId);
+    if (!inp || !dd) return;
+    const r = inp.getBoundingClientRect();
+    dd.style.left = r.left + 'px';
+    dd.style.top = (r.bottom + 4) + 'px';
+    dd.style.width = r.width + 'px';
+}
+
+function openGuestDropdown(tableId) {
+    // Diğer dropdownları kapat
+    document.querySelectorAll('.t-add-dd.open').forEach(el => {
+        if (el.id !== 'seldd-' + tableId) el.classList.remove('open');
+    });
+    renderGuestDropdown(tableId);
+    const dd = document.getElementById('seldd-' + tableId);
+    if (dd) {
+        positionGuestDropdown(tableId);
+        dd.classList.add('open');
+    }
+}
+
+// Scroll/resize'da açık dropdown'ı yeniden konumla
+window.addEventListener('scroll', () => {
+    document.querySelectorAll('.t-add-dd.open').forEach(el => {
+        const tid = el.id.replace('seldd-','');
+        positionGuestDropdown(tid);
+    });
+}, true);
+window.addEventListener('resize', () => {
+    document.querySelectorAll('.t-add-dd.open').forEach(el => {
+        const tid = el.id.replace('seldd-','');
+        positionGuestDropdown(tid);
+    });
+});
+
+function closeGuestDropdown(tableId) {
+    const dd = document.getElementById('seldd-' + tableId);
+    if (dd) dd.classList.remove('open');
+}
+
+function onGuestSearchInput(tableId) {
+    // Kullanıcı yazmaya başlarsa seçimi temizle ki filtre çalışsın
+    const hidden = document.getElementById('selval-' + tableId);
+    if (hidden) hidden.value = '';
+    openGuestDropdown(tableId);
+}
+
+function selectGuestForTable(tableId, guestId) {
+    const g = guests.find(x => x.id === guestId);
+    if (!g) return;
+    const inp = document.getElementById('selinp-' + tableId);
+    const hidden = document.getElementById('selval-' + tableId);
+    if (inp) inp.value = g.name || g.title || 'İsimsiz';
+    if (hidden) hidden.value = guestId;
+    closeGuestDropdown(tableId);
+}
+
+// Dış tıklamada dropdown'ı kapat
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.t-add-wrap')) {
+        document.querySelectorAll('.t-add-dd.open').forEach(el => el.classList.remove('open'));
+    }
+});
+
 // ---- ACTIONS ----
 function addGuestToTable(tableId) {
-    const sel = document.getElementById('sel-' + tableId);
-    if (!sel || !sel.value) return;
-    const guestId = sel.value;
+    const hidden = document.getElementById('selval-' + tableId);
+    if (!hidden || !hidden.value) {
+        showToast('Önce bir kişi seçin');
+        return;
+    }
+    const guestId = hidden.value;
 
     // Optimistic UI update
     const gi = guests.findIndex(g => g.id === guestId);

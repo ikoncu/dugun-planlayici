@@ -321,7 +321,7 @@ let totalBudget = 0;
 let items = [];
 let editId = null;
 let unsub = null;
-let skipNextRender = false;
+// skipNextRender removed: uses snap.metadata.hasPendingWrites (race-safe)
 
 const CAT_LABELS = {
     'mekan':'Mekan','kiyafet':'Kıyafet','foto':'Foto/Video','organizasyon':'Organizasyon','diger':'Diğer'
@@ -371,7 +371,8 @@ function startListener(){
             totalBudget = 0;
             items = [];
         }
-        if(skipNextRender){skipNextRender=false;return;}
+        // Kendi pending yazmamızsa render'ı atla (focus korunur).
+        if(snap.metadata.hasPendingWrites) return;
         render();
     }, err=>{
         console.error(err);
@@ -381,9 +382,8 @@ function startListener(){
 }
 
 function save(){
-    skipNextRender = true;
     docRef.set({totalBudget, items, updatedAt:firebase.firestore.FieldValue.serverTimestamp()})
-        .catch(e=>{console.error(e);skipNextRender=false;showToast('Kaydedilemedi');});
+        .catch(e=>{console.error(e);showToast('Kaydedilemedi');});
 }
 
 // ----- RENDER -----
