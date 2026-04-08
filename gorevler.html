@@ -386,7 +386,7 @@ function listen(){
         }
         // Bizim henüz commit olmamış yazmamızsa render'ı atla (focus korunur).
         // Sunucu ack'lediğinde veya başka cihaz değişikliğinde hasPendingWrites=false → render.
-        if(snap.metadata.hasPendingWrites) return;
+        if(doc.metadata.hasPendingWrites) return;
         render();
     });
 }
