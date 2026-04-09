@@ -454,17 +454,14 @@ function toggleFav(id){
 }
 
 function toggleExpand(id){
-    expandedId = expandedId === id ? null : id;
+    const wasExpanded = expandedId === id;
+    expandedId = wasExpanded ? null : id;
     renderVenues();
-    // Auto-grow textarea'ları içeriğe göre ayarla
-    if(expandedId){
-        setTimeout(()=>{
-            document.querySelectorAll('.vc-note').forEach(ta=>{
-                ta.style.height = 'auto';
-                ta.style.height = ta.scrollHeight + 'px';
-            });
-        }, 10);
-    }
+    // Kapatıldığında kartı görünür alanın üstüne scroll et
+    setTimeout(()=>{
+        const card = document.querySelector('[data-id="'+id+'"]');
+        if(card) card.scrollIntoView({block:'start', behavior:'smooth'});
+    }, 10);
 }
 
 function startEditNote(id){
