@@ -7,6 +7,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script src="./firestore-helpers.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -149,7 +151,7 @@
         <div class="logo">💍</div>
         <h1>Düğün Planlayıcı</h1>
         <p>Düğününüzü birlikte planlayalım</p>
-        <button class="google-btn" onclick="doGoogleLogin()">
+        <button class="google-btn" onclick="fh.signIn()">
             <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
             Google ile Giriş Yap
         </button>
@@ -170,7 +172,7 @@
                 <div id="user-avatar-wrap"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-dropdown-name"></div>
-                    <button onclick="doSignOut()">Çıkış Yap</button>
+                    <button onclick="fh.signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Düğün Planlayıcı</h1>
@@ -252,66 +254,41 @@
 </div>
 
 <script>
-// Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyBwXGAb_p-Hx7D1qmxBBu7viFL1PAQ0m_0",
-    authDomain: "dugun-planlayici-ff34e.firebaseapp.com",
-    projectId: "dugun-planlayici-ff34e",
-    storageBucket: "dugun-planlayici-ff34e.firebasestorage.app",
-    messagingSenderId: "740092604485",
-    appId: "1:740092604485:web:62b9e0e8b9c45a1581b32c"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Firebase init — helper üzerinden
+fh.init();
 
 let NISAN_DATE = '2026-05-16';
 let WEDDING_DATE = '2026-09-01';
-const datesRef = db.collection('shared').doc('dates');
 
-// Firestore'dan tarihleri yukle
-datesRef.get().then(snap => {
-    if (snap.exists) {
-        if (snap.data().nisan) NISAN_DATE = snap.data().nisan;
-        if (snap.data().dugun) WEDDING_DATE = snap.data().dugun;
-    }
-    updateCountdowns();
-}).catch(() => {});
+function loadDates() {
+    fh.db.collection('shared').doc('dates').get().then(snap => {
+        if (snap.exists) {
+            if (snap.data().nisan) NISAN_DATE = snap.data().nisan;
+            if (snap.data().dugun) WEDDING_DATE = snap.data().dugun;
+        }
+        updateCountdowns();
+    }).catch(() => {});
+}
 
 function saveDates() {
-    // merge:true ile diger alanlari korur
-    datesRef.set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }, { merge: true }).catch(e => console.error(e));
+    fh.db.collection('shared').doc('dates').set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }, { merge: true }).catch(e => console.error(e));
 }
 
 // State
 let dashData = { tasks: [], guests: [], budget: null, venues: [] };
-let unsubscribers = [];
 
-// Auth
-function doGoogleLogin() {
-    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message));
-}
-function doSignOut() {
-    if(!confirm('Çıkış yapmak istediğinize emin misiniz?')) return;
-    unsubscribers.forEach(fn => fn());
-    unsubscribers = [];
-    auth.signOut();
-}
-
-auth.onAuthStateChanged(user => {
-    document.getElementById('loading-screen').style.display = 'none';
-    if (user) {
+fh.onAuth({
+    onLogin: (user) => {
+        document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('bnav').style.display = 'grid';
-        renderAvatar(user);
+        if(user.photoURL || user.displayName) renderAvatar(user);
+        loadDates();
         loadDashboard();
-    } else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('bnav').style.display = 'grid';
-        loadDashboard();
-    } else {
+    },
+    onLogout: () => {
+        document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('app').style.display = 'none';
         document.getElementById('bnav').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
@@ -344,42 +321,27 @@ function toggleDrawer() {
     document.getElementById('drawer-overlay').classList.toggle('show');
 }
 
-// Dashboard Loading
+// Dashboard Loading — helper üzerinden
 function loadDashboard() {
-    unsubscribers.forEach(fn => fn());
-    unsubscribers = [];
+    fh.listen('shared/planner_tasks', (data) => {
+        dashData.tasks = (data && data.list) ? data.list : [];
+        renderDashboard();
+    });
 
-    // Tasks (stored as {list: [...]})
-    unsubscribers.push(
-        db.collection('shared').doc('planner_tasks').onSnapshot(snap => {
-            dashData.tasks = (snap.exists && snap.data().list) ? snap.data().list : [];
-            renderDashboard();
-        })
-    );
+    fh.listen('shared/guests', (data) => {
+        dashData.guests = (data && data.list) ? data.list : [];
+        renderDashboard();
+    });
 
-    // Guests (stored as {list: [...]})
-    unsubscribers.push(
-        db.collection('shared').doc('guests').onSnapshot(snap => {
-            dashData.guests = (snap.exists && snap.data().list) ? snap.data().list : [];
-            renderDashboard();
-        })
-    );
+    fh.listen('shared/budget_v2', (data) => {
+        dashData.budget = data || null;
+        renderDashboard();
+    });
 
-    // Budget (stored as {list: [...], totalBudget: N})
-    unsubscribers.push(
-        db.collection('shared').doc('budget_v2').onSnapshot(snap => {
-            dashData.budget = snap.exists ? snap.data() : null;
-            renderDashboard();
-        })
-    );
-
-    // Venues (stored as {list: [...]})
-    unsubscribers.push(
-        db.collection('shared').doc('venues').onSnapshot(snap => {
-            dashData.venues = (snap.exists && snap.data().list) ? snap.data().list : [];
-            renderDashboard();
-        })
-    );
+    fh.listen('shared/venues', (data) => {
+        dashData.venues = (data && data.list) ? data.list : [];
+        renderDashboard();
+    });
 }
 
 // Render

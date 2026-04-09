@@ -59,34 +59,18 @@ Diğer Firestore doc'lar: `users/{uid}` (profiller), `notes` collection (notlar)
 
 ## Backlog — Gelecek Fazlar
 
-### v0.5 — Kurtarma Mekanizması (tasarım onaylandı, kod yazılmadı)
+### v0.5 — Kurtarma Mekanizması ✅ TAMAMLANDI (10 Nisan 2026)
 
-**Amaç**: Sessiz felaket sigortası. Kullanıcıya görünmez, dev-side backup.
-
-**Kararlar (kesinleşen)**:
-- Versiyon depolama: subcollection per doc (`shared/{doc}/history/{versionId}`)
-- Retention: son 30 versiyon
-- Throttle: min 5 dk aralıkla versiyon
-- Kullanıcı UI'ı yok — dev Firebase Console'dan restore eder
-- Hosting: GitHub Pages'de kalıyor (Firebase Hosting v0.6'ya ertelendi)
-
-**Kararlar (bekleyen — tasarım tartışmasında)**:
-- [ ] Throttle penceresi: 5 dk mı, 2 dk mı?
-- [ ] authorName kaynağı: currentUser.displayName mi, manual override map mi?
-- [ ] Test sayfası (test.html) oluşturulsun mu?
-- [ ] FIREBASE_CONFIG: ayrı dosya mı, helper içinde mi, her sayfadan parametre mi?
-- [ ] Pilot sayfa: davetliler mi, mekanlar mı?
-- [ ] İsimlendirme: `fh` mı, `WedHelpers` mı, başka mı?
-
-**Teknik tasarım**: Bu session'da (9 Nisan 2025) detaylı API tasarımı yapıldı:
-- `fh.init()`, `fh.onAuth()`, `fh.listen()`, `fh.saveDoc()`, `fh.loadHistory()`, `fh.adminRestore()`, `fh.toast()`, `fh.setupErrorHandling()`
-- Tam tasarım belgesi conversation history'de mevcut.
-
-**İmplementasyon planı**:
-1. `firestore-helpers.js` oluştur + izole test (test.html)
-2. Pilot sayfada uygula, davranış doğrula
-3. Diğer sayfalara yay
-4. Eski kopya kodları temizle
+**Yapılanlar:**
+- `firebase-config.js` — tek config dosyası
+- `firestore-helpers.js` — fh.init/listen/saveDoc/toast/adminRestore
+  - hasPendingWrites race-safe listen
+  - Otomatik history/ subcollection snapshot (5dk throttle, 30 versiyon retention)
+  - Global error handling (window.onerror → toast)
+- 6 sayfa migration tamamlandı (index, davetliler, gorevler, mekanlar, butce, masa-plani)
+- Firestore Security Rules: `request.auth != null` (1 Mayıs expire sorunu çözüldü)
+- İsimlendirme: `fh` modülü
+- Config: `firebase-config.js` ayrı dosya
 
 ### v0.6 — Hosting & Repo Taşıma
 

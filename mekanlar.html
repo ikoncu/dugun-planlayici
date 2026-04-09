@@ -214,8 +214,8 @@
             <input type="url" id="inp-ig" placeholder="https://www.instagram.com/...">
         </div>
         <div class="modal-field">
-            <label>Özellikler (virgül ile ayırın)</label>
-            <input type="text" id="inp-features" placeholder="Salon, Bahçe, Açık Hava">
+            <label>Not</label>
+            <textarea id="inp-note" placeholder="Fiyat, kapasite, iletişim bilgisi..." rows="3" style="width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:13px;font-family:inherit;resize:none"></textarea>
         </div>
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal()">İptal</button>
@@ -471,7 +471,7 @@ function removeVenue(id){
 function openVenueModal(){
     document.getElementById('inp-name').value = '';
     document.getElementById('inp-ig').value = '';
-    document.getElementById('inp-features').value = '';
+    document.getElementById('inp-note').value = '';
     document.getElementById('modal-overlay').classList.add('open');
     setTimeout(()=>document.getElementById('inp-name').focus(), 100);
 }
@@ -488,19 +488,15 @@ function saveNewVenue(){
         return;
     }
     const ig = document.getElementById('inp-ig').value.trim();
-    const featuresStr = document.getElementById('inp-features').value.trim();
-    const features = featuresStr ? featuresStr.split(',').map(f=>f.trim()).filter(f=>f) : [];
+    const note = document.getElementById('inp-note').value.trim();
 
     const newVenue = {
         id: 'v' + Date.now(),
         name: name,
         instagram: ig,
-        features: features,
-        notes: '',
-        favorite: false,
-        price: '',
-        capacity: '',
-        contact: ''
+        features: [],
+        notes: note,
+        favorite: false
     };
 
     venues.push(newVenue);
