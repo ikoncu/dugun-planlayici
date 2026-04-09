@@ -77,27 +77,28 @@
         .btn-add:active{opacity:0.85}
 
         /* VENUE CARDS */
-        .venue-grid{padding:12px 16px;display:flex;flex-direction:column;gap:12px;max-width:640px;margin:0 auto;padding-bottom:80px}
-        .venue-card{background:white;border-radius:14px;border:1px solid var(--gray-100);box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;position:relative}
+        .venue-grid{padding:8px 12px;display:flex;flex-direction:column;gap:8px;max-width:640px;margin:0 auto;padding-bottom:80px}
+        .venue-card{background:white;border-radius:12px;border:1px solid var(--gray-100);box-shadow:0 1px 3px rgba(0,0,0,0.05);overflow:hidden;position:relative}
         .venue-card.fav{border-color:var(--gold);border-width:2px}
-        .vc-top{padding:14px 14px 10px}
-        .vc-name{font-size:16px;font-weight:600;padding-right:32px;margin-bottom:6px}
-        .vc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
-        .vc-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--gray-100);color:var(--gray-700);font-weight:500}
-        .vc-fav{position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;cursor:pointer}
-        .vc-note-preview{padding:0 14px 8px;font-size:12px;color:var(--gray-500);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word}
-        .vc-expand-btn{width:100%;background:none;border:none;border-top:1px solid var(--gray-100);padding:8px;font-size:12px;color:var(--gray-500);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
-        .vc-expand-arrow{transition:transform 0.2s}
-        .venue-card.expanded .vc-expand-arrow{transform:rotate(180deg)}
-        .vc-detail{display:none;padding:12px 14px;border-top:1px solid var(--gray-100);background:var(--gray-50)}
+        .vc-top{padding:10px 12px 6px;cursor:pointer}
+        .vc-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+        .vc-name{font-size:14px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .vc-fav{background:none;border:none;font-size:18px;cursor:pointer;padding:0;flex-shrink:0}
+        .vc-chevron{font-size:10px;color:var(--gray-400);transition:transform 0.2s;flex-shrink:0}
+        .venue-card.expanded .vc-chevron{transform:rotate(180deg)}
+        .vc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+        .vc-tags{display:flex;flex-wrap:wrap;gap:4px}
+        .vc-tag{font-size:10px;padding:2px 6px;border-radius:5px;background:var(--gray-100);color:var(--gray-600);font-weight:500}
+        .vc-note-preview{font-size:11px;color:var(--gray-500);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word;padding:0 12px 8px}
+        .vc-detail{display:none;padding:8px 12px 10px;border-top:1px solid var(--gray-100);background:var(--gray-50)}
         .venue-card.expanded .vc-detail{display:block}
-        .vc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--gray-100);font-size:13px}
+        .vc-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--gray-100);font-size:12px}
         .vc-row span{color:var(--gray-500)}
-        .vc-row input{border:none;background:transparent;text-align:right;font-size:13px;font-family:inherit;width:150px}
+        .vc-row input{border:none;background:transparent;text-align:right;font-size:12px;font-family:inherit;width:150px}
         .vc-row input:focus{outline:none;background:white;border-radius:4px;padding:2px 4px}
-        .vc-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:13px;resize:none;height:55px;font-family:inherit;margin-top:8px;background:white}
+        .vc-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:12px;resize:none;min-height:40px;font-family:inherit;margin-top:6px;background:white;overflow:hidden;box-sizing:border-box}
         .vc-note:focus{outline:none;border-color:var(--gold)}
-        .vc-actions{display:flex;gap:8px;margin-top:10px}
+        .vc-actions{display:flex;gap:8px;margin-top:8px}
         .vc-actions a,.vc-actions button{font-size:12px;padding:6px 12px;border-radius:7px;border:1px solid var(--gray-200);background:white;text-decoration:none;color:var(--gray-700);cursor:pointer;font-weight:500}
         .vc-actions a.ig{background:linear-gradient(135deg,#833AB4,#FD1D1D);color:white;border:none}
         .vc-actions .del{color:var(--red);border-color:var(--red-bg)}
@@ -400,10 +401,14 @@ function renderVenues(){
         const expClass = isExpanded ? ' expanded' : '';
 
         html += '<div class="venue-card'+favClass+expClass+'" data-id="'+v.id+'">';
-        html += '<div class="vc-top">';
+        html += '<div class="vc-top" onclick="toggleExpand(\''+v.id+'\')">';
+        html += '<div class="vc-header">';
         html += '<div class="vc-name">'+esc(v.name)+'</div>';
-        html += '<button class="vc-fav" onclick="toggleFav(\''+v.id+'\')">'+(v.favorite ? '&#11088;' : '&#9734;')+'</button>';
+        html += '<button class="vc-fav" onclick="event.stopPropagation();toggleFav(\''+v.id+'\')">'+(v.favorite ? '&#11088;' : '&#9734;')+'</button>';
+        html += '<span class="vc-chevron">&#9660;</span>';
+        html += '</div>';
 
+        html += '<div class="vc-meta">';
         if(v.features && v.features.length > 0){
             html += '<div class="vc-tags">';
             v.features.forEach(f=>{
@@ -411,19 +416,13 @@ function renderVenues(){
             });
             html += '</div>';
         }
-
+        html += '</div>';
         html += '</div>';
 
-        // Note preview (ilk 3 satır, not varsa)
-        if(v.notes && v.notes.trim()){
+        // Note preview (collapsed'da 2 satır)
+        if(v.notes && v.notes.trim() && !isExpanded){
             html += '<div class="vc-note-preview">'+esc(v.notes)+'</div>';
         }
-
-        // Expand button
-        html += '<button class="vc-expand-btn" onclick="toggleExpand(\''+v.id+'\')">';
-        html += '<span>'+(isExpanded ? 'Detayları Gizle' : 'Detayları Gör')+'</span>';
-        html += '<span class="vc-expand-arrow">&#9660;</span>';
-        html += '</button>';
 
         // Detail section
         html += '<div class="vc-detail">';
@@ -461,6 +460,15 @@ function toggleFav(id){
 function toggleExpand(id){
     expandedId = expandedId === id ? null : id;
     renderVenues();
+    // Auto-grow textarea'ları içeriğe göre ayarla
+    if(expandedId){
+        setTimeout(()=>{
+            document.querySelectorAll('.vc-note').forEach(ta=>{
+                ta.style.height = 'auto';
+                ta.style.height = ta.scrollHeight + 'px';
+            });
+        }, 10);
+    }
 }
 
 function updVenue(id, field, val){
