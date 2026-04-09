@@ -82,8 +82,11 @@ Son güncelleme: 2026-04-09
   - Eski/outdated memory dosyaları kaldırıldı
   - CLAUDE.md'ye otomatik bilgi yönetimi kuralları eklendi
 
+- **Global CLAUDE.md** oluşturuldu (`~/.claude/CLAUDE.md`): tüm projelerde geçerli 9 kural
+  - Mevcut `ibrahim-koncu.md` ve `howtoplanskills.md` korundu, referans verildi
+
 ## Son Durum
 - Canlı: `ikoncu.github.io/dugun-planlayici`
-- Son commit: `8529a25`
+- Son commit: `c871d4e`
 - Versiyon: v0.5
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)
