@@ -26,13 +26,13 @@ Bu dosya her yeni Claude Code session'ında otomatik yüklenir. Projenin sabit b
 | Dosya | Sayfa | Firestore Doc |
 |-------|-------|---------------|
 | `index.html` | Dashboard (timeline + özetler) | Diğer doc'ları okur |
-| `gorevler.html` | Görev listesi (agenda stili, subtask'lı) | `shared/roadmap` |
+| `gorevler.html` | Görev listesi (agenda stili, subtask'lı) | `shared/planner_tasks` |
 | `davetliler.html` | 62 davetli, RSVP, gruplama | `shared/guests` |
 | `mekanlar.html` | 7 Gaziantep mekanı, favoriler | `shared/venues` |
 | `butce.html` | Bütçe kalemleri, ödeme durumu | `shared/budget_v2` |
 | `masa-plani.html` | Masa düzeni, kişi atama | `shared/tables` |
 
-Diğer Firestore doc'lar: `users/{uid}` (profiller), `notes` collection (notlar), `shared/planner_tasks` (eski, kullanılmıyor)
+Diğer Firestore doc'lar: `users/{uid}` (profiller), `notes` collection (notlar). Not: `shared/roadmap` Firestore'da varsa eski fazdan kalmış atıl veri, kod tarafından kullanılmıyor.
 
 ## Kritik Prensipler
 
