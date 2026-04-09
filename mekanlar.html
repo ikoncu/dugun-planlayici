@@ -85,6 +85,7 @@
         .vc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
         .vc-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--gray-100);color:var(--gray-700);font-weight:500}
         .vc-fav{position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;cursor:pointer}
+        .vc-note-preview{padding:0 14px 8px;font-size:12px;color:var(--gray-500);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word}
         .vc-expand-btn{width:100%;background:none;border:none;border-top:1px solid var(--gray-100);padding:8px;font-size:12px;color:var(--gray-500);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
         .vc-expand-arrow{transition:transform 0.2s}
         .venue-card.expanded .vc-expand-arrow{transform:rotate(180deg)}
@@ -412,6 +413,11 @@ function renderVenues(){
         }
 
         html += '</div>';
+
+        // Note preview (ilk 3 satır, not varsa)
+        if(v.notes && v.notes.trim()){
+            html += '<div class="vc-note-preview">'+esc(v.notes)+'</div>';
+        }
 
         // Expand button
         html += '<button class="vc-expand-btn" onclick="toggleExpand(\''+v.id+'\')">';
