@@ -80,24 +80,24 @@
         .venue-grid{padding:8px 12px;display:flex;flex-direction:column;gap:8px;max-width:640px;margin:0 auto;padding-bottom:80px}
         .venue-card{background:white;border-radius:12px;border:1px solid var(--gray-100);box-shadow:0 1px 3px rgba(0,0,0,0.05);overflow:hidden;position:relative}
         .venue-card.fav{border-color:var(--gold);border-width:2px}
-        .vc-top{padding:10px 12px 6px;cursor:pointer}
-        .vc-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-        .vc-name{font-size:14px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .vc-fav{background:none;border:none;font-size:18px;cursor:pointer;padding:0;flex-shrink:0}
-        .vc-chevron{font-size:10px;color:var(--gray-400);transition:transform 0.2s;flex-shrink:0}
-        .venue-card.expanded .vc-chevron{transform:rotate(180deg)}
-        .vc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-        .vc-tags{display:flex;flex-wrap:wrap;gap:4px}
-        .vc-tag{font-size:10px;padding:2px 6px;border-radius:5px;background:var(--gray-100);color:var(--gray-600);font-weight:500}
-        .vc-note-preview{font-size:11px;color:var(--gray-500);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word;padding:0 12px 8px}
-        .vc-detail{display:none;padding:8px 12px 10px;border-top:1px solid var(--gray-100);background:var(--gray-50)}
+        .vc-top{padding:10px 12px 4px}
+        .vc-name{font-size:15px;font-weight:600;padding-right:32px;margin-bottom:2px}
+        .vc-fav{position:absolute;top:10px;right:10px;background:none;border:none;font-size:20px;cursor:pointer}
+        /* Not preview: 3 satır, son satır fade-out ile saydamlaşır */
+        .vc-note-preview{position:relative;font-size:12px;color:var(--gray-600);line-height:1.5;max-height:calc(1.5em * 3);overflow:hidden;white-space:pre-wrap;word-break:break-word;padding:4px 12px 0}
+        .vc-note-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5em;background:linear-gradient(transparent,white);pointer-events:none}
+        .vc-note-empty{font-size:11px;color:var(--gray-300);padding:4px 12px 0;font-style:italic}
+        .vc-expand-btn{width:100%;background:none;border:none;border-top:1px solid var(--gray-100);padding:6px;font-size:11px;color:var(--gray-400);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+        .vc-expand-arrow{transition:transform 0.2s}
+        .venue-card.expanded .vc-expand-arrow{transform:rotate(180deg)}
+        /* Expanded: not tam görünür, scroll edilebilir */
+        .vc-detail{display:none;padding:0 12px 8px}
         .venue-card.expanded .vc-detail{display:block}
-        .vc-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--gray-100);font-size:12px}
-        .vc-row span{color:var(--gray-500)}
-        .vc-row input{border:none;background:transparent;text-align:right;font-size:12px;font-family:inherit;width:150px}
-        .vc-row input:focus{outline:none;background:white;border-radius:4px;padding:2px 4px}
-        .vc-note{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:12px;resize:none;min-height:40px;font-family:inherit;margin-top:6px;background:white;overflow:hidden;box-sizing:border-box}
-        .vc-note:focus{outline:none;border-color:var(--gold)}
+        .vc-note-full{width:100%;font-size:12px;color:var(--gray-700);line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:calc(1.5em * 7);overflow-y:auto;padding:8px;background:var(--gray-50);border:1px solid var(--gray-100);border-radius:8px;box-sizing:border-box}
+        .vc-note-full:empty::before{content:'Henüz not eklenmemiş';color:var(--gray-300);font-style:italic}
+        .vc-note-edit{width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:8px;font-size:12px;resize:none;min-height:40px;font-family:inherit;margin-top:6px;background:white;overflow:hidden;box-sizing:border-box;display:none}
+        .vc-note-edit:focus{outline:none;border-color:var(--gold)}
+        .vc-note-edit-btn{background:none;border:none;font-size:11px;color:var(--gold);cursor:pointer;padding:4px 0;margin-top:4px}
         .vc-actions{display:flex;gap:8px;margin-top:8px}
         .vc-actions a,.vc-actions button{font-size:12px;padding:6px 12px;border-radius:7px;border:1px solid var(--gray-200);background:white;text-decoration:none;color:var(--gray-700);cursor:pointer;font-weight:500}
         .vc-actions a.ig{background:linear-gradient(135deg,#833AB4,#FD1D1D);color:white;border:none}
@@ -401,39 +401,28 @@ function renderVenues(){
         const expClass = isExpanded ? ' expanded' : '';
 
         html += '<div class="venue-card'+favClass+expClass+'" data-id="'+v.id+'">';
-        html += '<div class="vc-top" onclick="toggleExpand(\''+v.id+'\')">';
-        html += '<div class="vc-header">';
+        html += '<div class="vc-top">';
         html += '<div class="vc-name">'+esc(v.name)+'</div>';
-        html += '<button class="vc-fav" onclick="event.stopPropagation();toggleFav(\''+v.id+'\')">'+(v.favorite ? '&#11088;' : '&#9734;')+'</button>';
-        html += '<span class="vc-chevron">&#9660;</span>';
+        html += '<button class="vc-fav" onclick="toggleFav(\''+v.id+'\')">'+(v.favorite ? '&#11088;' : '&#9734;')+'</button>';
         html += '</div>';
 
-        html += '<div class="vc-meta">';
-        if(v.features && v.features.length > 0){
-            html += '<div class="vc-tags">';
-            v.features.forEach(f=>{
-                html += '<span class="vc-tag">'+esc(f)+'</span>';
-            });
-            html += '</div>';
-        }
-        html += '</div>';
-        html += '</div>';
-
-        // Note preview (collapsed'da 2 satır)
-        if(v.notes && v.notes.trim() && !isExpanded){
-            html += '<div class="vc-note-preview">'+esc(v.notes)+'</div>';
+        // Kapalı: 3 satır not preview (son satır fade-out)
+        if(!isExpanded){
+            if(v.notes && v.notes.trim()){
+                html += '<div class="vc-note-preview">'+esc(v.notes)+'</div>';
+            } else {
+                html += '<div class="vc-note-empty">Not ekle...</div>';
+            }
         }
 
-        // Detail section
+        // Açık: tam not (okunabilir, scroll) + düzenle + aksiyonlar
         html += '<div class="vc-detail">';
-        html += '<div class="vc-row"><span>Fiyat</span><input type="text" value="'+esc(v.price)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'price\',this.value)"></div>';
-        html += '<div class="vc-row"><span>Kapasite</span><input type="text" value="'+esc(v.capacity)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'capacity\',this.value)"></div>';
-        html += '<div class="vc-row"><span>İletişim</span><input type="text" value="'+esc(v.contact)+'" placeholder="Belirtilmedi" onchange="updVenue(\''+v.id+'\',\'contact\',this.value)"></div>';
-        html += '<textarea class="vc-note" placeholder="Notlar..." onchange="updVenue(\''+v.id+'\',\'notes\',this.value)">'+esc(v.notes)+'</textarea>';
+        html += '<div class="vc-note-full" id="note-display-'+v.id+'" onclick="startEditNote(\''+v.id+'\')">'+esc(v.notes||'')+'</div>';
+        html += '<textarea class="vc-note-edit" id="note-edit-'+v.id+'" placeholder="Not yaz..." onblur="finishEditNote(\''+v.id+'\',this.value)">'+esc(v.notes)+'</textarea>';
+        html += '<button class="vc-note-edit-btn" onclick="startEditNote(\''+v.id+'\')">&#9998; Notu Düzenle</button>';
 
         html += '<div class="vc-actions">';
         if(v.instagram){
-            // intent:// ile native Instagram app acilir, fallback olarak web acilir
             const igUser = v.instagram.replace(/https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,'');
             const intentUrl = 'intent://instagram.com/'+igUser+'#Intent;package=com.instagram.android;scheme=https;end';
             html += '<a class="ig" href="'+intentUrl+'" onclick="event.preventDefault();window.location.href=\'instagram://user?username='+igUser+'\';setTimeout(()=>{window.open(\''+esc(v.instagram)+'\',\'_blank\')},500)">Instagram</a>';
@@ -442,6 +431,13 @@ function renderVenues(){
         html += '</div>';
 
         html += '</div>'; // vc-detail
+
+        // Expand button — en altta, kart genişleyince aşağı kayar
+        html += '<button class="vc-expand-btn" onclick="toggleExpand(\''+v.id+'\')">';
+        html += '<span>'+(isExpanded ? 'Detayları Gizle' : 'Detayları Gör')+'</span>';
+        html += '<span class="vc-expand-arrow">&#9660;</span>';
+        html += '</button>';
+
         html += '</div>'; // venue-card
     });
 
@@ -469,6 +465,25 @@ function toggleExpand(id){
             });
         }, 10);
     }
+}
+
+function startEditNote(id){
+    const display = document.getElementById('note-display-'+id);
+    const edit = document.getElementById('note-edit-'+id);
+    if(!display || !edit) return;
+    display.style.display = 'none';
+    edit.style.display = 'block';
+    edit.style.height = 'auto';
+    edit.style.height = Math.max(edit.scrollHeight, 100) + 'px';
+    edit.focus();
+}
+
+function finishEditNote(id, val){
+    const display = document.getElementById('note-display-'+id);
+    const edit = document.getElementById('note-edit-'+id);
+    if(display) { display.textContent = val; display.style.display = 'block'; }
+    if(edit) edit.style.display = 'none';
+    updVenue(id, 'notes', val);
 }
 
 function updVenue(id, field, val){
