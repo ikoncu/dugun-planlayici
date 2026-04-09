@@ -67,30 +67,23 @@ Son güncelleme: 2026-04-09
 - **Memory dosyaları güncellendi**: feedback_plan_first.md, project_versiyon_stratejisi.md eklendi
 - **SESSION_LOG.md güncellendi**
 
-## Kritik Prensipler
-1. **Veri kaybı kabul edilemez** — her değişiklik bu filtreden geçer
-2. **Mobile first** — önce mobil, sonra masaüstü
-3. **Loading ile başla** — auth ekranını tekrar gösterme
-4. **Tek dosya / sade UI** — Firestore'a kaydet
-5. **ASCII data / Türkçe display** — trLabel() ile ayır
-6. **Akış önce, kod sonra** — non-trivial işlerde tasarım onayı al, sonra kodla
-7. **Sessiz kırılma olmasın** — hata toast ile gösterilmeli
+### Phase M — v0.5 İmplementasyon + Altyapı Temizliği (10 Nisan 2026)
+- **firestore-helpers.js** oluşturuldu: fh.init/listen/saveDoc/toast/adminRestore
+- **firebase-config.js** oluşturuldu: tek config kaynağı
+- **6 sayfa migration**: tüm sayfalar helper'a geçti (index, davetliler, gorevler, mekanlar, butce, masa-plani)
+- **Security Rules**: `request.auth != null` deploy edildi (Firebase CLI ile). 1 Mayıs expire sorunu çözüldü.
+- **Mekanlar UX**: compact kart, not preview (5 satır fade-out), expand → tam not, scroll fix, form sadeleştirme (isim+Instagram+not)
+- **Masa planı**: searchable guest dropdown (62 misafir filtre)
+- **Türkçeleştirme**: tüm nav/drawer/login ASCII → Türkçe, mekan isimleri migration
+- **E2E test**: 6 sayfa, 17 senaryo, hepsi geçti
+- **Bilgi yönetimi konsolidasyonu**:
+  - 12 dosya → 6 dosya (CLAUDE.md + BACKLOG.md + SESSION_LOG.md + 3 memory)
+  - 5 ayrı feedback dosyası → tek calisma_prensipleri.md
+  - Eski/outdated memory dosyaları kaldırıldı
+  - CLAUDE.md'ye otomatik bilgi yönetimi kuralları eklendi
 
-## Dosya Durumu
-- `index.html` — Dashboard + timeline
-- `davetliler.html` — Misafir listesi (en çok iterasyon gören dosya)
-- `gorevler.html` — Agenda stili görevler
-- `butce.html` — Yeniden yazılmış bütçe
-- `mekanlar.html` — Mekan takibi (not preview eklendi)
-- `masa-plani.html` — Masa düzeni (searchable dropdown)
-- `CLAUDE.md` — Proje kılavuzu + backlog (YENİ)
-
-## Deploy
+## Son Durum
 - Canlı: `ikoncu.github.io/dugun-planlayici`
-- Son commit: `6283556` (Phase K: gorevler hotfix)
-- Local preview: `ruby -run -e httpd . -p 8080` (launch.json)
-
-## Sonraki Session İçin
-1. CLAUDE.md backlog'daki 6 açık soruyu cevapla (throttle, authorName, test.html, config, pilot, naming)
-2. firestore-helpers.js kodlamasına geç
-3. mekanlar not preview commit'i push'la
+- Son commit: `8529a25`
+- Versiyon: v0.5
+- Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)
