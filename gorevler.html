@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
-    <script src="./firestore-helpers.js"></script>
+    <script src="./firestore-helpers.js?v=2"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -86,18 +86,23 @@
         .tlist{padding:8px 12px 100px;max-width:640px;margin:0 auto}
         .empty{text-align:center;color:var(--g400);padding:40px 16px;font-size:14px}
 
-        /* TASK CARD - AGENDA STYLE */
-        .tcard{background:white;border-radius:12px;border:1px solid var(--g100);margin-bottom:8px;overflow:hidden;transition:opacity 0.3s,border-color 0.2s}
+        /* TASK CARD - COMPACT STYLE */
+        .tcard{background:white;border-radius:12px;border:1px solid var(--g100);margin-bottom:6px;overflow:hidden;transition:opacity 0.3s,border-color 0.2s}
         .tcard.done{opacity:0.45}
         .tcard.dragging{opacity:0.5;border:2px dashed var(--gold);transform:scale(0.98)}
         .tcard.drag-over{border-top:3px solid var(--gold)}
 
-        .tc-header{display:flex;align-items:flex-start;gap:10px;padding:12px 12px 6px;cursor:pointer}
-        .tc-chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.2s}
+        .tc-header{display:flex;align-items:flex-start;gap:8px;padding:10px 10px 8px;cursor:pointer}
+        .tc-chk{width:18px;height:18px;border-radius:50%;border:2px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:all 0.2s}
         .tc-chk.on{background:var(--green);border-color:var(--green);color:white}
-        .tc-chk.on::after{content:'✓';font-size:11px;font-weight:700}
+        .tc-chk.on::after{content:'✓';font-size:10px;font-weight:700}
         .tc-body{flex:1;min-width:0}
-        .tc-title{font-size:14px;font-weight:600;color:var(--g900);line-height:1.3}
+        .tc-title{font-size:13px;font-weight:600;color:var(--g900);line-height:1.3}
+        .tc-hint-preview{font-size:11px;color:var(--g400);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tc-expand-btn{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:6px 0;border:none;border-top:1px solid var(--g100);background:none;cursor:pointer;color:var(--g400);font-size:11px;font-weight:500}
+        .tc-expand-btn:active{background:var(--g50)}
+        .tc-expand-arrow{font-size:9px;transition:transform 0.25s}
+        .tcard.open .tc-expand-arrow{transform:rotate(180deg)}
         .tcard.done .tc-title{text-decoration:line-through;color:var(--g400)}
         .tc-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
         .tc-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
@@ -114,26 +119,21 @@
         .tcard.drag-over-bot{border-bottom:3px solid var(--gold);margin-bottom:-1px}
         .drag-ghost{position:fixed;z-index:999;pointer-events:none;opacity:0.85;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2);transform:rotate(1.5deg)}
 
-        /* EXPANDABLE CONTENT - tek toggle ile acilir/kapanir */
+        /* EXPANDABLE CONTENT */
         .tc-detail{max-height:0;overflow:hidden;transition:max-height 0.25s ease}
         .tcard.open .tc-detail{max-height:800px}
-        .tc-subs{padding:4px 12px 2px 42px}
-        .tc-sub{display:flex;align-items:center;gap:8px;padding:8px 4px;border-top:1px solid var(--g50);cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px}
+        .tc-subs{padding:2px 10px 2px 36px}
+        .tc-sub{display:flex;align-items:center;gap:8px;padding:7px 4px;border-top:1px solid var(--g50);cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px}
         .tc-sub:active{background:var(--g50)}
         .tc-sub:first-child{border-top:none}
-        .tc-sub-chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+        .tc-sub-chk{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--g300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
         .tc-sub-chk.on{background:var(--green);border-color:var(--green);color:white}
-        .tc-sub-chk.on::after{content:'✓';font-size:9px;font-weight:700}
-        .tc-sub-text{font-size:13px;color:var(--g700);flex:1}
+        .tc-sub-chk.on::after{content:'✓';font-size:8px;font-weight:700}
+        .tc-sub-text{font-size:12px;color:var(--g700);flex:1}
         .tc-sub.done .tc-sub-text{text-decoration:line-through;color:var(--g400)}
-        .tc-hint{font-size:12px;color:var(--g400);padding:4px 12px 4px 42px;line-height:1.4}
-        .tc-actions{display:flex;padding:6px 12px 4px 42px;gap:8px}
-        /* EXPAND TOGGLE */
-        .tc-toggle{display:flex;align-items:center;justify-content:center;padding:6px 0 8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .tc-toggle-icon{width:28px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--g100);color:var(--g500);font-size:14px;transition:transform 0.25s,background 0.2s}
-        .tc-toggle:active .tc-toggle-icon{background:var(--gold-bg);color:var(--gold)}
-        .tcard.open .tc-toggle-icon{transform:rotate(180deg)}
-        .tc-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--g200);background:white;cursor:pointer;color:var(--g600)}
+        .tc-hint{font-size:11px;color:var(--g400);padding:2px 10px 2px 36px;line-height:1.4}
+        .tc-actions{display:flex;padding:4px 10px 6px 36px;gap:8px}
+        .tc-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:500;border:1px solid var(--g200);background:white;cursor:pointer;color:var(--g600)}
         .tc-btn:active{background:var(--g50)}
         .tc-btn-del{color:var(--red);border-color:var(--red-bg)}
 
@@ -415,11 +415,12 @@ function cardHTML(t,idx){
 
     let html='<div class="tcard'+(t.done?' done':'')+'" data-id="'+t.id+'" data-idx="'+idx+'">';
 
-    // Header - her zaman gorunur
+    // Header - compact, her zaman gorunur
     html+='<div class="tc-header" onclick="flipCard(\''+t.id+'\')">';
     html+='<div class="tc-chk'+(t.done?' on':'')+'" onclick="event.stopPropagation();togTask(\''+t.id+'\')"></div>';
     html+='<div class="tc-body">';
     html+='<div class="tc-title">'+esc(t.title)+'</div>';
+    if(t.hint) html+='<div class="tc-hint-preview">'+esc(t.hint)+'</div>';
     html+='<div class="tc-meta">';
     html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+trLabel(t.assignee||'Birlikte')+'</span>';
     if(due) html+='<span class="tc-tag tc-tag-due'+(over?' overdue':'')+'">'+due+'</span>';
@@ -429,7 +430,6 @@ function cardHTML(t,idx){
 
     // Detail - acilir/kapanir (subtasks + hint + actions)
     html+='<div class="tc-detail">';
-    if(t.hint) html+='<div class="tc-hint">'+esc(t.hint)+'</div>';
     if(subsTotal>0){
         html+='<div class="tc-subs">';
         t.subtasks.forEach(s=>{
@@ -446,8 +446,10 @@ function cardHTML(t,idx){
     html+='</div>';
     html+='</div>';
 
-    // Toggle ok
-    html+='<div class="tc-toggle" onclick="flipCard(\''+t.id+'\')"><div class="tc-toggle-icon">&#9660;</div></div>';
+    // Alt expand butonu (mekanlar ile tutarlı)
+    html+='<button class="tc-expand-btn" onclick="flipCard(\''+t.id+'\')">';
+    html+='<span class="tc-expand-arrow">&#9660;</span>';
+    html+='</button>';
 
     html+='</div>';
     return html;

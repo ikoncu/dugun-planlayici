@@ -27,6 +27,7 @@ const fh = (() => {
     let _currentUser = null;
     let _listeners = {};          // path -> unsubscribe fn
     let _lastVersionTime = {};    // path -> timestamp (throttle)
+    let _isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
     const VERSION_THROTTLE_MS = 5 * 60 * 1000;  // 5 dakika
     const MAX_VERSIONS = 30;
@@ -115,6 +116,12 @@ const fh = (() => {
             onData(data, snap);
         }, err => {
             console.error('Listen error [' + path + ']:', err);
+            if (_isLocal && err.code === 'permission-denied') {
+                // Localhost: Firestore Security Rules engeli — default data ile devam et
+                console.warn('[DEV] ' + path + ' → permission-denied, default data yükleniyor');
+                onData(null, null);
+                return;
+            }
             if (options.onError) {
                 options.onError(err);
             } else {
@@ -159,6 +166,10 @@ const fh = (() => {
                 _maybeCreateVersion(path, docRef, data, options.label || 'auto');
             }
         } catch (e) {
+            if (_isLocal && e.code === 'permission-denied') {
+                console.warn('[DEV] ' + path + ' → save atlandı (permission-denied)');
+                return; // Localhost'ta sessiz geç, UI çalışmaya devam etsin
+            }
             console.error('Save error [' + path + ']:', e);
             toast('Kaydedilemedi', 'error');
             throw e;

@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
-    <script src="./firestore-helpers.js"></script>
+    <script src="./firestore-helpers.js?v=2"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -300,7 +300,7 @@ function updateGuestTable(guestId, newTable) {
         });
     }).catch(e => {
         console.error('Transaction failed:', e);
-        showToast('Kaydedilemedi, tekrar deneyin');
+        fh.toast('Kaydedilemedi, tekrar deneyin','error');
     });
 }
 
@@ -513,7 +513,7 @@ document.addEventListener('click', (e) => {
 function addGuestToTable(tableId) {
     const hidden = document.getElementById('selval-' + tableId);
     if (!hidden || !hidden.value) {
-        showToast('Önce bir kişi seçin');
+        fh.toast('Önce bir kişi seçin','warning');
         return;
     }
     const guestId = hidden.value;
@@ -526,7 +526,7 @@ function addGuestToTable(tableId) {
 
     // Transaction ile guvenli kaydet (sadece table field'ini degistirir)
     updateGuestTable(guestId, tableId).then(()=>{
-        showToast('Misafir masaya eklendi');
+        fh.toast('Misafir masaya eklendi','success');
     });
 }
 
@@ -541,7 +541,7 @@ function removeGuestFromTable(guestId, tableId) {
 
     // Transaction ile guvenli sifirla
     updateGuestTable(guestId, '').then(()=>{
-        showToast('Misafir masadan kaldırıldı');
+        fh.toast('Misafir masadan kaldırıldı');
     });
 }
 
@@ -553,7 +553,7 @@ function addTable() {
     const newId = 't' + (maxNum + 1);
     tables.push({ id: newId, name: 'Masa ' + (maxNum + 1), capacity: 8 });
     saveTables();
-    showToast('Yeni masa eklendi');
+    fh.toast('Yeni masa eklendi','success');
 }
 
 function deleteTable(idx) {
@@ -561,12 +561,12 @@ function deleteTable(idx) {
     if (!t) return;
     const seated = guestsAtTable(t.id);
     if (seated.length > 0) {
-        showToast('Once masadaki misafirleri kaldirin');
+        fh.toast('Önce masadaki misafirleri kaldırın','warning');
         return;
     }
     tables.splice(idx, 1);
     saveTables();
-    showToast('Masa silindi');
+    fh.toast('Masa silindi');
 }
 
 function renameTable(idx, newName) {
@@ -590,13 +590,6 @@ function esc(s) {
     return d.innerHTML;
 }
 
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2000);
-}
 </script>
 </body>
 </html>

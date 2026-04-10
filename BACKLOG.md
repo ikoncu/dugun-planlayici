@@ -23,10 +23,10 @@
 
 ## 📋 Bekleyen — UX Polish
 
-- [ ] showToast kopyalarını fh.toast() ile değiştir (4 dosya, 28 kullanım)
-- [ ] Mekanlar dead code temizle (VENUE_NAME_MIGRATION artık gereksiz)
-- [ ] Görevler sayfası compact kart yapısına geçiş (mekanlar gibi)
-- [ ] Dashboard timeline tarihi dinamik güncelleme
+- [x] showToast kopyalarını fh.toast() ile değiştir (4 dosya, 25 çağrı) ✅
+- [x] Mekanlar dead code temizle (VENUE_NAME_MIGRATION kaldırıldı) ✅
+- [x] Görevler sayfası compact kart yapısına geçiş ✅
+- [x] Timeline: setInterval(60s) → visibilitychange (temiz kod) ✅
 
 ## 🗓️ Gelecek Fazlar
 
@@ -52,3 +52,4 @@
 - [ ] Firebase Blaze plan (scheduled export, PITR)
 - [ ] Staging environment
 - [ ] Onboarding akışı
+- [ ] DEFAULT_TASKS / DEFAULT_VENUES seed datalarını kaldır (hardcoded → onboarding ile dinamik)
