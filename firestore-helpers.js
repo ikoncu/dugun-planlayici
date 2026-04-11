@@ -402,6 +402,40 @@ const fh = (() => {
         });
     }
 
+    // ---- TRANSACTION: LİSTE SIRALAMA ----
+    /**
+     * List-doc'taki item sıralamasını transaction ile güvenle günceller.
+     * Drag-drop sonrası kullanılır — eş zamanlı ekleme/silme korunur.
+     */
+    async function reorderList(path, orderedIds) {
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        var parts = path.split('/');
+        var ref = _db.collection(parts[0]).doc(parts[1]);
+        return _db.runTransaction(function (t) {
+            return t.get(ref).then(function (doc) {
+                if (!doc.exists) return;
+                var currentList = doc.data().list || [];
+                // Sıralamayı orderedIds'e göre yap, yeni eklenen/silinenleri koru
+                var idMap = {};
+                currentList.forEach(function (item) { idMap[item.id] = item; });
+                var reordered = [];
+                orderedIds.forEach(function (id) {
+                    if (idMap[id]) { reordered.push(idMap[id]); delete idMap[id]; }
+                });
+                // orderedIds'te olmayan yeni item'ları sona ekle (eş zamanlı ekleme koruması)
+                Object.keys(idMap).forEach(function (id) { reordered.push(idMap[id]); });
+                t.set(ref, {
+                    list: reordered,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: _currentUser ? { uid: _currentUser.uid, name: _currentUser.displayName || 'Bilinmiyor' } : null
+                }, { merge: true });
+            });
+        }).catch(function (e) {
+            console.error('reorderList failed [' + path + ']:', e);
+            toast('Sıralama kaydedilemedi', 'error');
+        });
+    }
+
     // ---- TOAST ----
     function toast(message, type = 'info') {
         // Container yoksa oluştur
@@ -483,6 +517,7 @@ const fh = (() => {
         updateItemField,
         addItem,
         removeItem,
+        reorderList,
         toast,
         esc,
         // Internal erişim (gerektiğinde)

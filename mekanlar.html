@@ -210,8 +210,8 @@ function renderVenues(){
         html += '<button class="vc-note-edit-btn" onclick="startEditNote(\''+v.id+'\')">&#9998; Notu Düzenle</button>';
 
         html += '<div class="vc-actions">';
-        if(v.instagram){
-            html += '<a class="ig" href="'+UI.esc(v.instagram)+'" data-ig="'+UI.esc(v.instagram)+'" target="_blank" rel="noopener">Instagram</a>';
+        if(v.instagram && v.instagram.startsWith('https://')){
+            html += '<a class="ig" href="'+UI.esc(v.instagram)+'" target="_blank" rel="noopener">Instagram</a>';
         }
         html += '<button class="del" onclick="removeVenue(\''+v.id+'\')">Sil</button>';
         html += '</div>';

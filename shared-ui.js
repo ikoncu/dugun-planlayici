@@ -35,8 +35,9 @@ window.UI = (function () {
 
     // ── Drawer Toggle ────────────────────────────────────────────
     function toggleDrawer() {
-        document.getElementById('drawer').classList.toggle('open');
+        var isOpen = document.getElementById('drawer').classList.toggle('open');
         document.getElementById('drawer-overlay').classList.toggle('open');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
     }
 
     // ── Inject: Login Ekranı ─────────────────────────────────────

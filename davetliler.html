@@ -383,10 +383,6 @@ function startListening(){
     });
 }
 
-function saveToFirestore(){
-    fh.saveDoc('shared/guests', {list: guests});
-}
-
 // --- BACKUP SISTEMI (fh.history entegrasyonu) ---
 function createBackup(reason){
     return fh.forceVersion('shared/guests', reason || 'Manuel')
@@ -1012,7 +1008,7 @@ function gOnTouchEnd(e){
                 const rect=target.getBoundingClientRect();
                 const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
                 guests.splice(insertIdx>gDragState.srcIdx?insertIdx-1:insertIdx,0,item);
-                saveToFirestore();
+                fh.reorderList('shared/guests', guests.map(function(g){return g.id;}));
                 renderList();
             }
         }
@@ -1100,7 +1096,7 @@ function gOnMouseUp(e){
                 const rect=target.getBoundingClientRect();
                 const insertIdx=e.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
                 guests.splice(insertIdx>gDragState.srcIdx?insertIdx-1:insertIdx,0,item);
-                saveToFirestore();
+                fh.reorderList('shared/guests', guests.map(function(g){return g.id;}));
                 renderList();
             }
         }
