@@ -65,7 +65,7 @@
         .gside-damat{background:var(--blue-bg);color:var(--blue)}
         .gmeta{font-size:11px;color:var(--gray-500);margin-top:1px;display:flex;gap:8px;flex-wrap:wrap}
         .grsvp{flex-shrink:0}
-        .rsvp-chip{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:transform 0.1s}
+        .rsvp-chip{padding:8px 12px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:transform 0.1s;min-height:36px;display:inline-flex;align-items:center}
         .rsvp-chip:active{transform:scale(0.93)}
         .rsvp-beklemede{background:var(--orange-bg);color:var(--orange)}
         .rsvp-katilacak{background:var(--green-bg);color:var(--green)}
@@ -224,7 +224,7 @@
 
     <!-- SEARCH & FILTER & SORT -->
     <div class="search-strip">
-        <input type="text" class="search-input" id="search-input" placeholder="Davetli ara..." oninput="renderList()">
+        <input type="text" class="search-input" id="search-input" placeholder="Davetli ara..." oninput="debouncedSearch()">
         <div class="filter-sort-row">
             <div class="filter-row">
                 <button class="filter-btn active" data-f="all" onclick="setFilter('all',this)">Hepsi</button>
@@ -489,14 +489,18 @@ function sortGuests(list){
 
 // ── VIRTUAL SCROLL ──────────────────────────────────────────
 const CARD_H = 72;        // Collapsed kart yüksekliği (px)
-const CARD_OPEN_H = 220;  // Expanded kart tahmini yüksekliği (px)
+const CARD_OPEN_H = 220;  // Expanded kart varsayılan yüksekliği (px)
 const CARD_GAP = 6;       // margin-bottom
 const VS_BUFFER = 8;      // Görünür alanın üst/altına ekstra render
 let vsFiltered = [];       // Filtrelenmiş + sıralanmış sonuç
 let vsScrollRAF = null;    // requestAnimationFrame id
+let vsHeightCache = {};    // Açık kartların gerçek yükseklik cache'i: {id: px}
 
 function getItemH(g) {
-    return (openCardId === g.id ? CARD_OPEN_H : CARD_H) + CARD_GAP;
+    if(openCardId === g.id) {
+        return (vsHeightCache[g.id] || CARD_OPEN_H) + CARD_GAP;
+    }
+    return CARD_H + CARD_GAP;
 }
 
 function buildCardHTML(g) {
@@ -534,6 +538,13 @@ function buildCardHTML(g) {
 }
 
 // Render: filtre + sort → vsFiltered, sonra vsRender çağır
+// Search debounce — 300+ davetlide performans için
+let _searchTimer = null;
+function debouncedSearch(){
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(renderList, 150);
+}
+
 function renderList(){
     const q = (document.getElementById('search-input').value||'').toLowerCase().trim();
     let filtered = guests.filter(g=>{
@@ -637,7 +648,17 @@ function trLabel(s){return UI.trLabel(s);}
 
 function toggleCard(id){
     openCardId = openCardId===id ? null : id;
-    vsRender(); // Full renderList gerekmez, sadece görünür kartları yeniden çiz
+    vsRender();
+    // Açık kartın gerçek yüksekliğini ölç ve cache'le
+    if(openCardId){
+        requestAnimationFrame(function(){
+            var card = document.querySelector('.gcard[data-id="'+openCardId+'"]');
+            if(card) {
+                vsHeightCache[openCardId] = card.offsetHeight;
+                vsRender(); // Pozisyonları gerçek yükseklikle güncelle
+            }
+        });
+    }
 }
 
 // RSVP cycle
@@ -702,6 +723,7 @@ function openAddModal(){
     document.getElementById('f-table').value='';
     document.getElementById('f-note').value='';
     document.getElementById('modal-guest').classList.add('show');
+    document.body.style.overflow = 'hidden';
     modalSnapshot = captureModalSnapshot();
 }
 
@@ -722,6 +744,7 @@ function openEditModal(id){
     document.getElementById('f-table').value=g.table||'';
     document.getElementById('f-note').value=g.note||'';
     document.getElementById('modal-guest').classList.add('show');
+    document.body.style.overflow = 'hidden';
     modalSnapshot = captureModalSnapshot();
 }
 
@@ -736,6 +759,7 @@ function tryCloseModal(){
 
 function closeModal(){
     document.getElementById('modal-guest').classList.remove('show');
+    document.body.style.overflow = '';
     modalSnapshot = null;
 }
 

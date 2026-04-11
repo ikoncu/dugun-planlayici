@@ -157,13 +157,6 @@ function startListen(){
     }});
 }
 
-function saveVenues(){
-    fh.saveDoc('shared/venues', {list: venues}).catch(e=>{
-        console.error('Save error:',e);
-        fh.toast('Kaydedilemedi','error');
-    });
-}
-
 function sortedVenues(){
     return [...venues].sort((a,b)=>{
         if(a.favorite && !b.favorite) return -1;
@@ -234,7 +227,7 @@ function toggleFav(id){
     const v = venues.find(x=>x.id===id);
     if(v){
         v.favorite = !v.favorite;
-        saveVenues();
+        fh.updateItemField('shared/venues', id, {favorite: v.favorite});
         fh.toast(v.favorite ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı');
     }
 }
@@ -273,7 +266,8 @@ function updVenue(id, field, val){
     const v = venues.find(x=>x.id===id);
     if(v && v[field] !== val){
         v[field] = val;
-        saveVenues();
+        var update = {}; update[field] = val;
+        fh.updateItemField('shared/venues', id, update);
         fh.toast('Kaydedildi','success');
     }
 }
@@ -284,7 +278,7 @@ function removeVenue(id){
     if(!confirm(v.name + ' silinsin mi?')) return;
     venues = venues.filter(x=>x.id!==id);
     if(expandedId === id) expandedId = null;
-    saveVenues();
+    fh.removeItem('shared/venues', id);
     fh.toast('Mekan silindi');
 }
 
@@ -320,7 +314,7 @@ function saveNewVenue(){
     };
 
     venues.push(newVenue);
-    saveVenues();
+    fh.addItem('shared/venues', newVenue);
     document.getElementById('modal-overlay').classList.remove('open');
     fh.toast('Mekan eklendi','success');
 }

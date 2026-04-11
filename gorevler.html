@@ -72,10 +72,10 @@
         .tc-detail{max-height:0;overflow:hidden;transition:max-height 0.25s ease}
         .tcard.open .tc-detail{max-height:800px}
         .tc-subs{padding:2px 10px 2px 36px}
-        .tc-sub{display:flex;align-items:center;gap:8px;padding:7px 4px;border-top:1px solid var(--gray-50);cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px}
+        .tc-sub{display:flex;align-items:center;gap:8px;padding:10px 4px;border-top:1px solid var(--gray-50);cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px;min-height:44px}
         .tc-sub:active{background:var(--gray-50)}
         .tc-sub:first-child{border-top:none}
-        .tc-sub-chk{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--gray-300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+        .tc-sub-chk{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--gray-300);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
         .tc-sub-chk.on{background:var(--green);border-color:var(--green);color:white}
         .tc-sub-chk.on::after{content:'✓';font-size:8px;font-weight:700}
         .tc-sub-text{font-size:12px;color:var(--gray-700);flex:1}
@@ -152,7 +152,7 @@
 
     <!-- SEARCH -->
     <div class="search-bar">
-        <input type="text" class="search-input" id="qi" placeholder="Görev ara..." oninput="renderList()">
+        <input type="text" class="search-input" id="qi" placeholder="Görev ara..." oninput="debouncedSearch()">
     </div>
 
     <!-- TASK LIST -->
@@ -220,8 +220,11 @@ function startListening(){
     });
 }
 
-function save(){
-    fh.saveDoc('shared/planner_tasks', {list: tasks});
+// Search debounce
+let _searchTimer = null;
+function debouncedSearch(){
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(render, 150);
 }
 
 // RENDER
@@ -315,14 +318,14 @@ function cardHTML(t,idx){
 // INTERACTIONS
 function togTask(id){
     const t=tasks.find(x=>x.id===id);
-    if(t){t.done=!t.done; save();}
+    if(t){t.done=!t.done; fh.updateItemField('shared/planner_tasks', id, {done:t.done});}
 }
 
 function togSub(taskId,subId){
     const t=tasks.find(x=>x.id===taskId);
     if(t&&t.subtasks){
         const s=t.subtasks.find(x=>x.id===subId);
-        if(s){s.done=!s.done; save();}
+        if(s){s.done=!s.done; fh.updateItemField('shared/planner_tasks', taskId, {subtasks:t.subtasks});}
     }
 }
 
@@ -336,7 +339,7 @@ function delTaskConfirm(id){
     const name=t?t.title:'Bu görev';
     if(confirm(name+' silinsin mi?')){
         tasks=tasks.filter(t=>t.id!==id);
-        save();
+        fh.removeItem('shared/planner_tasks', id);
     }
 }
 
@@ -435,18 +438,22 @@ function saveTask(){
             t.due=document.getElementById('me-due').value;
             t.note=document.getElementById('me-note').value.trim();
             t.subtasks=subs;
+            fh.updateItemField('shared/planner_tasks', editId, {
+                title:t.title, hint:t.hint, assignee:t.assignee, due:t.due, note:t.note, subtasks:t.subtasks
+            });
         }
     } else {
-        tasks.push({
+        const newTask = {
             id:'t'+Date.now(),
             title, hint:document.getElementById('me-hint').value.trim(),
             done:false, due:document.getElementById('me-due').value,
             assignee:document.getElementById('me-asg').value,
             note:document.getElementById('me-note').value.trim(),
             subtasks:subs
-        });
+        };
+        tasks.push(newTask);
+        fh.addItem('shared/planner_tasks', newTask);
     }
-    save();
     closeModal();
 }
 
@@ -456,7 +463,7 @@ function delTask(){
         const name=t?t.title:'Bu görev';
         if(confirm(name+' silinsin mi?')){
             tasks=tasks.filter(t=>t.id!==editId);
-            save();
+            fh.removeItem('shared/planner_tasks', editId);
             closeModal();
         }
     }
@@ -564,7 +571,7 @@ function onTouchEnd(e){
                 const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
                 src.splice(insertIdx>dragState.srcIdx?insertIdx-1:insertIdx,0,item);
                 tasks=src;
-                save();
+                fh.reorderList('shared/planner_tasks', tasks.map(function(t){return t.id;}));
             }
         }
     }
