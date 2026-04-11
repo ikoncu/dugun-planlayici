@@ -48,7 +48,8 @@
         .filter-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
 
         /* GUEST LIST */
-        .glist{padding:8px 12px 120px;max-width:640px;margin:0 auto}
+        .glist{padding:8px 12px 0;max-width:640px;margin:0 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
+        .glist-spacer{position:relative}
         .gcard{background:white;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:border-color 0.15s}
         .gcard.dragging{opacity:0.4;transform:scale(0.97)}
         .gcard.drag-over-top{border-top:3px solid var(--gold);margin-top:-1px}
@@ -363,6 +364,7 @@ let deleteTargetId = null;
 function startListening(){
     fh.listen('shared/guests', (data, snap) => {
         UI.showApp();
+        vsBindScroll();
         if(data && data.list && data.list.length > 0){
             guests = data.list;
         } else {
@@ -489,10 +491,55 @@ function sortGuests(list){
     }
 }
 
-// Render guest list
+// ── VIRTUAL SCROLL ──────────────────────────────────────────
+const CARD_H = 72;        // Collapsed kart yüksekliği (px)
+const CARD_OPEN_H = 220;  // Expanded kart tahmini yüksekliği (px)
+const CARD_GAP = 6;       // margin-bottom
+const VS_BUFFER = 8;      // Görünür alanın üst/altına ekstra render
+let vsFiltered = [];       // Filtrelenmiş + sıralanmış sonuç
+let vsScrollRAF = null;    // requestAnimationFrame id
+
+function getItemH(g) {
+    return (openCardId === g.id ? CARD_OPEN_H : CARD_H) + CARD_GAP;
+}
+
+function buildCardHTML(g) {
+    const isOpen = openCardId===g.id;
+    const initials = g.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const sideClass = g.side==='Gelin'?'gside-gelin':'gside-damat';
+    const rsvpClass = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
+    const rsvpLabel = trLabel(g.rsvp);
+    let h = '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'" data-idx="'+guests.indexOf(g)+'" style="position:absolute;left:0;right:0">';
+    h += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
+    h += '<div class="gavatar">'+initials+'</div>';
+    h += '<div class="ginfo">';
+    h += '<div class="gname">'+UI.esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
+    h += '<div class="gmeta">';
+    if(g.phone) h += '<span>'+UI.esc(g.phone)+'</span>';
+    h += '<span>'+g.adults+' yetişkin'+(g.children>0?', '+g.children+' çocuk':'')+'</span>';
+    h += '</div></div>';
+    h += '<div class="grsvp"><button class="rsvp-chip '+rsvpClass+'" onclick="event.stopPropagation();cycleRsvp(\''+g.id+'\')">'+rsvpLabel+'</button></div>';
+    h += '<div class="garrow">&#x25BC;</div>';
+    h += '</div>';
+    h += '<div class="gdetail">';
+    h += '<div class="gdetail-grid">';
+    h += '<div class="gd-item"><div class="gd-label">Davetiye</div><div class="gd-val">'+trLabel(g.invited||'Gonderilmedi')+'</div></div>';
+    h += '<div class="gd-item"><div class="gd-label">Masa</div><div class="gd-val">'+(g.table||'-')+'</div></div>';
+    h += '<div class="gd-item"><div class="gd-label">Grup</div><div class="gd-val">'+(g.group||'-')+'</div></div>';
+    h += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kişi</div></div>';
+    h += '</div>';
+    if(g.note) h += '<div class="gnote">'+UI.esc(g.note)+'</div>';
+    h += '<div class="gbtns">';
+    h += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Düzenle</button>';
+    h += '<button class="gbtn-del" onclick="event.stopPropagation();askDelete(\''+g.id+'\')">Sil</button>';
+    h += '</div></div>';
+    h += '</div>';
+    return h;
+}
+
+// Render: filtre + sort → vsFiltered, sonra vsRender çağır
 function renderList(){
     const q = (document.getElementById('search-input').value||'').toLowerCase().trim();
-    const container = document.getElementById('glist');
     let filtered = guests.filter(g=>{
         if(activeFilter!=='all' && g.side!==activeFilter) return false;
         if(q){
@@ -501,50 +548,90 @@ function renderList(){
         }
         return true;
     });
-    filtered = sortGuests(filtered);
+    vsFiltered = sortGuests(filtered);
 
-    if(filtered.length===0){
+    const container = document.getElementById('glist');
+    if(vsFiltered.length===0){
         container.innerHTML = '<div class="empty-msg">Davetli bulunamadı</div>';
         return;
     }
 
-    let html = '';
-    filtered.forEach(g=>{
-        const isOpen = openCardId===g.id;
-        const initials = g.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-        const sideClass = g.side==='Gelin'?'gside-gelin':'gside-damat';
-        const rsvpClass = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
-        const rsvpLabel = trLabel(g.rsvp);
+    // Spacer div yoksa oluştur
+    if(!container.querySelector('.glist-spacer')){
+        container.innerHTML = '<div class="glist-spacer"></div>';
+    }
 
-        html += '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'" data-idx="'+guests.indexOf(g)+'">';
-        html += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
-        html += '<div class="gavatar">'+initials+'</div>';
-        html += '<div class="ginfo">';
-        html += '<div class="gname">'+UI.esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
-        html += '<div class="gmeta">';
-        if(g.phone) html += '<span>'+UI.esc(g.phone)+'</span>';
-        html += '<span>'+g.adults+' yetişkin'+(g.children>0?', '+g.children+' çocuk':'')+'</span>';
-        html += '</div></div>';
-        html += '<div class="grsvp"><button class="rsvp-chip '+rsvpClass+'" onclick="event.stopPropagation();cycleRsvp(\''+g.id+'\')">'+rsvpLabel+'</button></div>';
-        html += '<div class="garrow">&#x25BC;</div>';
-        html += '</div>';
+    vsRender();
+}
 
-        // Detail
-        html += '<div class="gdetail">';
-        html += '<div class="gdetail-grid">';
-        html += '<div class="gd-item"><div class="gd-label">Davetiye</div><div class="gd-val">'+trLabel(g.invited||'Gonderilmedi')+'</div></div>';
-        html += '<div class="gd-item"><div class="gd-label">Masa</div><div class="gd-val">'+(g.table||'-')+'</div></div>';
-        html += '<div class="gd-item"><div class="gd-label">Grup</div><div class="gd-val">'+(g.group||'-')+'</div></div>';
-        html += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kişi</div></div>';
-        html += '</div>';
-        if(g.note) html += '<div class="gnote">'+UI.esc(g.note)+'</div>';
-        html += '<div class="gbtns">';
-        html += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Düzenle</button>';
-        html += '<button class="gbtn-del" onclick="event.stopPropagation();askDelete(\''+g.id+'\')">Sil</button>';
-        html += '</div></div>';
-        html += '</div>';
+// Virtual scroll: sadece görünür kartları çiz
+function vsRender(){
+    const container = document.getElementById('glist');
+    const spacer = container.querySelector('.glist-spacer');
+    if(!spacer || vsFiltered.length===0) return;
+
+    // Toplam yükseklik hesapla
+    let totalH = 0;
+    const offsets = [];
+    vsFiltered.forEach(g => {
+        offsets.push(totalH);
+        totalH += getItemH(g);
     });
-    container.innerHTML = html;
+    spacer.style.height = totalH + 120 + 'px'; // +120 alt padding (bnav + fab)
+
+    // Görünür aralığı bul
+    const scrollTop = container.scrollTop;
+    const viewH = container.clientHeight;
+    let startIdx = 0, endIdx = vsFiltered.length - 1;
+
+    // Binary search ile başlangıç bul
+    for(let i = 0; i < vsFiltered.length; i++){
+        if(offsets[i] + getItemH(vsFiltered[i]) > scrollTop){ startIdx = i; break; }
+    }
+    for(let i = startIdx; i < vsFiltered.length; i++){
+        if(offsets[i] > scrollTop + viewH){ endIdx = i; break; }
+    }
+
+    // Buffer ekle
+    startIdx = Math.max(0, startIdx - VS_BUFFER);
+    endIdx = Math.min(vsFiltered.length - 1, endIdx + VS_BUFFER);
+
+    // Sadece görünür kartları render et
+    let html = '';
+    for(let i = startIdx; i <= endIdx; i++){
+        const g = vsFiltered[i];
+        const card = buildCardHTML(g);
+        // top pozisyonunu style'a ekle
+        html += card.replace('style="position:absolute;left:0;right:0"',
+            'style="position:absolute;left:0;right:0;top:'+offsets[i]+'px"');
+    }
+    spacer.innerHTML = html;
+}
+
+// Scroll event — throttled with rAF
+function vsOnScroll(){
+    if(vsScrollRAF) return;
+    vsScrollRAF = requestAnimationFrame(()=>{
+        vsScrollRAF = null;
+        vsRender();
+    });
+}
+
+// glist scroll listener kurulumu (bir kez)
+let vsScrollBound = false;
+function vsBindScroll(){
+    if(vsScrollBound) return;
+    const container = document.getElementById('glist');
+    if(!container) return;
+    container.addEventListener('scroll', vsOnScroll, {passive: true});
+    vsScrollBound = true;
+    // glist yüksekliğini viewport'a göre ayarla
+    function setGlistHeight(){
+        const rect = container.getBoundingClientRect();
+        container.style.height = (window.innerHeight - rect.top - 56) + 'px'; // 56 = bnav
+    }
+    setGlistHeight();
+    window.addEventListener('resize', setGlistHeight);
 }
 
 // Veri degeri -> Turkce gosterim
@@ -552,7 +639,7 @@ function trLabel(s){return UI.trLabel(s);}
 
 function toggleCard(id){
     openCardId = openCardId===id ? null : id;
-    renderList();
+    vsRender(); // Full renderList gerekmez, sadece görünür kartları yeniden çiz
 }
 
 // RSVP cycle
