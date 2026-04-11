@@ -8,33 +8,21 @@
 window.UI = (function () {
     // ── Sayfa Tanımları ──────────────────────────────────────────
     const PAGES = [
-        { id: 'index',      path: 'index.html',      title: 'Ana Sayfa',   icon: '🏠', bnavIcon: '🏠', bnav: true, drawer: true },
-        { id: 'gorevler',   path: 'gorevler.html',    title: 'Görevler',    icon: '📋', bnavIcon: '✅', bnav: true, drawer: true },
-        { id: 'mekanlar',   path: 'mekanlar.html',    title: 'Mekanlar',    icon: '🏛️', bnavIcon: '🏛️', bnav: true, drawer: true },
-        { id: 'davetliler', path: 'davetliler.html',  title: 'Davetliler',  icon: '👥', bnavIcon: '👥', bnav: true, drawer: true },
-        { id: 'masa-plani', path: 'masa-plani.html',  title: 'Masa Planı',  icon: '🪑', bnavIcon: '🪑', bnav: true, drawer: true },
+        { id: 'index',      path: 'index.html',      title: 'Ana Sayfa',   icon: '🏠', bnavIcon: '🏠', bnav: false, drawer: true },
+        { id: 'gorevler',   path: 'gorevler.html',    title: 'Görevler',    icon: '📋', bnavIcon: '✅', bnav: true,  drawer: true },
+        { id: 'mekanlar',   path: 'mekanlar.html',    title: 'Mekanlar',    icon: '🏛️', bnavIcon: '🏛️', bnav: true,  drawer: true },
+        { id: 'davetliler', path: 'davetliler.html',  title: 'Davetliler',  icon: '👥', bnavIcon: '👥', bnav: true,  drawer: true },
+        { id: 'masa-plani', path: 'masa-plani.html',  title: 'Masa Planı',  icon: '🪑', bnavIcon: '🪑', bnav: true,  drawer: true },
     ];
+
+    var _currentUser = null;
 
     // ── XSS Escape ───────────────────────────────────────────────
     function esc(s) {
         if (!s) return '';
-        const d = document.createElement('div');
+        var d = document.createElement('div');
         d.textContent = s;
         return d.innerHTML;
-    }
-
-    // ── Avatar ───────────────────────────────────────────────────
-    function renderAvatar(user) {
-        const c = document.getElementById('user-avatar-container');
-        const n = document.getElementById('user-name');
-        if (!c) return;
-        if (user.photoURL) {
-            c.innerHTML = '<img class="user-avatar" src="' + user.photoURL + '" referrerpolicy="no-referrer">';
-        } else {
-            const init = (user.displayName || user.email || '?')[0].toUpperCase();
-            c.innerHTML = '<div class="user-avatar-fallback">' + init + '</div>';
-        }
-        if (n) n.textContent = user.displayName || user.email || '';
     }
 
     // ── Drawer Toggle ────────────────────────────────────────────
@@ -42,21 +30,6 @@ window.UI = (function () {
         document.getElementById('drawer').classList.toggle('open');
         document.getElementById('drawer-overlay').classList.toggle('open');
     }
-
-    // ── Dropdown Toggle ──────────────────────────────────────────
-    function toggleDropdown() {
-        document.getElementById('user-dropdown').classList.toggle('open');
-    }
-
-    // Outside-click: dropdown kapat
-    document.addEventListener('click', function (e) {
-        var dd = document.getElementById('user-dropdown');
-        if (dd && dd.classList.contains('open')) {
-            if (!e.target.closest('#user-avatar-container') && !e.target.closest('.user-dropdown')) {
-                dd.classList.remove('open');
-            }
-        }
-    });
 
     // ── Inject: Login Ekranı ─────────────────────────────────────
     function injectLogin(title, subtitle) {
@@ -83,7 +56,7 @@ window.UI = (function () {
             '<div style="font-size:14px;color:var(--g500,#6b7280)">Yükleniyor...</div>';
     }
 
-    // ── Inject: Bottom Nav ───────────────────────────────────────
+    // ── Inject: Bottom Nav (4 link, Ana Sayfa hariç) ─────────────
     function injectBnav(pageId) {
         var el = document.getElementById('bnav');
         if (!el) return;
@@ -97,7 +70,7 @@ window.UI = (function () {
         el.innerHTML = html;
     }
 
-    // ── Inject: Drawer ───────────────────────────────────────────
+    // ── Inject: Drawer (profil üstte, çıkış altta) ──────────────
     function injectDrawer(pageId) {
         // Overlay
         var overlay = document.getElementById('drawer-overlay');
@@ -116,30 +89,54 @@ window.UI = (function () {
             drawer.id = 'drawer';
             document.body.appendChild(drawer);
         }
-        var html = '<div class="drawer-header">💍 Düğün Planlayıcı</div>';
+        // Profil bölümü (auth sonrası güncellenir)
+        var html = '<div class="drawer-profile" id="drawer-profile">' +
+            '<div class="dp-avatar" id="dp-avatar"></div>' +
+            '<div class="dp-name" id="dp-name">Yükleniyor...</div>' +
+        '</div>';
+        // Sayfa linkleri
         html += '<div class="drawer-section">Sayfalar</div>';
         PAGES.forEach(function (p) {
             if (!p.drawer) return;
             var cls = p.id === pageId ? ' active' : '';
             html += '<a class="drawer-item' + cls + '" href="' + p.path + '"><span class="di-icon">' + p.icon + '</span>' + p.title + '</a>';
         });
+        // Çıkış butonu en altta
+        html += '<div class="drawer-spacer"></div>';
+        html += '<button class="drawer-logout" onclick="fh.signOut()">Çıkış Yap</button>';
+
         drawer.innerHTML = html;
     }
 
+    // ── Drawer'daki profili güncelle ─────────────────────────────
+    function _updateDrawerProfile(user) {
+        var avatar = document.getElementById('dp-avatar');
+        var name = document.getElementById('dp-name');
+        if (!avatar || !name) return;
+        if (user.photoURL) {
+            avatar.innerHTML = '<img class="dp-img" src="' + user.photoURL + '" referrerpolicy="no-referrer">';
+        } else {
+            var init = (user.displayName || user.email || '?')[0].toUpperCase();
+            avatar.innerHTML = '<div class="dp-fallback">' + init + '</div>';
+        }
+        name.textContent = user.displayName || user.email || '';
+    }
+
     // ── Auth Flow ────────────────────────────────────────────────
-    // Standardize: loading görünür → auth kontrol → login veya app
     function setupAuth(config) {
         fh.init();
         fh.onAuth({
             onLogin: function (user) {
+                _currentUser = user;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('loading-screen').style.display = 'flex';
                 var bnav = document.getElementById('bnav');
                 if (bnav) bnav.style.display = 'flex';
-                renderAvatar(user);
+                _updateDrawerProfile(user);
                 if (config && config.onLogin) config.onLogin(user);
             },
             onLogout: function () {
+                _currentUser = null;
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('app').style.display = 'none';
                 var bnav = document.getElementById('bnav');
@@ -159,9 +156,7 @@ window.UI = (function () {
     return {
         PAGES: PAGES,
         esc: esc,
-        renderAvatar: renderAvatar,
         toggleDrawer: toggleDrawer,
-        toggleDropdown: toggleDropdown,
         injectLogin: injectLogin,
         injectLoading: injectLoading,
         injectBnav: injectBnav,

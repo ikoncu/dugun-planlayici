@@ -36,16 +36,12 @@
 
         /* HEADER */
         .header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:12px 16px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
-        .header-row{display:flex;align-items:center;gap:12px}
+        .header-row{display:flex;align-items:center;justify-content:space-between}
         .header-back{color:rgba(255,255,255,0.7);font-size:20px;text-decoration:none;display:flex;align-items:center}
-        .header h1{font-size:17px;font-weight:700;flex:1}
+        .header h1{font-size:17px;font-weight:700;flex:1;text-align:center}
         .header-right{display:flex;gap:6px;align-items:center}
-        .user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);object-fit:cover;cursor:pointer}
-        .user-avatar-fallback{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;cursor:pointer}
-        .user-dropdown{position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:200;overflow:hidden;display:none}
-        .user-dropdown.open{display:block}
-        .user-dropdown-name{padding:12px 14px;font-size:13px;font-weight:600;color:var(--gray-900);border-bottom:1px solid var(--gray-100)}
-        .user-dropdown button{width:100%;padding:10px 14px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:var(--red)}
+        .header-logo{text-decoration:none;color:white;font-size:12px;font-weight:600;padding:4px 8px;border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;white-space:nowrap;letter-spacing:1px;width:56px;text-align:center}
+        .header-logo:active{opacity:0.7}
 
         /* DASHBOARD */
         .dashboard{padding:12px 16px;background:white;border-bottom:1px solid var(--gray-200)}
@@ -156,13 +152,19 @@
         .bnav .bicon{font-size:18px}
 
         /* HAMBURGER & DRAWER */
-        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;opacity:0.8}
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;width:56px;text-align:center}
         .hamburger:hover{opacity:1}
         .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
         .drawer-overlay.open{display:block}
-        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto}
+        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;box-shadow:-4px 0 20px rgba(0,0,0,0.15);overflow-y:auto;display:flex;flex-direction:column}
         .drawer.open{right:0}
-        .drawer-header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
+        .drawer-profile{display:flex;align-items:center;gap:12px;padding:20px 16px;background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white}
+        .dp-img{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold-light)}
+        .dp-fallback{width:40px;height:40px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white}
+        .dp-name{font-size:14px;font-weight:600}
+        .drawer-spacer{flex:1}
+        .drawer-logout{width:calc(100% - 32px);margin:12px 16px;padding:12px;border:1px solid var(--gray-200);border-radius:10px;background:none;color:var(--red);font-size:14px;font-weight:500;cursor:pointer;text-align:center}
+        .drawer-logout:active{background:var(--red-bg)}
         .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100);text-decoration:none;color:var(--gray-900);font-size:14px;font-weight:500}
         .drawer-item:active{background:var(--gray-50)}
         .drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
@@ -235,13 +237,7 @@
     <!-- HEADER -->
     <div class="header">
         <div class="header-row">
-            <div style="position:relative">
-                <div id="user-avatar-container" onclick="UI.toggleDropdown()"></div>
-                <div class="user-dropdown" id="user-dropdown">
-                    <div class="user-dropdown-name" id="user-name"></div>
-                    <button onclick="fh.signOut()">Çıkış Yap</button>
-                </div>
-            </div>
+            <a href="index.html" class="header-logo">H 💞 İ</a>
             <h1>Davetliler</h1>
             <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
