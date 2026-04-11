@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Görevler - Düğün Planlayıcı</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -654,8 +654,7 @@ function fmtDue(d){
 }
 
 // Veri degeri -> Turkce gosterim
-const TR_LABELS={'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte'};
-function trLabel(s){return TR_LABELS[s]||s;}
+function trLabel(s){return UI.trLabel(s);}
 </script>
 </body>
 </html>

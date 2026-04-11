@@ -25,6 +25,14 @@ window.UI = (function () {
         return d.innerHTML;
     }
 
+    // ── Türkçe Etiket Dönüşümü ─────────────────────────────────
+    var TR_LABELS = {
+        'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte',
+        'Katilacak':'Katılacak','Katilmayacak':'Katılmayacak','Beklemede':'Beklemede',
+        'Gonderildi':'Gönderildi','Gonderilmedi':'Gönderilmedi'
+    };
+    function trLabel(s) { return TR_LABELS[s] || s; }
+
     // ── Drawer Toggle ────────────────────────────────────────────
     function toggleDrawer() {
         document.getElementById('drawer').classList.toggle('open');
@@ -156,6 +164,7 @@ window.UI = (function () {
     return {
         PAGES: PAGES,
         esc: esc,
+        trLabel: trLabel,
         toggleDrawer: toggleDrawer,
         injectLogin: injectLogin,
         injectLoading: injectLoading,

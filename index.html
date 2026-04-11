@@ -466,8 +466,7 @@ function fmtDue(d) {
 
 
 // Veri degeri -> Turkce gosterim
-const TR_LABELS = {'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte','Katilacak':'Katılacak','Katilmayacak':'Katılmayacak','Beklemede':'Beklemede','Gonderildi':'Gönderildi','Gonderilmedi':'Gönderilmedi'};
-function trLabel(s){return TR_LABELS[s]||s;}
+function trLabel(s){return UI.trLabel(s);}
 
 // Gün bazlı geri sayım — sayfa tekrar görünür olduğunda güncelle (polling yok)
 document.addEventListener('visibilitychange', () => {

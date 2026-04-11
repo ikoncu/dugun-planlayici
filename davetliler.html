@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Davetliler - Düğün Planlayıcı</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -601,17 +601,7 @@ function renderList(){
 }
 
 // Veri degeri -> Turkce gosterim
-const TR_LABELS = {
-    'Katilacak':'Katılacak',
-    'Katilmayacak':'Katılmayacak',
-    'Beklemede':'Beklemede',
-    'Gonderildi':'Gönderildi',
-    'Gonderilmedi':'Gönderilmedi',
-    'Ibrahim':'İbrahim',
-    'Hilal':'Hilal',
-    'Birlikte':'Birlikte'
-};
-function trLabel(s){return TR_LABELS[s]||s;}
+function trLabel(s){return UI.trLabel(s);}
 
 function toggleCard(id){
     openCardId = openCardId===id ? null : id;
@@ -751,12 +741,23 @@ function saveGuest(){
 
     if(id){
         const idx = guests.findIndex(x=>x.id===id);
+        const backup = idx>=0 ? Object.assign({}, guests[idx]) : null;
         if(idx>=0) guests[idx]=obj;
-        // Transaction ile güvenli güncelleme
-        fh.updateItemField('shared/guests', id, obj);
+        // Transaction ile güvenli güncelleme — hata olursa geri al
+        fh.updateItemField('shared/guests', id, {
+            name: obj.name, side: obj.side, group: obj.group, phone: obj.phone,
+            adults: obj.adults, children: obj.children, total: obj.total,
+            invited: obj.invited, rsvp: obj.rsvp, table: obj.table, note: obj.note
+        }).then(function() {
+            closeModal();
+        }).catch(function() {
+            if(backup && idx>=0) guests[idx] = backup; // Rollback
+            renderList();
+        });
+        return; // Modal henüz kapanmasın, transaction sonucunu bekle
     } else {
         guests.push(obj);
-        saveToFirestore(); // Yeni ekleme: full write (transaction gerekmez)
+        saveToFirestore();
     }
     closeModal();
 }

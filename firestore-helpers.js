@@ -130,6 +130,16 @@ const fh = (() => {
             console.error('Listen error [' + path + ']:', err);
             if (options.onError) {
                 options.onError(err);
+            } else if (err.code === 'permission-denied') {
+                // Allowlist dışı kullanıcı — loading'den çıkar, bilgilendir
+                toast('Bu hesabın erişim yetkisi yok', 'error');
+                var loading = document.getElementById('loading-screen');
+                if (loading) loading.style.display = 'none';
+                var login = document.getElementById('login-screen');
+                if (login) login.style.display = 'flex';
+                var bnav = document.getElementById('bnav');
+                if (bnav) bnav.style.display = 'none';
+                signOut();
             } else {
                 toast('Bağlantı hatası', 'error');
             }
@@ -335,6 +345,7 @@ const fh = (() => {
         }).catch(function (e) {
             console.error('Transaction failed [' + path + ']:', e);
             toast('Kaydedilemedi, tekrar deneyin', 'error');
+            throw e; // Caller'a hatayı ilet (rollback yapabilmesi için)
         });
     }
 
