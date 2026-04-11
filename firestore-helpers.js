@@ -49,6 +49,10 @@ const fh = (() => {
                 console.warn('Persistence: bu tarayıcı desteklemiyor');
             }
         });
+        // Redirect login sonrası sonucu yakala (iOS PWA fallback)
+        _auth.getRedirectResult().catch(function (e) {
+            console.warn('Redirect result:', e.code || e.message);
+        });
         _setupErrorHandling();
     }
 
@@ -150,10 +154,12 @@ const fh = (() => {
         const parts = path.split('/');
         const docRef = _db.collection(parts[0]).doc(parts[1]);
 
-        // Metadata ekle
-        data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        // Metadata ekle — caller objesini mutate etmeden kopya oluştur
+        const docData = Object.assign({}, data, {
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
         if (_currentUser) {
-            data.updatedBy = {
+            docData.updatedBy = {
                 uid: _currentUser.uid,
                 name: _currentUser.displayName || 'Bilinmiyor'
             };
@@ -161,11 +167,11 @@ const fh = (() => {
 
         try {
             // Ana dokümanı yaz
-            await docRef.set(data);
+            await docRef.set(docData);
 
             // Versiyonlama (throttled)
             if (!options.skipHistory) {
-                _maybeCreateVersion(path, docRef, data, options.label || 'auto');
+                _maybeCreateVersion(path, docRef, docData, options.label || 'auto');
             }
         } catch (e) {
             console.error('Save error [' + path + ']:', e);

@@ -271,9 +271,7 @@ function renderVenues(){
 
         html += '<div class="vc-actions">';
         if(v.instagram){
-            const igUser = encodeURIComponent(v.instagram.replace(/https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,''));
-            const intentUrl = 'intent://instagram.com/'+igUser+'#Intent;package=com.instagram.android;scheme=https;end';
-            html += '<a class="ig" href="'+intentUrl+'" onclick="event.preventDefault();window.location.href=\'instagram://user?username='+igUser+'\';setTimeout(()=>{window.open(\''+UI.esc(v.instagram)+'\',\'_blank\')},500)">Instagram</a>';
+            html += '<a class="ig" href="'+UI.esc(v.instagram)+'" data-ig="'+UI.esc(v.instagram)+'" target="_blank" rel="noopener">Instagram</a>';
         }
         html += '<button class="del" onclick="removeVenue(\''+v.id+'\')">Sil</button>';
         html += '</div>';

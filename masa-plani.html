@@ -218,24 +218,9 @@ function saveTables() {
         .catch(e=>{console.error(e);});
 }
 
-// Transaction ile guvenli guncelleme: sadece ilgili davetlilerin 'table' field'ini degistirir
-// Diger field'lari (rsvp, not, telefon vs.) korur
+// Transaction ile guvenli guncelleme: fh.updateItemField kullanır
 function updateGuestTable(guestId, newTable) {
-    const ref = fh.db.collection('shared').doc('guests');
-    return fh.db.runTransaction(t => {
-        return t.get(ref).then(doc => {
-            if(!doc.exists) return;
-            const data = doc.data();
-            const list = data.list || [];
-            const idx = list.findIndex(g => g.id === guestId);
-            if(idx < 0) return;
-            list[idx] = {...list[idx], table: newTable};
-            t.set(ref, {list: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: fh.currentUser() ? {uid: fh.currentUser().uid, name: fh.currentUser().displayName || 'Bilinmiyor'} : null}, {merge: true});
-        });
-    }).catch(e => {
-        console.error('Transaction failed:', e);
-        fh.toast('Kaydedilemedi, tekrar deneyin','error');
-    });
+    return fh.updateItemField('shared/guests', guestId, { table: newTable });
 }
 
 // ---- RENDER ----
