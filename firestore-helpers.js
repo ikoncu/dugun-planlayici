@@ -349,6 +349,59 @@ const fh = (() => {
         });
     }
 
+    // ---- TRANSACTION: ITEM EKLE ----
+    /**
+     * Bir list-doc'a yeni item ekler — transaction ile güvenli.
+     * Eş zamanlı yazma sırasında diğer kullanıcının değişikliği korunur.
+     */
+    async function addItem(path, newItem) {
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        var parts = path.split('/');
+        var ref = _db.collection(parts[0]).doc(parts[1]);
+        return _db.runTransaction(function (t) {
+            return t.get(ref).then(function (doc) {
+                var list = (doc.exists && doc.data().list) ? doc.data().list : [];
+                list.push(newItem);
+                t.set(ref, {
+                    list: list,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: _currentUser ? { uid: _currentUser.uid, name: _currentUser.displayName || 'Bilinmiyor' } : null
+                }, { merge: true });
+            });
+        }).catch(function (e) {
+            console.error('addItem failed [' + path + ']:', e);
+            toast('Eklenemedi, tekrar deneyin', 'error');
+            throw e;
+        });
+    }
+
+    // ---- TRANSACTION: ITEM SİL ----
+    /**
+     * Bir list-doc'tan item siler — transaction ile güvenli.
+     * Eş zamanlı yazma sırasında diğer kullanıcının değişikliği korunur.
+     */
+    async function removeItem(path, itemId) {
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        var parts = path.split('/');
+        var ref = _db.collection(parts[0]).doc(parts[1]);
+        return _db.runTransaction(function (t) {
+            return t.get(ref).then(function (doc) {
+                if (!doc.exists) return;
+                var list = doc.data().list || [];
+                list = list.filter(function (item) { return item.id !== itemId; });
+                t.set(ref, {
+                    list: list,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: _currentUser ? { uid: _currentUser.uid, name: _currentUser.displayName || 'Bilinmiyor' } : null
+                }, { merge: true });
+            });
+        }).catch(function (e) {
+            console.error('removeItem failed [' + path + ']:', e);
+            toast('Silinemedi, tekrar deneyin', 'error');
+            throw e;
+        });
+    }
+
     // ---- TOAST ----
     function toast(message, type = 'info') {
         // Container yoksa oluştur
@@ -428,6 +481,8 @@ const fh = (() => {
         loadHistory,
         forceVersion,
         updateItemField,
+        addItem,
+        removeItem,
         toast,
         esc,
         // Internal erişim (gerektiğinde)

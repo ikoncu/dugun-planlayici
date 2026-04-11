@@ -793,7 +793,14 @@ function saveGuest(){
         return; // Modal henüz kapanmasın, transaction sonucunu bekle
     } else {
         guests.push(obj);
-        saveToFirestore();
+        // Transaction ile güvenli ekleme — eş zamanlı yazma korunur
+        fh.addItem('shared/guests', obj).then(function() {
+            closeModal();
+        }).catch(function() {
+            guests = guests.filter(function(x){ return x.id !== obj.id; }); // Rollback
+            renderList();
+        });
+        return;
     }
     closeModal();
 }
@@ -808,11 +815,18 @@ function askDelete(id){
 
 function confirmDelete(){
     if(deleteTargetId){
-        guests = guests.filter(x=>x.id!==deleteTargetId);
+        const delId = deleteTargetId;
+        const backup = guests.find(x=>x.id===delId);
+        guests = guests.filter(x=>x.id!==delId);
         openCardId = null;
-        saveToFirestore();
         updateDashboard();
         renderList();
+        // Transaction ile güvenli silme — eş zamanlı yazma korunur
+        fh.removeItem('shared/guests', delId).catch(function() {
+            if(backup) guests.push(backup); // Rollback
+            updateDashboard();
+            renderList();
+        });
     }
     deleteTargetId = null;
     document.getElementById('confirm-del').classList.remove('show');
@@ -925,7 +939,9 @@ function gOnTouchStart(e){
     const card=e.target.closest('.gcard');
     if(!card) return;
     if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
-    const idx=parseInt(card.dataset.idx);
+    const dragId=card.dataset.id;
+    const idx=guests.findIndex(function(g){return g.id===dragId;});
+    if(idx<0) return;
     const touch=e.touches[0];
     gDragState.startY=touch.clientY;
     gDragState.timer=setTimeout(()=>{
@@ -989,8 +1005,9 @@ function gOnTouchEnd(e){
     if(el){
         const target=el.closest('.gcard');
         if(target&&!target.classList.contains('drag-ghost')){
-            const targetIdx=parseInt(target.dataset.idx);
-            if(!isNaN(targetIdx)&&gDragState.srcIdx!==targetIdx){
+            const targetId=target.dataset.id;
+            const targetIdx=guests.findIndex(function(g){return g.id===targetId;});
+            if(targetIdx>=0&&gDragState.srcIdx!==targetIdx){
                 const item=guests.splice(gDragState.srcIdx,1)[0];
                 const rect=target.getBoundingClientRect();
                 const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
@@ -1008,7 +1025,9 @@ function gOnMouseDown(e){
     const card=e.target.closest('.gcard');
     if(!card) return;
     if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
-    const idx=parseInt(card.dataset.idx);
+    const dragId=card.dataset.id;
+    const idx=guests.findIndex(function(g){return g.id===dragId;});
+    if(idx<0) return;
     gDragState.startY=e.clientY;
     gDragState.timer=setTimeout(()=>{
         if(!canDrag()) return;
@@ -1074,8 +1093,9 @@ function gOnMouseUp(e){
     if(el){
         const target=el.closest('.gcard');
         if(target&&!target.classList.contains('drag-ghost')){
-            const targetIdx=parseInt(target.dataset.idx);
-            if(!isNaN(targetIdx)&&gDragState.srcIdx!==targetIdx){
+            const targetId=target.dataset.id;
+            const targetIdx=guests.findIndex(function(g){return g.id===targetId;});
+            if(targetIdx>=0&&gDragState.srcIdx!==targetIdx){
                 const item=guests.splice(gDragState.srcIdx,1)[0];
                 const rect=target.getBoundingClientRect();
                 const insertIdx=e.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
