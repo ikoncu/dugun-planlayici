@@ -551,6 +551,8 @@ function renderList(){
     vsFiltered = sortGuests(filtered);
 
     const container = document.getElementById('glist');
+    container.scrollTop = 0; // Filtre/search değiştiğinde en başa dön
+
     if(vsFiltered.length===0){
         container.innerHTML = '<div class="empty-msg">Davetli bulunamadı</div>';
         return;
@@ -809,6 +811,8 @@ function confirmDelete(){
         guests = guests.filter(x=>x.id!==deleteTargetId);
         openCardId = null;
         saveToFirestore();
+        updateDashboard();
+        renderList();
     }
     deleteTargetId = null;
     document.getElementById('confirm-del').classList.remove('show');
@@ -880,7 +884,7 @@ function gAutoScroll(clientY){
     if(dir!==0){
         if(!gAutoScrollTimer){
             gAutoScrollTimer=setInterval(()=>{
-                window.scrollBy(0,gAutoScrollDir);
+                var sc=document.getElementById('glist');if(sc)sc.scrollBy(0,gAutoScrollDir);
                 if(gDragState.ghost){
                     // Ghost ekrani takip etmesin, parmak/cursor pozisyonunu koru
                 }
