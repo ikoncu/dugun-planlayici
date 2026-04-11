@@ -324,7 +324,7 @@ const fh = (() => {
                     list: list,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedBy: _currentUser ? { uid: _currentUser.uid, name: _currentUser.displayName || 'Bilinmiyor' } : null
-                });
+                }, { merge: true });
             });
         }).catch(function (e) {
             console.error('Transaction failed [' + path + ']:', e);

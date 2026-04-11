@@ -230,7 +230,7 @@ function updateGuestTable(guestId, newTable) {
             const idx = list.findIndex(g => g.id === guestId);
             if(idx < 0) return;
             list[idx] = {...list[idx], table: newTable};
-            t.set(ref, {list: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+            t.set(ref, {list: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: fh.currentUser() ? {uid: fh.currentUser().uid, name: fh.currentUser().displayName || 'Bilinmiyor'} : null}, {merge: true});
         });
     }).catch(e => {
         console.error('Transaction failed:', e);
