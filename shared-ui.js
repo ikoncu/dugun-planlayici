@@ -61,7 +61,7 @@ window.UI = (function () {
         if (!el) return;
         el.innerHTML =
             '<div class="spinner"></div>' +
-            '<div style="font-size:14px;color:var(--g500,#6b7280)">Yükleniyor...</div>';
+            '<div style="font-size:14px;color:var(--gray-500)">Yükleniyor...</div>';
     }
 
     // ── Inject: Bottom Nav (4 link, Ana Sayfa hariç) ─────────────
