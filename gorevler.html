@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./firestore-helpers.js?v=2"></script>
+    <script src="./shared-ui.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -24,7 +25,7 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
         /* LOGIN */
-        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
+        #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card .logo{font-size:48px;margin-bottom:16px}
         .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
@@ -166,43 +167,32 @@
         .sub-editor-add{display:flex;align-items:center;gap:4px;padding:6px 0;font-size:12px;color:var(--gold);cursor:pointer;font-weight:500;border:none;background:none}
 
         /* BOTTOM NAV */
-        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);z-index:40;padding:6px 0 env(safe-area-inset-bottom)}
-        .bnav{grid-template-columns:repeat(4,1fr)}
-        .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;text-decoration:none;color:var(--g400);font-size:10px;font-weight:500}
+        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--g200);z-index:40;height:56px;padding:6px 0 env(safe-area-inset-bottom)}
+        .bnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;padding:6px 0;text-decoration:none;color:var(--g400);font-size:9px;font-weight:500}
         .bnav a.active{color:var(--gold)}
         .bicon{font-size:20px}
     </style>
 </head>
 <body>
 <!-- LOGIN -->
-<div id="login-screen" style="display:none">
-    <div class="login-card">
-        <div class="logo">💍</div>
-        <h1>Görevler</h1>
-        <p>Düğün görevlerini yönetin</p>
-        <button class="google-btn" onclick="fh.signIn()">
-            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-            Google ile Giriş Yap
-        </button>
-    </div>
-</div>
+<div id="login-screen"></div>
 
 <!-- LOADING -->
-<div id="loading-screen" style="display:flex"><div class="spinner"></div><div style="font-size:14px;color:var(--g500)">Yükleniyor...</div></div>
+<div id="loading-screen" style="display:flex"></div>
 
 <!-- APP -->
 <div id="app" style="display:none">
     <div class="header">
         <div class="header-row">
-            <div id="user-avatar-container" onclick="toggleDropdown()">
-                <div id="user-avatar-wrap"></div>
+            <div style="position:relative">
+                <div id="user-avatar-container" onclick="UI.toggleDropdown()"></div>
                 <div class="user-dropdown" id="user-dropdown">
-                    <div class="user-dropdown-name" id="user-dropdown-name"></div>
+                    <div class="user-dropdown-name" id="user-name"></div>
                     <button class="dd-btn" onclick="fh.signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Görevler</h1>
-            <button class="hamburger" onclick="toggleDrawer()">&#9776;</button>
+            <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
     </div>
 
@@ -236,26 +226,7 @@
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bnav" id="bnav" style="display:none">
-    <a href="index.html"><span class="bicon">&#127968;</span>Ana Sayfa</a>
-    <a class="active" href="gorevler.html"><span class="bicon">&#9989;</span>Görevler</a>
-    <a href="mekanlar.html"><span class="bicon">&#127963;&#65039;</span>Mekanlar</a>
-    <a href="davetliler.html"><span class="bicon">&#128101;</span>Davetliler</a>
-</nav>
-
-<!-- DRAWER -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
-<div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Düğün Planlayıcı</div>
-    <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
-    <a class="drawer-item active" href="gorevler.html"><span class="di-icon">✅</span>Görevler</a>
-    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
-    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <div class="drawer-section">Diğer</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Bütçe</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
-</div>
+<nav class="bnav" id="bnav" style="display:none"></nav>
 
 <!-- EDIT MODAL -->
 <div class="modal-bg" id="modal-edit" onclick="if(event.target===this)tryCloseModal()">
@@ -282,82 +253,31 @@
 </div>
 
 <script>
-const DEFAULT_TASKS = [
-    {id:'g1',title:'Ofisten izin al',hint:'24 Nisan ve 27 Nisan',done:false,due:'2026-04-20',assignee:'Ibrahim',note:'',subtasks:[
-        {id:'s1a',text:'24 Nisan izin talebi',done:false},
-        {id:'s1b',text:'27 Nisan izin talebi',done:false}
-    ]},
-    {id:'g2',title:'Antep ucak biletleri',hint:'Gidis + donus',done:false,due:'2026-04-20',assignee:'Birlikte',note:'Pegasus, THY, AnadoluJet karsilastir',subtasks:[
-        {id:'s2a',text:'Gidis bileti (30 Nisan veya 1 Mayis)',done:false},
-        {id:'s2b',text:'Donus bileti (4 veya 5 Mayis)',done:false},
-        {id:'s2c',text:'Fiyat karsilastirma yap',done:false}
-    ]},
-    {id:'g3',title:'Mekan randevulari ayarla',hint:'Tum mekanlari ara',done:false,due:'2026-04-12',assignee:'Birlikte',note:'1 Mayis resmi tatil - saatleri dogrula',subtasks:[
-        {id:'s3a',text:'MSM Erikce - 0342 777 76 76',done:false},
-        {id:'s3b',text:'Ceremony Erikce - 0533 255 66 27',done:false},
-        {id:'s3c',text:'Selale Plaza',done:false},
-        {id:'s3d',text:'Pembe Kosk',done:false},
-        {id:'s3e',text:'Marina BKM',done:false},
-        {id:'s3f',text:'Vadi Garden',done:false},
-        {id:'s3g',text:'Livas Park',done:false}
-    ]},
-    {id:'g4',title:'Belediyeleri ara',hint:'Nikah icin belediye arastir',done:false,due:'2026-04-15',assignee:'Ibrahim',note:'4 Mayis icin planlaniyor',subtasks:[
-        {id:'s4a',text:'Sehitkamil Belediyesi',done:false},
-        {id:'s4b',text:'Sahinbey Belediyesi - 444 27 01',done:false},
-        {id:'s4c',text:'Buyuksehir Belediyesi',done:false},
-        {id:'s4d',text:'Online nikah randevu sistemi var mi?',done:false}
-    ]},
-    {id:'g5',title:'Saglik raporu & evlilik belgeleri',hint:'Iki kisi icin tum belgeler',done:false,due:'2026-04-15',assignee:'Birlikte',note:'Saglik raporu 6 ay gecerli. SMA testi olmadan nikah kiyilamaz.',subtasks:[
-        {id:'s5a',text:'Ibrahim saglik raporu randevusu',done:false},
-        {id:'s5b',text:'Hilal saglik raporu randevusu',done:false},
-        {id:'s5c',text:'Hemogram, Hepatit B/C, HIV testi',done:false},
-        {id:'s5d',text:'SMA testi (ZORUNLU)',done:false},
-        {id:'s5e',text:'Akciger filmi + idrar tahlili',done:false},
-        {id:'s5f',text:'TC Kimlik fotokopisi (2 kisi)',done:false},
-        {id:'s5g',text:'Vesikalik fotograf (4-5 adet)',done:false},
-        {id:'s5h',text:'Nufus kayit ornegi (e-Devlet)',done:false}
-    ]},
-    {id:'g6',title:'Nisan oncesi alinacaklar',hint:'Alisveris listesi',done:false,due:'2026-05-10',assignee:'Birlikte',note:'',subtasks:[
-        {id:'s6a',text:'Gecelik',done:false},
-        {id:'s6b',text:'Terlik',done:false},
-        {id:'s6c',text:'Ic camasir seti',done:false},
-        {id:'s6d',text:'Nisan yuzugu',done:false},
-        {id:'s6e',text:'Kuafor randevusu',done:false}
-    ]}
-];
-
 // STATE
 let tasks=[], activeAsg='Hepsi', editId=null, dragSrcIdx=null;
 
-// FIREBASE — helper üzerinden
-fh.init();
+// UI inject
+UI.injectLogin('Görevler', 'Görev listenize erişin');
+UI.injectLoading();
+UI.injectBnav('gorevler');
+UI.injectDrawer('gorevler');
 
-fh.onAuth({
-    onLogin: (u) => {
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('app').style.display='block';
-        document.getElementById('bnav').style.display='grid';
-        if(u.photoURL || u.displayName) renderAvatar(u);
+UI.setupAuth({
+    onLogin: function() {
         startListening();
-    },
-    onLogout: () => {
-        document.getElementById('loading-screen').style.display='none';
-        document.getElementById('login-screen').style.display='flex';
-        document.getElementById('app').style.display='none';
-        document.getElementById('bnav').style.display='none';
     }
 });
 
 // FIRESTORE — helper üzerinden
 function startListening(){
     fh.listen('shared/planner_tasks', (data) => {
-        document.getElementById('loading-screen').style.display='none';
+        UI.showApp();
         if(data){
             tasks = (data.list && Array.isArray(data.list)) ? data.list : [];
             tasks.forEach(t=>{if(!t.subtasks) t.subtasks=[];});
         } else {
-            tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
-            save();
+            tasks=[];
+            fh.toast('Henüz görev yok — ekleyerek başlayın','info');
         }
         render();
     });
@@ -419,8 +339,8 @@ function cardHTML(t,idx){
     html+='<div class="tc-header" onclick="flipCard(\''+t.id+'\')">';
     html+='<div class="tc-chk'+(t.done?' on':'')+'" onclick="event.stopPropagation();togTask(\''+t.id+'\')"></div>';
     html+='<div class="tc-body">';
-    html+='<div class="tc-title">'+esc(t.title)+'</div>';
-    if(t.hint) html+='<div class="tc-hint-preview">'+esc(t.hint)+'</div>';
+    html+='<div class="tc-title">'+UI.esc(t.title)+'</div>';
+    if(t.hint) html+='<div class="tc-hint-preview">'+UI.esc(t.hint)+'</div>';
     html+='<div class="tc-meta">';
     html+='<span class="tc-tag tc-tag-asg" data-a="'+(t.assignee||'Birlikte')+'">'+trLabel(t.assignee||'Birlikte')+'</span>';
     if(due) html+='<span class="tc-tag tc-tag-due'+(over?' overdue':'')+'">'+due+'</span>';
@@ -435,7 +355,7 @@ function cardHTML(t,idx){
         t.subtasks.forEach(s=>{
             html+='<div class="tc-sub'+(s.done?' done':'')+'" onclick="togSub(\''+t.id+'\',\''+s.id+'\')">';
             html+='<div class="tc-sub-chk'+(s.done?' on':'')+'"></div>';
-            html+='<span class="tc-sub-text">'+esc(s.text)+'</span>';
+            html+='<span class="tc-sub-text">'+UI.esc(s.text)+'</span>';
             html+='</div>';
         });
         html+='</div>';
@@ -544,7 +464,7 @@ function addSubEditor(text, sid, done){
     item.className='sub-editor-item';
     item.dataset.sid = sid || '';
     item.dataset.done = done ? '1' : '0';
-    item.innerHTML='<input type="text" value="'+esc(text||'')+'" placeholder="Alt gorev...">'
+    item.innerHTML='<input type="text" value="'+UI.esc(text||'')+'" placeholder="Alt gorev...">'
         +'<button class="sub-editor-rm" onclick="this.parentElement.remove()">&times;</button>';
     editor.appendChild(item);
     if(!text) item.querySelector('input').focus();
@@ -733,19 +653,6 @@ function fmtDue(d){
     const months=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
     return due.getDate()+' '+months[due.getMonth()];
 }
-
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-
-function renderAvatar(user){
-    const w=document.getElementById('user-avatar-wrap');
-    if(user.photoURL) w.innerHTML='<img class="user-avatar" src="'+user.photoURL+'" referrerpolicy="no-referrer">';
-    else w.innerHTML='<div class="user-avatar-fallback">'+(user.displayName||user.email||'?')[0].toUpperCase()+'</div>';
-    document.getElementById('user-dropdown-name').textContent=user.displayName||user.email||'';
-}
-
-function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
-function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
-document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container'))document.getElementById('user-dropdown')?.classList.remove('open')});
 
 // Veri degeri -> Turkce gosterim
 const TR_LABELS={'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte'};

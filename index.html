@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./firestore-helpers.js?v=2"></script>
+    <script src="./shared-ui.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -23,37 +24,34 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh}
 
         /* LOGIN */
-        #login-screen{align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
+        #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card .logo{font-size:48px;margin-bottom:16px}
-        .login-card h1{color:white;font-size:24px;font-weight:700;margin-bottom:6px}
-        .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:32px}
-        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:transform 0.15s,box-shadow 0.15s}
-        .google-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.2)}
+        .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
+        .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
+        .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
         .google-btn svg{width:20px;height:20px;flex-shrink:0}
 
         /* LOADING */
-        #loading-screen{align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
+        #loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
         .spinner{width:36px;height:36px;border:3px solid var(--gray-200);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
-        .loading-text{font-size:14px;color:var(--gray-500)}
 
         /* APP */
         #app{display:none;padding-bottom:68px}
 
         /* HEADER */
         .header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:14px 16px 12px;position:sticky;top:0;z-index:50}
-        .header-top{display:flex;align-items:center;justify-content:space-between}
-        .header-top h1{font-size:17px;font-weight:700;flex:1;text-align:center}
-        .user-menu{cursor:pointer;position:relative}
-        .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--gold-light)}
-        .user-avatar-placeholder{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;border:2px solid var(--gold-light)}
-        .user-dropdown{display:none;position:absolute;top:40px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:160px;z-index:100;overflow:hidden}
-        .user-dropdown.show{display:block}
-        .user-dropdown-name{padding:12px 14px 8px;font-size:13px;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-100)}
-        .user-dropdown button{width:100%;padding:10px 14px;border:none;background:none;font-size:13px;color:var(--red);cursor:pointer;text-align:left}
-        .user-dropdown button:hover{background:var(--gray-50)}
-        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 2px}
+        .header-row{display:flex;align-items:center;justify-content:space-between}
+        .header h1{font-size:17px;font-weight:700;flex:1;text-align:center}
+        #user-avatar-container{cursor:pointer;position:relative}
+        .user-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--gold-light)}
+        .user-avatar-fallback{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white}
+        .user-dropdown{display:none;position:absolute;top:38px;left:0;background:white;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:150px;z-index:200;overflow:hidden}
+        .user-dropdown.open{display:block}
+        .user-dropdown-name{padding:10px 14px 6px;font-size:12px;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-100)}
+        .dd-btn{width:100%;padding:10px 14px;border:none;background:none;font-size:13px;color:var(--red);cursor:pointer;text-align:left}
+        .hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px}
 
         /* TIMELINE */
         .tl-wrap{padding:8px 0 4px;margin-top:4px}
@@ -109,11 +107,6 @@
         .mini-stat.red .ms-num{color:var(--red)}
         .mini-stat.blue .ms-num{color:var(--blue)}
 
-        /* BUDGET ROW */
-        .budget-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-        .budget-item{text-align:center;padding:8px 4px}
-        .budget-item .bi-num{font-size:15px;font-weight:700;color:var(--gray-900)}
-        .budget-item .bi-label{font-size:9px;color:var(--gray-500);margin-top:2px}
 
         /* VENUE SUMMARY */
         .venue-summary{display:flex;align-items:center;justify-content:space-between}
@@ -125,58 +118,44 @@
         .empty-state{text-align:center;padding:12px 0;color:var(--gray-400);font-size:13px}
 
         /* BOTTOM NAV */
-        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);z-index:40;padding:6px 0 env(safe-area-inset-bottom)}
-        .bnav{display:none;grid-template-columns:repeat(4,1fr)}
-        .bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;text-decoration:none;color:var(--gray-400);font-size:10px;font-weight:500;transition:color 0.2s}
+        .bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);z-index:40;height:56px;padding:6px 0 env(safe-area-inset-bottom)}
+        .bnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;padding:6px 0;text-decoration:none;color:var(--gray-400);font-size:9px;font-weight:500}
         .bnav a.active{color:var(--gold)}
         .bicon{font-size:20px}
 
         /* DRAWER */
-        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:60}
-        .drawer-overlay.show{display:block}
-        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:70;transition:right 0.3s;overflow-y:auto;box-shadow:-2px 0 20px rgba(0,0,0,0.1)}
-        .drawer.show{right:0}
-        .drawer-header{padding:20px 16px 12px;font-size:18px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--gray-100)}
+        .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
+        .drawer-overlay.open{display:block}
+        .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,0.15)}
+        .drawer.open{right:0}
+        .drawer-header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:20px 16px;font-size:16px;font-weight:700}
         .drawer-section{padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
-        .drawer-item{display:flex;align-items:center;gap:10px;padding:10px 16px;text-decoration:none;color:var(--gray-700);font-size:14px;font-weight:500;transition:background 0.15s}
-        .drawer-item:hover,.drawer-item.active{background:var(--gold-bg);color:var(--gold)}
+        .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100);text-decoration:none;color:var(--gray-900);font-size:14px;font-weight:500}
+        .drawer-item.active{background:var(--gold-bg);color:var(--gold);font-weight:600}
         .di-icon{font-size:18px;width:24px;text-align:center}
     </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen" style="display:none">
-    <div class="login-card">
-        <div class="logo">💍</div>
-        <h1>Düğün Planlayıcı</h1>
-        <p>Düğününüzü birlikte planlayalım</p>
-        <button class="google-btn" onclick="fh.signIn()">
-            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-            Google ile Giriş Yap
-        </button>
-    </div>
-</div>
+<div id="login-screen"></div>
 
 <!-- LOADING -->
-<div id="loading-screen" style="display:flex">
-    <div class="spinner"></div>
-    <div class="loading-text">Yükleniyor...</div>
-</div>
+<div id="loading-screen" style="display:flex"></div>
 
 <!-- APP -->
 <div id="app">
     <div class="header">
-        <div class="header-top">
-            <div class="user-menu" onclick="toggleDropdown()" style="position:relative">
-                <div id="user-avatar-wrap"></div>
+        <div class="header-row">
+            <div style="position:relative">
+                <div id="user-avatar-container" onclick="UI.toggleDropdown()"></div>
                 <div class="user-dropdown" id="user-dropdown">
-                    <div class="user-dropdown-name" id="user-dropdown-name"></div>
-                    <button onclick="fh.signOut()">Çıkış Yap</button>
+                    <div class="user-dropdown-name" id="user-name"></div>
+                    <button class="dd-btn" onclick="fh.signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Düğün Planlayıcı</h1>
-            <button class="hamburger" onclick="toggleDrawer()">☰</button>
+            <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
         <div class="tl-wrap" id="tl-wrap"></div>
         <input type="date" id="date-nisan" style="position:absolute;opacity:0;pointer-events:none;height:0" onchange="changeNisanDate(this.value)">
@@ -210,17 +189,6 @@
             </div>
         </div>
 
-        <!-- Bütçe Özeti -->
-        <div class="dash-card">
-            <div class="dash-card-title">Bütçe Özeti <a href="butce.html">Detay &rarr;</a></div>
-            <div class="budget-row" id="budget-stats">
-                <div class="budget-item"><div class="bi-num" id="bs-total">0</div><div class="bi-label">Toplam Bütçe</div></div>
-                <div class="budget-item"><div class="bi-num" id="bs-estimated">0</div><div class="bi-label">Tahmini</div></div>
-                <div class="budget-item"><div class="bi-num" id="bs-paid">0</div><div class="bi-label">Ödenen</div></div>
-                <div class="budget-item"><div class="bi-num" id="bs-remaining">0</div><div class="bi-label">Kalan</div></div>
-            </div>
-        </div>
-
         <!-- Mekan Durumu -->
         <div class="dash-card">
             <div class="dash-card-title">Mekan Durumu <a href="mekanlar.html">Mekanları Gör &rarr;</a></div>
@@ -232,30 +200,14 @@
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bnav" id="bnav">
-    <a class="active" href="index.html"><span class="bicon">🏠</span>Ana Sayfa</a>
-    <a href="gorevler.html"><span class="bicon">✅</span>Görevler</a>
-    <a href="mekanlar.html"><span class="bicon">🏛️</span>Mekanlar</a>
-    <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
-</nav>
-
-<!-- DRAWER -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
-<div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Düğün Planlayıcı</div>
-    <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item active" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
-    <a class="drawer-item" href="gorevler.html"><span class="di-icon">✅</span>Görevler</a>
-    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
-    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <div class="drawer-section">Diğer</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Bütçe</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
-</div>
+<nav class="bnav" id="bnav" style="display:none"></nav>
 
 <script>
-// Firebase init — helper üzerinden
-fh.init();
+// UI inject
+UI.injectLogin('Düğün Planlayıcı', 'Düğününüzü birlikte planlayalım');
+UI.injectLoading();
+UI.injectBnav('index');
+UI.injectDrawer('index');
 
 let NISAN_DATE = '2026-05-16';
 let WEDDING_DATE = '2026-09-01';
@@ -275,51 +227,14 @@ function saveDates() {
 }
 
 // State
-let dashData = { tasks: [], guests: [], budget: null, venues: [] };
+let dashData = { tasks: [], guests: [], venues: [] };
 
-fh.onAuth({
-    onLogin: (user) => {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('bnav').style.display = 'grid';
-        if(user.photoURL || user.displayName) renderAvatar(user);
+UI.setupAuth({
+    onLogin: function() {
         loadDates();
         loadDashboard();
-    },
-    onLogout: () => {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'none';
-        document.getElementById('bnav').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'flex';
     }
 });
-
-function renderAvatar(user) {
-    const wrap = document.getElementById('user-avatar-wrap');
-    if (user.photoURL) {
-        wrap.innerHTML = '<img class="user-avatar" src="' + user.photoURL + '" referrerpolicy="no-referrer">';
-    } else {
-        const init = (user.displayName || user.email || '?')[0].toUpperCase();
-        wrap.innerHTML = '<div class="user-avatar-placeholder">' + init + '</div>';
-    }
-    document.getElementById('user-dropdown-name').textContent = user.displayName || user.email || '';
-}
-
-// Dropdown & Drawer
-function toggleDropdown() {
-    document.getElementById('user-dropdown').classList.toggle('show');
-}
-document.addEventListener('click', e => {
-    if (!e.target.closest('.user-menu')) {
-        document.getElementById('user-dropdown').classList.remove('show');
-    }
-});
-
-function toggleDrawer() {
-    document.getElementById('drawer').classList.toggle('show');
-    document.getElementById('drawer-overlay').classList.toggle('show');
-}
 
 // Dashboard Loading — helper üzerinden
 function loadDashboard() {
@@ -333,11 +248,6 @@ function loadDashboard() {
         renderDashboard();
     });
 
-    fh.listen('shared/budget_v2', (data) => {
-        dashData.budget = data || null;
-        renderDashboard();
-    });
-
     fh.listen('shared/venues', (data) => {
         dashData.venues = (data && data.list) ? data.list : [];
         renderDashboard();
@@ -346,18 +256,26 @@ function loadDashboard() {
 
 // Render
 function renderDashboard() {
+    UI.showApp();
     renderProgress();
     renderUpcomingTasks();
     renderGuestSummary();
-    renderBudgetSummary();
     renderVenueSummary();
     updateCountdowns();
 }
 
 function renderProgress() {
     const tasks = dashData.tasks;
-    const total = tasks.length;
-    const done = tasks.filter(t => t.done).length;
+    let total = 0, done = 0;
+    tasks.forEach(t => {
+        if (t.subtasks && t.subtasks.length > 0) {
+            total += t.subtasks.length;
+            done += t.subtasks.filter(s => s.done).length;
+        } else {
+            total++;
+            if (t.done) done++;
+        }
+    });
     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
     document.getElementById('prog-fill').style.width = pct + '%';
     document.getElementById('prog-label').textContent = done + ' / ' + total + ' görev';
@@ -379,11 +297,11 @@ function renderUpcomingTasks() {
 
     container.innerHTML = upcoming.map(t => {
         const pClass = t.priority === 'urgent' ? 'urgent' : (t.priority === 'low' ? 'low' : 'normal');
-        const assignee = t.assignee ? '<span class="tp-tag assignee">' + esc(trLabel(t.assignee)) + '</span>' : '';
+        const assignee = t.assignee ? '<span class="tp-tag assignee">' + UI.esc(trLabel(t.assignee)) + '</span>' : '';
         return '<div class="task-preview" onclick="location.href=\'gorevler.html\'">' +
             '<div class="tp-dot ' + pClass + '"></div>' +
             '<div class="tp-info">' +
-                '<div class="tp-title">' + esc(t.title || t.text || '') + '</div>' +
+                '<div class="tp-title">' + UI.esc(t.title || t.text || '') + '</div>' +
                 '<div class="tp-meta">' + fmtDue(t.due) + '</div>' +
             '</div>' +
             assignee +
@@ -406,29 +324,6 @@ function renderGuestSummary() {
     document.getElementById('gs-confirmed').textContent = confirmed;
     document.getElementById('gs-pending').textContent = pending;
     document.getElementById('gs-declined').textContent = declined;
-}
-
-function renderBudgetSummary() {
-    const b = dashData.budget;
-    if (!b) {
-        document.getElementById('bs-total').textContent = '0';
-        document.getElementById('bs-estimated').textContent = '0';
-        document.getElementById('bs-paid').textContent = '0';
-        document.getElementById('bs-remaining').textContent = '0';
-        return;
-    }
-    const totalBudget = b.totalBudget || 0;
-    const items = b.list || [];
-    let estimated = 0, paid = 0;
-    items.forEach(item => {
-        estimated += (item.estimated || 0);
-        paid += (item.actual || 0);
-    });
-    const remaining = totalBudget - paid;
-    document.getElementById('bs-total').textContent = fmtMoney(totalBudget);
-    document.getElementById('bs-estimated').textContent = fmtMoney(estimated);
-    document.getElementById('bs-paid').textContent = fmtMoney(paid);
-    document.getElementById('bs-remaining').textContent = fmtMoney(remaining);
 }
 
 function renderVenueSummary() {
@@ -574,17 +469,6 @@ function fmtDue(d) {
     return Math.ceil(diff / 30) + ' ay sonra';
 }
 
-function fmtMoney(n) {
-    if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.0', '') + 'K';
-    return String(n);
-}
-
-function esc(s) {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-}
 
 // Veri degeri -> Turkce gosterim
 const TR_LABELS = {'Ibrahim':'İbrahim','Hilal':'Hilal','Birlikte':'Birlikte','Katilacak':'Katılacak','Katilmayacak':'Katılmayacak','Beklemede':'Beklemede','Gonderildi':'Gönderildi','Gonderilmedi':'Gönderilmedi'};

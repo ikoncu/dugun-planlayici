@@ -1,5 +1,18 @@
 {
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      "CLAUDE.md",
+      "BACKLOG.md",
+      "SESSION_LOG.md",
+      ".claude/**",
+      ".git/**",
+      "*.md"
+    ]
   }
 }

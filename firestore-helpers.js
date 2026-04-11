@@ -27,7 +27,6 @@ const fh = (() => {
     let _currentUser = null;
     let _listeners = {};          // path -> unsubscribe fn
     let _lastVersionTime = {};    // path -> timestamp (throttle)
-    let _isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
     const VERSION_THROTTLE_MS = 5 * 60 * 1000;  // 5 dakika
     const MAX_VERSIONS = 30;
@@ -53,10 +52,6 @@ const fh = (() => {
             if (user) {
                 _currentUser = user;
                 if (onLogin) onLogin(user);
-            } else if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-                // Localhost bypass — dev ortamında anonim erişim
-                _currentUser = { uid: 'local-dev', displayName: 'Dev' };
-                if (onLogin) onLogin(_currentUser);
             } else {
                 _currentUser = null;
                 // Tüm aktif listener'ları temizle
@@ -116,12 +111,6 @@ const fh = (() => {
             onData(data, snap);
         }, err => {
             console.error('Listen error [' + path + ']:', err);
-            if (_isLocal && err.code === 'permission-denied') {
-                // Localhost: Firestore Security Rules engeli — default data ile devam et
-                console.warn('[DEV] ' + path + ' → permission-denied, default data yükleniyor');
-                onData(null, null);
-                return;
-            }
             if (options.onError) {
                 options.onError(err);
             } else {
@@ -166,10 +155,6 @@ const fh = (() => {
                 _maybeCreateVersion(path, docRef, data, options.label || 'auto');
             }
         } catch (e) {
-            if (_isLocal && e.code === 'permission-denied') {
-                console.warn('[DEV] ' + path + ' → save atlandı (permission-denied)');
-                return; // Localhost'ta sessiz geç, UI çalışmaya devam etsin
-            }
             console.error('Save error [' + path + ']:', e);
             toast('Kaydedilemedi', 'error');
             throw e;
@@ -179,11 +164,11 @@ const fh = (() => {
     /**
      * Throttled versiyonlama — son versiyondan 5dk geçtiyse yeni snapshot yaz.
      */
-    async function _maybeCreateVersion(path, docRef, data, label) {
+    async function _maybeCreateVersion(path, docRef, data, label, force) {
         const now = Date.now();
         const last = _lastVersionTime[path] || 0;
 
-        if (now - last < VERSION_THROTTLE_MS) return; // Henüz erken
+        if (!force && now - last < VERSION_THROTTLE_MS) return; // Henüz erken
 
         _lastVersionTime[path] = now;
 
@@ -353,6 +338,19 @@ const fh = (() => {
         return d.innerHTML;
     }
 
+    /**
+     * Manuel versiyon oluştur — throttle bypass.
+     * Backup butonu gibi kullanıcı aksiyonları için.
+     */
+    async function forceVersion(path, label) {
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        const parts = path.split('/');
+        const docRef = _db.collection(parts[0]).doc(parts[1]);
+        const snap = await docRef.get();
+        if (!snap.exists) throw new Error('Döküman bulunamadı: ' + path);
+        await _maybeCreateVersion(path, docRef, snap.data(), label || 'Manuel', true);
+    }
+
     // ---- PUBLIC API ----
     return {
         init,
@@ -364,6 +362,7 @@ const fh = (() => {
         saveDoc,
         adminRestore,
         loadHistory,
+        forceVersion,
         toast,
         esc,
         // Internal erişim (gerektiğinde)

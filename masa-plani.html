@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./firestore-helpers.js?v=2"></script>
+    <script src="./shared-ui.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -21,7 +22,7 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
         /* LOGIN */
-        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
+        #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
         .login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
@@ -132,47 +133,29 @@
         .ua-empty{font-size:12px;color:var(--g400);padding:8px 4px;font-style:italic}
 
         /* TOAST */
-        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--g900);color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
-        .toast.show{opacity:1}
     </style>
 </head>
 <body>
 
-<!-- LOGIN (hidden by default) -->
-<div id="login-screen" style="display:none">
-    <div class="login-card">
-        <div style="font-size:48px;margin-bottom:16px">🪑</div>
-        <h1>Masa Planı</h1>
-        <p>Düğün oturma düzeni</p>
-        <button class="google-btn" onclick="fh.signIn()">
-            <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Google ile Giriş Yap
-        </button>
-    </div>
-</div>
+<div id="login-screen"></div>
 
-<!-- LOADING (visible by default) -->
-<div id="loading-screen" style="display:flex">
-    <div class="spinner"></div>
-    <div style="font-size:14px;color:var(--g500)">Yükleniyor...</div>
-</div>
+<div id="loading-screen" style="display:flex"></div>
 
 <!-- APP -->
 <div id="app" style="padding-bottom:60px">
     <div class="header">
         <div class="header-row">
             <div style="position:relative">
-                <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+                <div id="user-avatar-container" onclick="UI.toggleDropdown()"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-name"></div>
                     <button class="dd-btn" onclick="fh.signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Masa Planı</h1>
-            <button class="hamburger" onclick="toggleDrawer()">☰</button>
+            <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
             </div>
         </div>
-    </div>
 
     <div class="summary" id="summary"></div>
     <div class="table-grid" id="table-grid"></div>
@@ -182,64 +165,24 @@
     <div class="unassigned-section" id="unassigned-section"></div>
 </div>
 
-<div class="toast" id="toast"></div>
 
-<!-- BOTTOM NAV -->
-<nav class="bnav" id="bnav">
-    <a href="index.html"><span class="bicon">🏠</span>Ana Sayfa</a>
-    <a href="gorevler.html"><span class="bicon">✅</span>Görevler</a>
-    <a href="mekanlar.html"><span class="bicon">🏛️</span>Mekanlar</a>
-    <a href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
-</nav>
+<nav class="bnav" id="bnav" style="display:none"></nav>
 
-<!-- DRAWER -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
-<div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Düğün Planlayıcı</div>
-    <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
-    <a class="drawer-item" href="gorevler.html"><span class="di-icon">✅</span>Görevler</a>
-    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
-    <a class="drawer-item" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <div class="drawer-section">Diğer</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Bütçe</a>
-    <a class="drawer-item active" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
-</div>
 
 <script>
-fh.init();
+UI.injectLogin('Masa Planı', 'Masa düzeninize erişin');
+UI.injectLoading();
+UI.injectBnav('masa-plani');
+UI.injectDrawer('masa-plani');
+
+UI.setupAuth({
+    onLogin: function() {
+        startListening();
+    }
+});
 
 let tables = [];
 let guests = [];
-
-// ---- UI HELPERS ----
-function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('drawer-overlay').classList.toggle('open')}
-function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
-document.addEventListener('click',e=>{if(!e.target.closest('#user-avatar-container')&&!e.target.closest('.user-dropdown'))document.getElementById('user-dropdown')?.classList.remove('open')});
-function renderAvatar(user){
-    const c=document.getElementById('user-avatar-container');
-    const n=document.getElementById('user-name');
-    if(n)n.textContent=user.displayName||user.email;
-    if(user.photoURL){c.innerHTML='<img class="user-avatar" src="'+user.photoURL+'" referrerpolicy="no-referrer">';}
-    else{const i=(user.displayName||user.email||'U')[0].toUpperCase();c.innerHTML='<div class="user-avatar-fallback">'+i+'</div>';}
-}
-
-// ---- AUTH ----
-fh.onAuth({
-    onLogin(user) {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('loading-screen').style.display = 'flex';
-        document.getElementById('bnav').style.display = 'flex';
-        renderAvatar(user);
-        startListening();
-    },
-    onLogout() {
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'none';
-        document.getElementById('bnav').style.display = 'none';
-    }
-});
 
 // ---- FIRESTORE LISTENERS ----
 function startListening() {
@@ -254,21 +197,16 @@ function startListening() {
             saveTables();
         }
         tablesReady = true;
-        if (guestsReady) showApp();
+        if (guestsReady) UI.showApp();
         render();
     });
 
     fh.listen('shared/guests', (data) => {
         guests = (data && data.list) ? data.list : [];
         guestsReady = true;
-        if (tablesReady) showApp();
+        if (tablesReady) UI.showApp();
         render();
     });
-}
-
-function showApp() {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
 }
 
 function generateDefaultTables() {
@@ -302,11 +240,6 @@ function updateGuestTable(guestId, newTable) {
         console.error('Transaction failed:', e);
         fh.toast('Kaydedilemedi, tekrar deneyin','error');
     });
-}
-
-function saveGuests() {
-    fh.saveDoc('shared/guests', { list: guests })
-        .catch(e=>{console.error(e);});
 }
 
 // ---- RENDER ----
@@ -356,7 +289,7 @@ function renderTables() {
         const guestRows = seated.length > 0
             ? seated.map(g => `
                 <div class="t-guest">
-                    <span class="t-guest-name">${esc(g.name || g.title || 'İsimsiz')}</span>
+                    <span class="t-guest-name">${UI.esc(g.name || g.title || 'İsimsiz')}</span>
                     <button class="t-guest-rm" onclick="removeGuestFromTable('${g.id || ''}','${t.id}')" title="Kaldir">&times;</button>
                 </div>
             `).join('')
@@ -369,7 +302,7 @@ function renderTables() {
             <div class="t-head">
                 <div class="t-head-left">
                     <span class="t-icon">🪑</span>
-                    <input class="t-name-input" value="${esc(t.name)}" onchange="renameTable(${idx}, this.value)" />
+                    <input class="t-name-input" value="${UI.esc(t.name)}" onchange="renameTable(${idx}, this.value)" />
                 </div>
                 <span class="t-count ${countClass}">${count}/${cap}</span>
                 <div class="t-cap-wrap">
@@ -405,7 +338,7 @@ function renderUnassigned() {
 
     const chips = ua.length > 0
         ? '<div class="ua-list">' + ua.map(g =>
-            `<div class="ua-chip"><span class="ua-icon">👤</span>${esc(g.name || g.title || 'İsimsiz')}</div>`
+            `<div class="ua-chip"><span class="ua-icon">👤</span>${UI.esc(g.name || g.title || 'İsimsiz')}</div>`
         ).join('') + '</div>'
         : '<div class="ua-empty">Tüm davetliler bir masaya oturdu!</div>';
 
@@ -439,7 +372,7 @@ function renderGuestDropdown(tableId) {
         return;
     }
     dd.innerHTML = filtered.slice(0, 50).map(g =>
-        '<div class="t-add-dd-item" onmousedown="selectGuestForTable(\''+tableId+'\',\''+g.id+'\')">'+esc(g.name || g.title || 'İsimsiz')+'</div>'
+        '<div class="t-add-dd-item" onmousedown="selectGuestForTable(\''+tableId+'\',\''+g.id+'\')">'+UI.esc(g.name || g.title || 'İsimsiz')+'</div>'
     ).join('');
 }
 
@@ -580,14 +513,6 @@ function changeCapacity(idx, val) {
     if (isNaN(n) || n < 1) return;
     tables[idx].capacity = n;
     saveTables();
-}
-
-// ---- UTILS ----
-function esc(s) {
-    if (!s) return '';
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
 }
 
 </script>

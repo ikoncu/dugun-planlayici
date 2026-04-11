@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./firestore-helpers.js?v=2"></script>
+    <script src="./shared-ui.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
@@ -22,7 +23,7 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
         /* LOGIN */
-        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
+        #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card .logo{font-size:48px;margin-bottom:16px}
         .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
@@ -127,30 +128,15 @@
         .btn-save:active{opacity:0.85}
 
         /* TOAST */
-        .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--gray-900);color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s;z-index:600;pointer-events:none}
-        .toast.show{opacity:1}
     </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen" style="display:none">
-    <div class="login-card">
-        <div class="logo">💍</div>
-        <h1>Mekanlar</h1>
-        <p>Düğün mekanlarını keşfet ve karşılaştır</p>
-        <button class="google-btn" onclick="fh.signIn()">
-            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
-            Google ile Giriş Yap
-        </button>
-    </div>
-</div>
+<div id="login-screen"></div>
 
 <!-- LOADING -->
-<div id="loading-screen" style="display:flex">
-    <div class="spinner"></div>
-    <div style="font-size:14px;color:var(--gray-500)">Yükleniyor...</div>
-</div>
+<div id="loading-screen" style="display:flex"></div>
 
 <!-- APP -->
 <div id="app">
@@ -158,14 +144,14 @@
     <div class="header">
         <div class="header-row">
             <div style="position:relative">
-                <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+                <div id="user-avatar-container" onclick="UI.toggleDropdown()"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-name"></div>
                     <button class="dd-btn" onclick="fh.signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Mekanlar</h1>
-            <button class="hamburger" onclick="toggleDrawer()">&#9776;</button>
+            <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
     </div>
 
@@ -180,26 +166,7 @@
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bnav" id="bnav" style="display:none">
-    <a href="index.html"><span class="bicon">&#127968;</span>Ana Sayfa</a>
-    <a href="gorevler.html"><span class="bicon">&#9989;</span>Görevler</a>
-    <a class="active" href="mekanlar.html"><span class="bicon">&#127963;&#65039;</span>Mekanlar</a>
-    <a href="davetliler.html"><span class="bicon">&#128101;</span>Davetliler</a>
-</nav>
-
-<!-- DRAWER -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
-<div class="drawer" id="drawer">
-    <div class="drawer-header">&#128141; Düğün Planlayıcı</div>
-    <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">&#127968;</span>Ana Sayfa</a>
-    <a class="drawer-item" href="gorevler.html"><span class="di-icon">&#9989;</span>Görevler</a>
-    <a class="drawer-item active" href="mekanlar.html"><span class="di-icon">&#127963;&#65039;</span>Mekanlar</a>
-    <a class="drawer-item" href="davetliler.html"><span class="di-icon">&#128101;</span>Davetliler</a>
-    <div class="drawer-section">Diğer</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">&#128176;</span>Bütçe</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">&#129681;</span>Masa Planı</a>
-</div>
+<nav class="bnav" id="bnav" style="display:none"></nav>
 
 <!-- ADD VENUE MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
@@ -225,76 +192,35 @@
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
 
 <script>
-const DEFAULT_VENUES = [
-    {id:'v1',name:'Şelale Plaza Düğün Salonu',instagram:'https://www.instagram.com/selaleplazadugunsalonu/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v2',name:'Pembe Köşk Balo Salonu',instagram:'https://www.instagram.com/pembekoskbalosalon/',features:['Balo Salonu'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v3',name:'Marina Gaziantep BKM',instagram:'https://www.instagram.com/marinagaziantepbkm/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v4',name:'Vadi Garden Gaziantep',instagram:'https://www.instagram.com/vadigardengaziantep/',features:['Bahçe','Açık Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v5',name:'Livas Park Düğün',instagram:'https://www.instagram.com/livasparkdugun/',features:['Park','Açık Hava'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v6',name:'Ceremony Erikçe',instagram:'https://www.instagram.com/ceremonyerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''},
-    {id:'v7',name:'MSM Erikçe',instagram:'https://www.instagram.com/msmerikce/',features:['Salon'],notes:'',favorite:false,price:'',capacity:'',contact:''}
-];
+UI.injectLogin('Mekanlar', 'Mekan listenize erişin');
+UI.injectLoading();
+UI.injectBnav('mekanlar');
+UI.injectDrawer('mekanlar');
 
-// Firebase init via helpers
-fh.init();
+UI.setupAuth({
+    onLogin: function() {
+        startListen();
+    }
+});
 
 let venues = [];
 let expandedId = null;
 
-function toggleDropdown(){
-    document.getElementById('user-dropdown').classList.toggle('open');
-}
-document.addEventListener('click', e=>{
-    const dd = document.getElementById('user-dropdown');
-    if(dd && !e.target.closest('#user-avatar-container') && !e.target.closest('#user-dropdown')) dd.classList.remove('open');
-});
-
-function renderAvatar(u){
-    const c = document.getElementById('user-avatar-container');
-    if(u.photoURL){
-        c.innerHTML = '<img class="user-avatar" src="'+u.photoURL+'" referrerpolicy="no-referrer">';
-    } else {
-        c.innerHTML = '<div class="user-avatar-fallback">'+(u.displayName||u.email||'?').charAt(0).toUpperCase()+'</div>';
-    }
-    document.getElementById('user-name').textContent = u.displayName||u.email||'';
-}
-
-fh.onAuth({
-    onLogin(u) {
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('loading-screen').style.display='flex';
-        renderAvatar(u);
-        startListen();
-    },
-    onLogout() {
-        document.getElementById('login-screen').style.display='flex';
-        document.getElementById('app').style.display='none';
-        document.getElementById('bnav').style.display='none';
-        document.getElementById('loading-screen').style.display='none';
-    }
-});
-
 function startListen(){
     fh.listen('shared/venues', (data) => {
-        document.getElementById('loading-screen').style.display='none';
-        document.getElementById('app').style.display='block';
-        document.getElementById('bnav').style.display='flex';
+        UI.showApp();
         if(data){
             venues = (data.list && Array.isArray(data.list)) ? data.list : [];
         } else {
-            // Doc hic yok: ilk kez aciliyor, default seed
-            venues = JSON.parse(JSON.stringify(DEFAULT_VENUES));
-            saveVenues();
+            venues = [];
+            fh.toast('Henüz mekan yok — ekleyerek başlayın','info');
         }
         renderVenues();
     }, { onError(err) {
         console.error(err);
-        document.getElementById('loading-screen').style.display='none';
-        document.getElementById('app').style.display='block';
-        document.getElementById('bnav').style.display='flex';
+        UI.showApp();
     }});
 }
 
@@ -311,10 +237,6 @@ function sortedVenues(){
         if(!a.favorite && b.favorite) return 1;
         return a.name.localeCompare(b.name,'tr');
     });
-}
-
-function esc(s){
-    const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;
 }
 
 function renderVenues(){
@@ -335,14 +257,14 @@ function renderVenues(){
 
         html += '<div class="venue-card'+favClass+expClass+'" data-id="'+v.id+'">';
         html += '<div class="vc-top">';
-        html += '<div class="vc-name">'+esc(v.name)+'</div>';
+        html += '<div class="vc-name">'+UI.esc(v.name)+'</div>';
         html += '<button class="vc-fav" onclick="toggleFav(\''+v.id+'\')">'+(v.favorite ? '&#11088;' : '&#9734;')+'</button>';
         html += '</div>';
 
         // Kapalı: 3 satır not preview (son satır fade-out)
         if(!isExpanded){
             if(v.notes && v.notes.trim()){
-                html += '<div class="vc-note-preview">'+esc(v.notes)+'</div>';
+                html += '<div class="vc-note-preview">'+UI.esc(v.notes)+'</div>';
             } else {
                 html += '<div class="vc-note-empty">Not ekle...</div>';
             }
@@ -350,15 +272,15 @@ function renderVenues(){
 
         // Açık: tam not (okunabilir, scroll) + düzenle + aksiyonlar
         html += '<div class="vc-detail">';
-        html += '<div class="vc-note-full" id="note-display-'+v.id+'" onclick="startEditNote(\''+v.id+'\')">'+esc(v.notes||'')+'</div>';
-        html += '<textarea class="vc-note-edit" id="note-edit-'+v.id+'" placeholder="Not yaz..." onblur="finishEditNote(\''+v.id+'\',this.value)">'+esc(v.notes)+'</textarea>';
+        html += '<div class="vc-note-full" id="note-display-'+v.id+'" onclick="startEditNote(\''+v.id+'\')">'+UI.esc(v.notes||'')+'</div>';
+        html += '<textarea class="vc-note-edit" id="note-edit-'+v.id+'" placeholder="Not yaz..." onblur="finishEditNote(\''+v.id+'\',this.value)">'+UI.esc(v.notes)+'</textarea>';
         html += '<button class="vc-note-edit-btn" onclick="startEditNote(\''+v.id+'\')">&#9998; Notu Düzenle</button>';
 
         html += '<div class="vc-actions">';
         if(v.instagram){
             const igUser = v.instagram.replace(/https?:\/\/(www\.)?instagram\.com\/?/,'').replace(/\/$/,'');
             const intentUrl = 'intent://instagram.com/'+igUser+'#Intent;package=com.instagram.android;scheme=https;end';
-            html += '<a class="ig" href="'+intentUrl+'" onclick="event.preventDefault();window.location.href=\'instagram://user?username='+igUser+'\';setTimeout(()=>{window.open(\''+esc(v.instagram)+'\',\'_blank\')},500)">Instagram</a>';
+            html += '<a class="ig" href="'+intentUrl+'" onclick="event.preventDefault();window.location.href=\'instagram://user?username='+igUser+'\';setTimeout(()=>{window.open(\''+UI.esc(v.instagram)+'\',\'_blank\')},500)">Instagram</a>';
         }
         html += '<button class="del" onclick="removeVenue(\''+v.id+'\')">Sil</button>';
         html += '</div>';
@@ -470,11 +392,6 @@ function saveNewVenue(){
     saveVenues();
     document.getElementById('modal-overlay').classList.remove('open');
     fh.toast('Mekan eklendi','success');
-}
-
-function toggleDrawer(){
-    document.getElementById('drawer').classList.toggle('open');
-    document.getElementById('drawer-overlay').classList.toggle('open');
 }
 
 </script>

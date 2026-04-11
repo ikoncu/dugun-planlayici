@@ -1,6 +1,19 @@
 # Backlog — Düğün Planlayıcı
 
-## ✅ Tamamlanan
+## Tamamlanan
+
+### v0.6 — Hosting + Temizlik + Altyapı (11 Nisan 2026)
+- Firebase Hosting'e geçiş (GitHub Pages'den)
+- Repo private yapılacak (İbrahim yapacak)
+- UID allowlist: sadece İbrahim + Hilal erişebilir
+- shared-ui.js: ortak bileşenler (login, drawer, bnav, avatar) tek dosyada
+- Bütçe sayfası kaldırıldı (butce.html silindi, dashboard bölümü kaldırıldı)
+- Masa planı bnav'a 5. link olarak eklendi
+- Ölü kod temizliği (dead toast, saveGuests, duplicate esc/renderAvatar/toggleDrawer)
+- Backup sistemi fh.history'ye entegre (shared/guests_backup yerine history/ subcollection)
+- Seed data koddan çıkarıldı (DEFAULT_GUESTS, DEFAULT_TASKS, DEFAULT_VENUES)
+- Dashboard progress subtask-aware fix
+- masa-plani div nesting fix
 
 ### v0.5 — Kurtarma Mekanizması (10 Nisan 2026)
 - `firebase-config.js` + `firestore-helpers.js` ortak modül
@@ -10,37 +23,22 @@
 - Firestore Security Rules: `request.auth != null`
 
 ### Önceki fazlar
-- Phase A: Sheets sync temizliği
-- Phase B: Davetliler iyileştirmeleri (drag-drop, RSVP, arama)
-- Phase C: Rose & Navy teması
-- Phase D: Dashboard timeline
-- Phase E: Görevler agenda redesign
-- Phase H: Türkçeleştirme (trLabel)
-- Phase I: Bütçe v2
-- Phase J: Critical bug fixes (transaction, seeding, dirty check)
-- Phase K: MEDIUM fixes (Türkçe nav, searchable dropdown, hasPendingWrites)
-- Phase L: CLAUDE.md + backlog + memory yapısı
+- Phase A-E: Sheets sync temizliği, davetli iyileştirmeleri, tema, timeline, görevler redesign
+- Phase H-K: Türkçeleştirme, bütçe v2, critical fixes, UX polish
+- Phase L-M: CLAUDE.md altyapı, bilgi konsolidasyonu
 
-## 📋 Bekleyen — UX Polish
+## Bekleyen — UX Polish
 
-- [x] showToast kopyalarını fh.toast() ile değiştir (4 dosya, 25 çağrı) ✅
-- [x] Mekanlar dead code temizle (VENUE_NAME_MIGRATION kaldırıldı) ✅
-- [x] Görevler sayfası compact kart yapısına geçiş ✅
-- [x] Timeline: setInterval(60s) → visibilitychange (temiz kod) ✅
+- [ ] Mekan kartlarında note textarea otomatik büyüme (yazdıkça)
+- [ ] Görevler drag-drop: long-press 400ms → visual feedback ekle (kullanıcı "tıkladım" sanmasın)
 
-## 🗓️ Gelecek Fazlar
-
-### v0.6 — Hosting & Repo Taşıma
-- [ ] GitHub repo public → private
-- [ ] Firebase Hosting'e geçiş (dugun-planlayici.web.app)
-- [ ] Eski GitHub Pages URL'inden yönlendirme
-- [ ] Firebase Hosting CLI deploy script
+## Gelecek Fazlar
 
 ### v0.7 — Soft Delete
 - [ ] Item'lara `deletedAt` field pattern'ı
 - [ ] "Çöp Kutusu" görünümü (sayfa içi chip)
 - [ ] 30 gün sonra otomatik kalıcı silme
-- [ ] Sayfalar: davetliler + görevler + bütçe
+- [ ] Sayfalar: davetliler + görevler
 
 ### v0.8 — Observability
 - [ ] Sentry free tier (client-side error tracking)
@@ -48,8 +46,7 @@
 
 ### v1.0 — Çok Kullanıcılı Geçiş
 - [ ] Veri modeli: `shared/*` → `weddings/{weddingId}/*`
-- [ ] Firestore Security Rules (wedding üyeliğine göre)
+- [ ] Firestore Security Rules: UID allowlist → wedding membership modeline geçiş
 - [ ] Firebase Blaze plan (scheduled export, PITR)
 - [ ] Staging environment
-- [ ] Onboarding akışı
-- [ ] DEFAULT_TASKS / DEFAULT_VENUES seed datalarını kaldır (hardcoded → onboarding ile dinamik)
+- [ ] Onboarding akışı (seed data dinamik olarak oluşturulacak)

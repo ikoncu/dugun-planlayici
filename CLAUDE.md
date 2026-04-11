@@ -26,31 +26,34 @@ Claude her yeni bilgiyi, yönlendirmeyi veya kararı otomatik olarak doğru dosy
 
 ## Canlı & Deploy
 
-- **URL**: https://ikoncu.github.io/dugun-planlayici/
-- **Repo**: https://github.com/ikoncu/dugun-planlayici (public)
-- **Deploy**: `git push origin main` → GitHub Pages (1-2 dk)
+- **URL**: https://dugun-planlayici-ff34e.web.app (Firebase Hosting)
+- **Repo**: https://github.com/ikoncu/dugun-planlayici (private yapılacak)
+- **Deploy**: `firebase deploy --project dugun-planlayici-ff34e`
 - **Lokal**: `ruby -run -e httpd . -p 8080` (launch.json)
-- **Firebase CLI**: `firebase deploy --only firestore:rules --project dugun-planlayici-ff34e`
+- **Sadece rules**: `firebase deploy --only firestore:rules --project dugun-planlayici-ff34e`
 - **Push öncesi onay al** — canlıya almadan kullanıcıya sor.
 
 ## Teknik Yığın
 
-- 6 HTML + `firebase-config.js` + `firestore-helpers.js` (ortak modül)
-- Firebase Firestore (Spark/free), Google Auth, GitHub Pages
-- `fh.init()` / `fh.listen()` / `fh.saveDoc()` — tüm sayfalar bu helper'ı kullanır
+- 5 HTML + `firebase-config.js` + `firestore-helpers.js` + `shared-ui.js`
+- Firebase Firestore (Spark/free), Google Auth, Firebase Hosting
+- `fh` = veri katmanı: `fh.init()` / `fh.listen()` / `fh.saveDoc()` / `fh.forceVersion()` / `fh.loadHistory()`
+- `UI` = görsel katman: `UI.injectLogin()` / `UI.injectBnav()` / `UI.injectDrawer()` / `UI.setupAuth()` / `UI.showApp()`
 - Otomatik versiyonlama: her save'de `history/` subcollection'a snapshot (5dk throttle, 30 retention)
-- Security Rules: `request.auth != null` (Firebase Console'dan deploy edildi)
+- Security Rules: UID allowlist (sadece İbrahim + Hilal erişebilir)
 
 ## Dosya Yapısı
 
 | Dosya | Sayfa | Firestore Doc |
 |-------|-------|---------------|
-| `index.html` | Dashboard (timeline + özetler) | 4 doc'u dinler |
+| `index.html` | Dashboard (timeline + özetler) | 3 doc dinler (tasks, guests, venues) |
 | `gorevler.html` | Görevler (subtask, drag-drop) | `shared/planner_tasks` |
-| `davetliler.html` | 62 davetli, RSVP | `shared/guests` |
-| `mekanlar.html` | 7 mekan, not odaklı | `shared/venues` |
-| `butce.html` | Bütçe kalemleri | `shared/budget_v2` |
+| `davetliler.html` | Davetliler, RSVP, backup | `shared/guests` |
+| `mekanlar.html` | Mekanlar, not odaklı | `shared/venues` |
 | `masa-plani.html` | Masa düzeni | `shared/tables` + `shared/guests` |
+| `shared-ui.js` | Ortak UI (login, drawer, bnav, avatar) | — |
+| `firestore-helpers.js` | Veri katmanı (auth, CRUD, versiyonlama) | — |
+| `firebase-config.js` | Firebase credentials | — |
 
 ## Kritik Prensipler
 
@@ -65,12 +68,14 @@ Claude her yeni bilgiyi, yönlendirmeyi veya kararı otomatik olarak doğru dosy
 
 ## Versiyon
 
-- **Şu an**: v0.5 (kurtarma mekanizması tamamlandı)
+- **Şu an**: v0.6 (hosting geçişi + shared-ui + temizlik)
 - **Sıradaki**: BACKLOG.md'ye bak
 - **v1.0**: çok kullanıcılı geçiş (ertelendi)
 
 ## Dikkat
 
-- `shared/guests` → 62 gerçek kişi, seed üstüne yazma
+- `shared/guests` → gerçek kişiler, seed data koddan kaldırıldı (v0.6), veri sadece Firestore'da
 - `shared/roadmap` → eski atıl veri, kod kullanmıyor
+- `shared/budget_v2` → bütçe sayfası kaldırıldı (v0.6), Firestore doc korunuyor
 - Localhost'ta Security Rules nedeniyle veri gelmez (gerçek Google auth gerekir)
+- Yeni sayfa eklemek: `shared-ui.js` PAGES dizisine 1 satır + yeni HTML dosyası

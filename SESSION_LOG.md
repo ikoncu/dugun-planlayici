@@ -85,8 +85,26 @@ Son güncelleme: 2026-04-09
 - **Global CLAUDE.md** oluşturuldu (`~/.claude/CLAUDE.md`): tüm projelerde geçerli 9 kural
   - Mevcut `ibrahim-koncu.md` ve `howtoplanskills.md` korundu, referans verildi
 
+### Phase N — v0.6: Hosting + Altyapı + Temizlik (11 Nisan 2026)
+- **Tam proje taraması**: 4500+ satır, 8 dosya satır satır incelendi
+- **Bug fix'ler**: Dashboard progress subtask-aware, masa-plani div nesting, bütçe b.list→b.items
+- **Bütçe sayfası kaldırıldı**: butce.html silindi, dashboard bölümü + drawer linki kaldırıldı
+- **Masa planı bnav'a eklendi**: 5 linkli bottom nav (Ana Sayfa, Görevler, Mekanlar, Davetliler, Masa)
+- **shared-ui.js oluşturuldu**: login, loading, drawer, bnav, avatar, auth flow tek dosyada
+  - 5 HTML dosyasından ~1000 satır duplicate kod kaldırıldı
+  - Yeni sayfa = PAGES dizisine 1 satır
+  - Standardizasyon: .open class, flex bnav, Structure C header
+- **UID allowlist**: Firestore rules'a İbrahim + Hilal UID'leri eklendi
+- **Firebase Hosting'e geçiş**: firebase.json güncellendi, GitHub Pages'den geçiş
+- **Seed data kaldırıldı**: DEFAULT_GUESTS (37 kişi + telefon), DEFAULT_TASKS, DEFAULT_VENUES koddan çıkarıldı
+- **Backup basitleştirildi**: shared/guests_backup → fh.history entegrasyonu (forceVersion + loadHistory)
+- **Ölü kod temizliği**: dead toast CSS/HTML, saveGuests(), esc() kopyaları, renderAvatar kopyaları
+- **Migration kaldırıldı**: applyMigration_20260406() (zaten çalışmış)
+- **Kararlar**: İbrahim ile 4 turda AskUserQuestion ile tüm kararlar alındı
+
 ## Son Durum
-- Canlı: `ikoncu.github.io/dugun-planlayici`
-- Son commit: `c871d4e`
-- Versiyon: v0.5
+- Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
+- Versiyon: v0.6
+- 5 sayfa: index, gorevler, davetliler, mekanlar, masa-plani
+- 3 JS modülü: firebase-config.js, firestore-helpers.js, shared-ui.js
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)

@@ -2,10 +2,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Sadece Google ile giriş yapmış kullanıcılar okuyup yazabilir
-    // Tarih sınırı yok — süresiz çalışır
+    // Sadece İbrahim ve Hilal erişebilir
+    // v1.0'da UID allowlist → wedding membership modeline geçilecek
+    function isOwner() {
+      return request.auth != null &&
+        request.auth.uid in ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
+    }
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isOwner();
     }
   }
 }

@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
     <script src="./firestore-helpers.js?v=2"></script>
+    <script src="./shared-ui.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -25,7 +26,7 @@
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
         /* LOGIN */
-        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
+        #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
         .login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
         .login-card .logo{font-size:48px;margin-bottom:16px}
         .login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
@@ -216,8 +217,6 @@
         .ibtn-go:active{opacity:0.8}
 
         /* TOAST */
-        .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:opacity 0.3s;pointer-events:none}
-        .toast.show{opacity:1}
 
         /* LOADING */
         #loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
@@ -227,24 +226,9 @@
 </head>
 <body>
 
-<!-- LOGIN (hidden by default - shows only if not authenticated) -->
-<div id="login-screen" style="display:none">
-    <div class="login-card">
-        <div class="logo">💍</div>
-        <h1>Düğün Planlayıcı</h1>
-        <p>Düğün davetlilerini yönetin</p>
-        <button class="google-btn" onclick="fh.signIn()">
-            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.998 23.998 0 0 0 0 24c0 3.77.9 7.35 2.56 10.52l7.97-5.93z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.93C6.51 42.62 14.62 48 24 48z"/></svg>
-            Google ile Giriş Yap
-        </button>
-    </div>
-</div>
+<div id="login-screen"></div>
 
-<!-- LOADING (visible by default - first thing user sees) -->
-<div id="loading-screen" style="display:flex">
-    <div class="spinner"></div>
-    <div style="font-size:14px;color:var(--gray-500)">Yükleniyor...</div>
-</div>
+<div id="loading-screen" style="display:flex"></div>
 
 <!-- APP -->
 <div id="app">
@@ -252,14 +236,14 @@
     <div class="header">
         <div class="header-row">
             <div style="position:relative">
-                <div id="user-avatar-container" onclick="toggleDropdown()"></div>
+                <div id="user-avatar-container" onclick="UI.toggleDropdown()"></div>
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-dropdown-name" id="user-name"></div>
                     <button onclick="fh.signOut()">Çıkış Yap</button>
                 </div>
             </div>
             <h1>Davetliler</h1>
-            <button class="hamburger" onclick="toggleDrawer()">☰</button>
+            <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
     </div>
 
@@ -326,29 +310,7 @@
     <button class="fab" id="fab-add" onclick="openAddModal()">+</button>
 </div>
 
-<!-- BOTTOM NAV -->
-<nav class="bnav" id="bnav" style="display:none">
-    <a href="index.html"><span class="bicon">🏠</span>Ana Sayfa</a>
-    <a href="gorevler.html"><span class="bicon">✅</span>Görevler</a>
-    <a href="mekanlar.html"><span class="bicon">🏛️</span>Mekanlar</a>
-    <a class="active" href="davetliler.html"><span class="bicon">👥</span>Davetliler</a>
-</nav>
-
-<!-- DRAWER MENU -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
-<div class="drawer" id="drawer">
-    <div class="drawer-header">💍 Düğün Planlayıcı</div>
-    <div class="drawer-section">Sayfalar</div>
-    <a class="drawer-item" href="index.html"><span class="di-icon">🏠</span>Ana Sayfa</a>
-    <a class="drawer-item" href="gorevler.html"><span class="di-icon">✅</span>Görevler</a>
-    <a class="drawer-item" href="mekanlar.html"><span class="di-icon">🏛️</span>Mekanlar</a>
-    <a class="drawer-item active" href="davetliler.html"><span class="di-icon">👥</span>Davetliler</a>
-    <div class="drawer-section">Diğer</div>
-    <a class="drawer-item" href="butce.html"><span class="di-icon">💰</span>Bütçe</a>
-    <a class="drawer-item" href="masa-plani.html"><span class="di-icon">🪑</span>Masa Planı</a>
-    <div class="drawer-section">Davetli Araçları</div>
-    <a class="drawer-item" onclick="toggleDrawer();showBackupHistory()"><span class="di-icon">💾</span>Yedekler</a>
-</div>
+<nav class="bnav" id="bnav" style="display:none"></nav>
 
 <!-- ADD/EDIT MODAL -->
 <div class="modal-bg" id="modal-guest" onclick="if(event.target===this)tryCloseModal()">
@@ -423,7 +385,6 @@
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
 
 <!-- CONFIRM DELETE -->
 <div class="confirm-bg" id="confirm-del" onclick="if(event.target===this)this.classList.remove('show')">
@@ -437,48 +398,17 @@
 </div>
 
 <script>
-const DEFAULT_GUESTS = [
-    {id:'g1',name:'Hilal Yuksel',side:'Gelin',group:'',phone:'546 715 04 15',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g2',name:'Ibrahim Koncu',side:'Damat',group:'',phone:'534 733 60 93',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g3',name:'Sehrazat Capanoglu',side:'Gelin',group:'',phone:'545 912 76 40',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g4',name:'Basri Yuksel',side:'Gelin',group:'',phone:'554 832 96 08',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g5',name:'Sukriye Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g6',name:'Yalcin Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g7',name:'Lisa Winkles',side:'Gelin',group:'',phone:'31 6 46370501',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g8',name:'Ali Ekber Yuksel',side:'Gelin',group:'',phone:'31 6 40815427',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g9',name:'Busra Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g10',name:'Huseyin Koncu',side:'Damat',group:'',phone:'',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g11',name:'Yalcin Koncu Jr.',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g12',name:'Betul Bakir',side:'Gelin',group:'',phone:'546 690 44 52',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g13',name:'Tahsin Bakir',side:'Gelin',group:'',phone:'542 243 52 00',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g14',name:'Cengiz Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g15',name:'Hatice Koncu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g16',name:'Ruveyda Mete',side:'Gelin',group:'',phone:'533 216 92 36',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g17',name:'Alper Mete',side:'Gelin',group:'',phone:'542 721 22 98',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g18',name:'Deniz Bakir',side:'Gelin',group:'',phone:'530 171 34 09',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g19',name:'Esvet Bakir',side:'Gelin',group:'',phone:'532 569 83 44',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g20',name:'Guzin Bakir',side:'Gelin',group:'',phone:'542 797 41 90',adults:1,children:1,total:2,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g21',name:'Ensar Bakir',side:'Gelin',group:'',phone:'543 190 94 94',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g22',name:'Nihal Mete',side:'Gelin',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g23',name:'Abdullah Mete',side:'Gelin',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g24',name:'Berna Nalcioglu',side:'Gelin',group:'',phone:'539 587 93 62',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g25',name:'Omur Koclu',side:'Gelin',group:'',phone:'549 365 65 01',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g26',name:'Husamettin Koclu',side:'Gelin',group:'',phone:'532 251 00 44',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g27',name:'Aysel Akar',side:'Gelin',group:'',phone:'532 667 28 51',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g28',name:'Kamuran Pelenk',side:'Gelin',group:'',phone:'537 294 85 51',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g29',name:'Zeynep Akin',side:'Gelin',group:'',phone:'530 397 27 05',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g30',name:'Selen Tekin',side:'Damat',group:'',phone:'507 101 66 61',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g31',name:'Cihan Tekin',side:'Damat',group:'',phone:'507 682 42 32',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g32',name:'Busra Celikhan',side:'Damat',group:'',phone:'538 598 50 27',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g33',name:'Mehmet Celikhan',side:'Damat',group:'',phone:'539 277 57 73',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g34',name:'Berk Ozturk',side:'Damat',group:'',phone:'531 860 48 60',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g35',name:'Suna',side:'Damat',group:'',phone:'536 420 79 23',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g36',name:'Emre Karaoglu',side:'Damat',group:'',phone:'',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-    {id:'g37',name:'Bengu Yilgur',side:'Gelin',group:'',phone:'537 515 37 03',adults:1,children:0,total:1,invited:'Gonderilmedi',rsvp:'Beklemede',table:'',note:''},
-];
 
-// Firebase init — helper üzerinden
-fh.init();
+UI.injectLogin('Davetliler', 'Davetli listenize erişin');
+UI.injectLoading();
+UI.injectBnav('davetliler');
+UI.injectDrawer('davetliler');
+
+UI.setupAuth({
+    onLogin: function() {
+        startListening();
+    }
+});
 
 let guests = [];
 let activeFilter = 'all';
@@ -486,64 +416,22 @@ let activeSort = 'alpha-az';
 let openCardId = null;
 let deleteTargetId = null;
 
-function toggleDropdown(){
-    document.getElementById('user-dropdown').classList.toggle('open');
-}
-document.addEventListener('click', e=>{
-    const dd = document.getElementById('user-dropdown');
-    if(dd && !e.target.closest('.header-right')) dd.classList.remove('open');
-});
-
-function renderAvatar(u){
-    const c = document.getElementById('user-avatar-container');
-    if(u.photoURL){
-        c.innerHTML = '<img class="user-avatar" src="'+u.photoURL+'" referrerpolicy="no-referrer">';
-    } else {
-        c.innerHTML = '<div class="user-avatar-fallback">'+(u.displayName||u.email||'?').charAt(0).toUpperCase()+'</div>';
-    }
-    document.getElementById('user-name').textContent = u.displayName||u.email||'';
-}
-
-fh.onAuth({
-    onLogin: (u) => {
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('loading-screen').style.display='flex';
-        if(u.photoURL || u.displayName) renderAvatar(u);
-        startListening();
-    },
-    onLogout: () => {
-        document.getElementById('login-screen').style.display='flex';
-        document.getElementById('app').style.display='none';
-        document.getElementById('bnav').style.display='none';
-        document.getElementById('loading-screen').style.display='none';
-    }
-});
-
 // Firestore listen — helper üzerinden (hasPendingWrites + versiyonlama dahil)
-let firstLoad = true;
 function startListening(){
     fh.listen('shared/guests', (data, snap) => {
-        document.getElementById('loading-screen').style.display='none';
-        document.getElementById('app').style.display='block';
-        document.getElementById('bnav').style.display='flex';
+        UI.showApp();
         if(data && data.list && data.list.length > 0){
             guests = data.list;
         } else {
-            guests = JSON.parse(JSON.stringify(DEFAULT_GUESTS));
-            saveToFirestore();
+            guests = [];
+            fh.toast('Henüz davetli yok — ekleyerek başlayın','info');
         }
         updateDashboard();
         renderList();
-        if(firstLoad){
-            firstLoad = false;
-            applyMigration_20260406();
-        }
     }, {
         onError: () => {
-            document.getElementById('loading-screen').style.display='none';
-            document.getElementById('app').style.display='block';
-            document.getElementById('bnav').style.display='flex';
-            guests = JSON.parse(JSON.stringify(DEFAULT_GUESTS));
+            UI.showApp();
+            guests = [];
             updateDashboard();
             renderList();
         }
@@ -554,103 +442,35 @@ function saveToFirestore(){
     fh.saveDoc('shared/guests', {list: guests});
 }
 
-// Tek seferlik migration - davetli ekle/cikar (06 Nisan 2026)
-function applyMigration_20260406(){
-    const MIGRATION_KEY = 'migration_20260406_done';
-    if(localStorage.getItem(MIGRATION_KEY)) return;
-
-    const norm = s=>(s||'').toLowerCase().replace(/\s+/g,' ').trim();
-    let changed = false;
-
-    // Cikarilacaklar
-    const removeNames = ['suzan ozcelik','ela (aysel)','ela aysel','duru (aysel)','duru aysel'];
-    const beforeLen = guests.length;
-    guests = guests.filter(g=>!removeNames.includes(norm(g.name)));
-    if(guests.length < beforeLen) changed = true;
-
-    // Eklenecekler (Gelin tarafi, Katilacak)
-    const addGuests = [
-        {name:'Nevra Kuralay', side:'Gelin', group:'Kuralay', rsvp:'Katilacak'},
-        {name:'Kuzey Kuralay', side:'Gelin', group:'Kuralay', rsvp:'Katilacak'},
-        {name:'Ali Koclu', side:'Gelin', group:'Koclu', rsvp:'Katilacak'},
-        {name:'Beste Koclu', side:'Gelin', group:'Koclu', rsvp:'Katilacak'},
-        {name:'Alin Koclu', side:'Gelin', group:'Koclu', rsvp:'Katilacak'},
-        {name:'Aycan Pelenk', side:'Gelin', group:'Pelenk', rsvp:'Katilacak'},
-        {name:'Doruk Pelenk', side:'Gelin', group:'Pelenk', rsvp:'Katilacak'}
-    ];
-
-    const existingNames = new Set(guests.map(g=>norm(g.name)));
-    addGuests.forEach(ag=>{
-        if(!existingNames.has(norm(ag.name))){
-            guests.push({
-                id: 'g'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
-                name: ag.name, side: ag.side, group: ag.group,
-                phone:'', adults:1, children:0, total:1,
-                invited:'Gonderilmedi', rsvp: ag.rsvp, table:'', note:''
-            });
-            changed = true;
-        }
-    });
-
-    if(changed){
-        createBackup('Migration 06.04.2026 oncesi').then(()=>{
-            saveToFirestore();
-            fh.toast('Liste güncellendi: yeni kişiler eklendi, çıkarılan kişiler kaldırıldı','success');
-        });
-    }
-    localStorage.setItem(MIGRATION_KEY, 'true');
-}
-
-// --- BACKUP SISTEMI ---
+// --- BACKUP SISTEMI (fh.history entegrasyonu) ---
 function createBackup(reason){
-    return backupRef.get().then(snap=>{
-        let backups = [];
-        if(snap.exists && snap.data().versions){
-            backups = snap.data().versions;
-        }
-        // Max 10 backup tut
-        if(backups.length>=10) backups = backups.slice(-9);
-        backups.push({
-            date: new Date().toISOString(),
-            reason: reason||'Manuel',
-            count: guests.length,
-            list: JSON.parse(JSON.stringify(guests))
-        });
-        return backupRef.set({versions:backups});
-    }).catch(e=>console.error('Backup error:',e));
+    return fh.forceVersion('shared/guests', reason || 'Manuel')
+        .catch(e=>console.error('Backup error:',e));
 }
 
 function showBackupHistory(){
-    backupRef.get().then(snap=>{
-        let backups = [];
-        if(snap.exists && snap.data().versions) backups = snap.data().versions;
-
+    fh.loadHistory('shared/guests').then(versions=>{
         const modal = document.createElement('div');
         modal.className = 'import-modal-bg show';
         modal.onclick = function(e){if(e.target===this)this.remove();};
 
         let listHtml = '';
-        if(backups.length===0){
+        if(versions.length===0){
             listHtml = '<div style="text-align:center;color:var(--gray-400);padding:20px">Henüz yedek yok</div>';
         } else {
-            backups.slice().reverse().forEach((b,i)=>{
-                const d = new Date(b.date);
-                const dateStr = d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
-                const idx = backups.length-1-i;
+            versions.forEach((v)=>{
+                const d = v.createdAt;
+                const dateStr = d ? d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) : 'Tarih yok';
                 listHtml += '<div class="backup-item">'+
                     '<div><div class="bi-date">'+dateStr+'</div>'+
-                    '<div class="bi-info">'+b.count+' davetli \u2022 '+b.reason+'</div></div>'+
-                    '<button class="bi-restore" onclick="restoreBackup('+idx+')">Geri Yükle</button></div>';
+                    '<div class="bi-info">'+(v.itemCount||0)+' davetli \u2022 '+(v.label||'Otomatik')+'</div></div>'+
+                    '<button class="bi-restore" onclick="restoreBackup(\''+v.id+'\')">Geri Yükle</button></div>';
             });
         }
 
         modal.innerHTML = '<div class="import-modal">'+
             '<h3>Yedek Geçmişi</h3>'+
-            '<div class="im-sub">Son 10 yedek saklanır. Geri yüklemeden önce mevcut liste otomatik yedeklenir.</div>'+
-            '<div style="margin:10px 0">'+
-            '<input id="backup-search" type="text" placeholder="Yedeklerde isim ara (örn: Simay)..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px" oninput="searchInBackups(this.value)">'+
-            '<div id="backup-search-result" style="margin-top:6px;font-size:12px;color:var(--gray-700)"></div>'+
-            '</div>'+
+            '<div class="im-sub">Son 30 yedek saklanır. Geri yüklemeden önce mevcut liste otomatik yedeklenir.</div>'+
             '<div class="backup-list">'+listHtml+'</div>'+
             '<div class="import-btns">'+
             '<button class="ibtn-cancel" onclick="this.closest(\'.import-modal-bg\').remove()">Kapat</button>'+
@@ -660,47 +480,14 @@ function showBackupHistory(){
     });
 }
 
-function searchInBackups(query){
-    const result = document.getElementById('backup-search-result');
-    if(!query || query.length<2){result.innerHTML='';return;}
-    backupRef.get().then(snap=>{
-        if(!snap.exists){result.innerHTML='Yedek yok';return;}
-        const backups = snap.data().versions || [];
-        const q = query.toLowerCase();
-        const found = [];
-        backups.forEach((b,i)=>{
-            (b.list||[]).forEach(g=>{
-                if(g.name && g.name.toLowerCase().includes(q)){
-                    found.push({name:g.name, backupIdx:i, date:b.date});
-                }
-            });
-        });
-        if(found.length===0){
-            result.innerHTML='<span style="color:var(--red)">Bulunamadı</span>';
-        } else {
-            const unique = {};
-            found.forEach(f=>{unique[f.name]=f;});
-            result.innerHTML='<span style="color:var(--green)">Bulundu:</span><br>'+
-                Object.values(unique).map(f=>{
-                    const d=new Date(f.date);
-                    return '<div style="padding:4px 0">&#10003; <b>'+esc(f.name)+'</b> - Yedek #'+(f.backupIdx+1)+' ('+d.toLocaleDateString('tr-TR')+')</div>';
-                }).join('');
-        }
-    });
-}
-
-function restoreBackup(idx){
-    backupRef.get().then(snap=>{
-        if(!snap.exists) return;
-        const backups = snap.data().versions;
-        if(!backups[idx]) return;
-        // Restore oncesi mevcut listeyi yedekle
-        createBackup('Geri yukleme oncesi otomatik').then(()=>{
-            guests = JSON.parse(JSON.stringify(backups[idx].list));
-            saveToFirestore();
-            fh.toast('Liste geri yüklendi: '+guests.length+' davetli','success');
-            document.querySelector('.import-modal-bg').remove();
-        });
+function restoreBackup(versionId){
+    if(!confirm('Bu versiyonu geri yüklemek istediğinize emin misiniz?')) return;
+    fh.adminRestore('shared/guests', versionId).then(()=>{
+        const m = document.querySelector('.import-modal-bg');
+        if(m) m.remove();
+    }).catch(e=>{
+        console.error(e);
+        fh.toast('Geri yükleme başarısız','error');
     });
 }
 
@@ -790,9 +577,9 @@ function renderList(){
         html += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
         html += '<div class="gavatar">'+initials+'</div>';
         html += '<div class="ginfo">';
-        html += '<div class="gname">'+esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
+        html += '<div class="gname">'+UI.esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
         html += '<div class="gmeta">';
-        if(g.phone) html += '<span>'+esc(g.phone)+'</span>';
+        if(g.phone) html += '<span>'+UI.esc(g.phone)+'</span>';
         html += '<span>'+g.adults+' yetişkin'+(g.children>0?', '+g.children+' çocuk':'')+'</span>';
         html += '</div></div>';
         html += '<div class="grsvp"><button class="rsvp-chip '+rsvpClass+'" onclick="event.stopPropagation();cycleRsvp(\''+g.id+'\')">'+rsvpLabel+'</button></div>';
@@ -807,7 +594,7 @@ function renderList(){
         html += '<div class="gd-item"><div class="gd-label">Grup</div><div class="gd-val">'+(g.group||'-')+'</div></div>';
         html += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kişi</div></div>';
         html += '</div>';
-        if(g.note) html += '<div class="gnote">'+esc(g.note)+'</div>';
+        if(g.note) html += '<div class="gnote">'+UI.esc(g.note)+'</div>';
         html += '<div class="gbtns">';
         html += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Düzenle</button>';
         html += '<button class="gbtn-del" onclick="event.stopPropagation();askDelete(\''+g.id+'\')">Sil</button>';
@@ -829,15 +616,6 @@ const TR_LABELS = {
     'Birlikte':'Birlikte'
 };
 function trLabel(s){return TR_LABELS[s]||s;}
-
-function toggleDrawer(){
-    document.getElementById('drawer').classList.toggle('open');
-    document.getElementById('drawer-overlay').classList.toggle('open');
-}
-
-function esc(s){
-    const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;
-}
 
 function toggleCard(id){
     openCardId = openCardId===id ? null : id;
