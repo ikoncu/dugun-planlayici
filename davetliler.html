@@ -622,22 +622,25 @@ function toggleCard(id){
 function cycleRsvp(id){
     const g = guests.find(x=>x.id===id);
     if(!g) return;
-    if(g.rsvp==='Beklemede') g.rsvp='Katilacak';
-    else if(g.rsvp==='Katilacak') g.rsvp='Katilmayacak';
-    else g.rsvp='Beklemede';
-    // Sadece o kartin chip'ini guncelle, tum listeyi yeniden render etme
+    var newRsvp;
+    if(g.rsvp==='Beklemede') newRsvp='Katilacak';
+    else if(g.rsvp==='Katilacak') newRsvp='Katilmayacak';
+    else newRsvp='Beklemede';
+    // Optimistic UI: DOM'u hemen güncelle
+    g.rsvp = newRsvp;
     const card = document.querySelector('.gcard[data-id="'+id+'"]');
     if(card){
         const chip = card.querySelector('.rsvp-chip');
         if(chip){
             chip.classList.remove('rsvp-katilacak','rsvp-katilmayacak','rsvp-beklemede');
-            const cls = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
+            const cls = newRsvp==='Katilacak'?'rsvp-katilacak':newRsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
             chip.classList.add(cls);
-            chip.textContent = trLabel(g.rsvp);
+            chip.textContent = trLabel(newRsvp);
         }
     }
     updateDashboard();
-    saveToFirestore();
+    // Transaction ile güvenli kayıt — eş zamanlı kullanımda veri kaybı olmaz
+    fh.updateItemField('shared/guests', id, { rsvp: newRsvp });
 }
 
 // Modal
@@ -749,10 +752,12 @@ function saveGuest(){
     if(id){
         const idx = guests.findIndex(x=>x.id===id);
         if(idx>=0) guests[idx]=obj;
+        // Transaction ile güvenli güncelleme
+        fh.updateItemField('shared/guests', id, obj);
     } else {
         guests.push(obj);
+        saveToFirestore(); // Yeni ekleme: full write (transaction gerekmez)
     }
-    saveToFirestore();
     closeModal();
 }
 

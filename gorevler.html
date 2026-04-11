@@ -555,6 +555,7 @@ function onTouchStart(e){
         // Long press triggered - start drag
         dragState.active=true;
         dragState.srcIdx=idx;
+        dragState.snapshot=[...tasks]; // Drag başlangıcında snapshot al
         dragState.card=card;
         dragState.startY=touch.clientY;
         const rect=card.getBoundingClientRect();
@@ -614,15 +615,18 @@ function onTouchEnd(e){
         if(target){
             const targetIdx=parseInt(target.dataset.idx);
             if(!isNaN(targetIdx)&&dragState.srcIdx!==targetIdx){
-                const item=tasks.splice(dragState.srcIdx,1)[0];
+                // Snapshot kullan — drag sırasında gelen Firestore güncellemesi bozmasın
+                const src = dragState.snapshot || tasks;
+                const item=src.splice(dragState.srcIdx,1)[0];
                 const rect=target.getBoundingClientRect();
                 const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
-                tasks.splice(insertIdx>dragState.srcIdx?insertIdx-1:insertIdx,0,item);
+                src.splice(insertIdx>dragState.srcIdx?insertIdx-1:insertIdx,0,item);
+                tasks=src;
                 save();
             }
         }
     }
-    dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
+    dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null,snapshot:null};
 }
 
 // Init drag after first render

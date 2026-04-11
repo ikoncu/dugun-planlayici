@@ -41,6 +41,14 @@ const fh = (() => {
         }
         _auth = firebase.auth();
         _db = firebase.firestore();
+        // Offline persistence — internet kesilse bile veri korunur
+        _db.enablePersistence({ synchronizeTabs: true }).catch(function (e) {
+            if (e.code === 'failed-precondition') {
+                console.warn('Persistence: birden fazla sekme açık, sadece birinde aktif');
+            } else if (e.code === 'unimplemented') {
+                console.warn('Persistence: bu tarayıcı desteklemiyor');
+            }
+        });
         _setupErrorHandling();
     }
 
@@ -64,7 +72,12 @@ const fh = (() => {
 
     function signIn() {
         if (!_auth) return;
-        _auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => {
+        var provider = new firebase.auth.GoogleAuthProvider();
+        _auth.signInWithPopup(provider).catch(function (e) {
+            // iOS PWA veya popup engellenirse redirect'e geç
+            if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+                return _auth.signInWithRedirect(provider);
+            }
             console.error('Sign-in error:', e);
             toast('Giriş başarısız', 'error');
         });
@@ -285,6 +298,40 @@ const fh = (() => {
         }));
     }
 
+    // ---- TRANSACTION: TEK ITEM GÜNCELLEME ----
+    /**
+     * Bir list-doc içindeki tek item'ı transaction ile güvenle günceller.
+     * İki kullanıcı aynı anda farklı item'ları güncelleyebilir — birbirini ezmez.
+     *
+     * @param {string} path - Firestore doc path, ör: 'shared/guests'
+     * @param {string} itemId - Güncellenecek item'ın id'si
+     * @param {object} fields - Güncellenecek alanlar, ör: { rsvp: 'Katilacak' }
+     * @returns {Promise<void>}
+     */
+    async function updateItemField(path, itemId, fields) {
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        const parts = path.split('/');
+        const ref = _db.collection(parts[0]).doc(parts[1]);
+        return _db.runTransaction(function (t) {
+            return t.get(ref).then(function (doc) {
+                if (!doc.exists) return;
+                var data = doc.data();
+                var list = data.list || [];
+                var idx = list.findIndex(function (item) { return item.id === itemId; });
+                if (idx < 0) return;
+                list[idx] = Object.assign({}, list[idx], fields);
+                t.set(ref, {
+                    list: list,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: _currentUser ? { uid: _currentUser.uid, name: _currentUser.displayName || 'Bilinmiyor' } : null
+                });
+            });
+        }).catch(function (e) {
+            console.error('Transaction failed [' + path + ']:', e);
+            toast('Kaydedilemedi, tekrar deneyin', 'error');
+        });
+    }
+
     // ---- TOAST ----
     function toast(message, type = 'info') {
         // Container yoksa oluştur
@@ -363,6 +410,7 @@ const fh = (() => {
         adminRestore,
         loadHistory,
         forceVersion,
+        updateItemField,
         toast,
         esc,
         // Internal erişim (gerektiğinde)
