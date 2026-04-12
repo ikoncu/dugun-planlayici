@@ -8,7 +8,7 @@
 window.UI = (function () {
     // ── Sayfa Tanımları ──────────────────────────────────────────
     const PAGES = [
-        { id: 'index',      path: 'index.html',      title: 'Ana Sayfa',   icon: '🏠', bnavIcon: '🏠', bnav: false, drawer: true },
+        { id: 'index',      path: 'index.html',      title: 'Ana Sayfa',   icon: '🏠', bnavIcon: '🏠', bnav: true,  drawer: true },
         { id: 'gorevler',   path: 'gorevler.html',    title: 'Görevler',    icon: '📋', bnavIcon: '✅', bnav: true,  drawer: true },
         { id: 'mekanlar',   path: 'mekanlar.html',    title: 'Mekanlar',    icon: '🏛️', bnavIcon: '🏛️', bnav: true,  drawer: true },
         { id: 'davetliler', path: 'davetliler.html',  title: 'Davetliler',  icon: '👥', bnavIcon: '👥', bnav: true,  drawer: true },
