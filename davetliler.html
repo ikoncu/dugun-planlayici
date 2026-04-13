@@ -516,7 +516,7 @@ function buildCardHTML(g) {
     h += '<div class="gname">'+UI.esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
     h += '<div class="gmeta">';
     if(g.phone) h += '<span>'+UI.esc(g.phone)+'</span>';
-    h += '<span>'+g.adults+' yetişkin'+(g.children>0?', '+g.children+' çocuk':'')+'</span>';
+    h += '<span>'+(g.adults>0?g.adults+' yetişkin':'')+(g.adults>0&&g.children>0?', ':'')+(g.children>0?g.children+' çocuk':'')+'</span>';
     h += '</div></div>';
     h += '<div class="grsvp"><button class="rsvp-chip '+rsvpClass+'" onclick="event.stopPropagation();cycleRsvp(\''+g.id+'\')">'+rsvpLabel+'</button></div>';
     h += '<div class="garrow">&#x25BC;</div>';
@@ -736,7 +736,7 @@ function openEditModal(id){
     document.getElementById('f-side').value=g.side;
     document.getElementById('f-group').value=g.group||'';
     document.getElementById('f-phone').value=g.phone||'';
-    document.getElementById('f-adults').value=g.adults||1;
+    document.getElementById('f-adults').value=g.adults??1;
     document.getElementById('f-children').value=g.children||0;
     document.getElementById('f-total').value=g.total||1;
     document.getElementById('f-invited').value=g.invited||'Gonderilmedi';
@@ -777,9 +777,10 @@ function saveGuest(){
     const name = document.getElementById('f-name').value.trim();
     if(!name){alert('Ad Soyad gerekli');return;}
     let adults = parseInt(document.getElementById('f-adults').value);
-    if(isNaN(adults) || adults < 1) adults = 1; // En az 1 yetiskin
+    if(isNaN(adults) || adults < 0) adults = 0;
     let children = parseInt(document.getElementById('f-children').value);
     if(isNaN(children) || children < 0) children = 0;
+    if(adults + children < 1) adults = 1; // En az 1 kisi
     const obj = {
         id: id || 'g'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
         name: name,

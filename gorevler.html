@@ -488,11 +488,21 @@ function dragAutoScroll(clientY){
 }
 function stopAutoScroll(){if(autoScrollTimer){clearInterval(autoScrollTimer);autoScrollTimer=null;autoScrollDir=0;}}
 
+function canDragTask(){
+    const q=(document.getElementById('qi').value||'').trim();
+    if(activeAsg!=='Hepsi'||q){
+        fh.toast('Sürüklemek için filtre ve aramayı temizleyin','warning');
+        return false;
+    }
+    return true;
+}
+
 function initDrag(){
     const list=document.getElementById('tlist');
     list.addEventListener('touchstart',onTouchStart,{passive:false});
     list.addEventListener('touchmove',onTouchMove,{passive:false});
     list.addEventListener('touchend',onTouchEnd);
+    list.addEventListener('mousedown',onMouseDown);
 }
 
 function onTouchStart(e){
@@ -501,6 +511,7 @@ function onTouchStart(e){
     const idx=parseInt(card.dataset.idx);
     const touch=e.touches[0];
     dragState.timer=setTimeout(()=>{
+        if(!canDragTask()) return;
         // Long press triggered - start drag
         dragState.active=true;
         dragState.srcIdx=idx;
@@ -569,6 +580,87 @@ function onTouchEnd(e){
                 const item=src.splice(dragState.srcIdx,1)[0];
                 const rect=target.getBoundingClientRect();
                 const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
+                src.splice(insertIdx>dragState.srcIdx?insertIdx-1:insertIdx,0,item);
+                tasks=src;
+                fh.reorderList('shared/planner_tasks', tasks.map(function(t){return t.id;}));
+            }
+        }
+    }
+    dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null,snapshot:null};
+}
+
+// Mouse drag (desktop)
+function onMouseDown(e){
+    const card=e.target.closest('.tcard');
+    if(!card||e.target.closest('.tc-chk')||e.target.closest('.tc-sub-chk')||e.target.closest('.tc-btn')||e.target.closest('.tc-expand')) return;
+    const idx=parseInt(card.dataset.idx);
+    dragState.startY=e.clientY;
+    dragState.timer=setTimeout(()=>{
+        if(!canDragTask()) return;
+        dragState.active=true;
+        dragState.srcIdx=idx;
+        dragState.snapshot=[...tasks];
+        dragState.card=card;
+        const rect=card.getBoundingClientRect();
+        dragState.offsetY=e.clientY-rect.top;
+        const ghost=card.cloneNode(true);
+        ghost.className='tcard drag-ghost';
+        ghost.style.width=rect.width+'px';
+        ghost.style.left=rect.left+'px';
+        ghost.style.top=rect.top+'px';
+        document.body.appendChild(ghost);
+        dragState.ghost=ghost;
+        card.classList.add('dragging');
+        document.addEventListener('mousemove',onMouseMove);
+        document.addEventListener('mouseup',onMouseUp);
+    },400);
+    document.addEventListener('mousemove',mouseCancelCheck,{once:false});
+    document.addEventListener('mouseup',mouseCancelLong,{once:true});
+}
+function mouseCancelCheck(e){
+    if(dragState.timer&&!dragState.active){
+        if(Math.abs(e.clientY-dragState.startY)>10){clearTimeout(dragState.timer);dragState.timer=null;document.removeEventListener('mousemove',mouseCancelCheck);}
+    }
+}
+function mouseCancelLong(){
+    if(dragState.timer){clearTimeout(dragState.timer);dragState.timer=null;}
+    document.removeEventListener('mousemove',mouseCancelCheck);
+}
+function onMouseMove(e){
+    if(!dragState.active) return;
+    e.preventDefault();
+    dragState.ghost.style.top=(e.clientY-dragState.offsetY)+'px';
+    dragAutoScroll(e.clientY);
+    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    if(el){
+        const target=el.closest('.tcard');
+        if(target&&target!==dragState.card&&!target.classList.contains('drag-ghost')){
+            const rect=target.getBoundingClientRect();
+            const mid=rect.top+rect.height/2;
+            if(e.clientY<mid) target.classList.add('drag-over-top');
+            else target.classList.add('drag-over-bot');
+        }
+    }
+}
+function onMouseUp(e){
+    document.removeEventListener('mousemove',onMouseMove);
+    document.removeEventListener('mouseup',onMouseUp);
+    stopAutoScroll();
+    if(!dragState.active){dragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null,snapshot:null};return;}
+    if(dragState.ghost) dragState.ghost.remove();
+    if(dragState.card) dragState.card.classList.remove('dragging');
+    document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    if(el){
+        const target=el.closest('.tcard');
+        if(target){
+            const targetIdx=parseInt(target.dataset.idx);
+            if(!isNaN(targetIdx)&&dragState.srcIdx!==targetIdx){
+                const src=dragState.snapshot||tasks;
+                const item=src.splice(dragState.srcIdx,1)[0];
+                const rect=target.getBoundingClientRect();
+                const insertIdx=e.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
                 src.splice(insertIdx>dragState.srcIdx?insertIdx-1:insertIdx,0,item);
                 tasks=src;
                 fh.reorderList('shared/planner_tasks', tasks.map(function(t){return t.id;}));
