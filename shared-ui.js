@@ -102,6 +102,7 @@ window.UI = (function () {
         var html = '<div class="drawer-profile" id="drawer-profile">' +
             '<div class="dp-avatar" id="dp-avatar"></div>' +
             '<div class="dp-name" id="dp-name">Yükleniyor...</div>' +
+            '<div class="dp-uid" id="dp-uid" style="font-size:10px;color:var(--gray-500);word-break:break-all;margin-top:4px;user-select:all;-webkit-user-select:all" onclick="(function(t){if(navigator.clipboard){navigator.clipboard.writeText(t.textContent).then(function(){fh.toast(\'UID kopyalandı\',\'success\')})}})(this)"></div>' +
         '</div>';
         // Sayfa linkleri
         html += '<div class="drawer-section">Sayfalar</div>';
@@ -129,6 +130,8 @@ window.UI = (function () {
             avatar.innerHTML = '<div class="dp-fallback">' + init + '</div>';
         }
         name.textContent = user.displayName || user.email || '';
+        var uid = document.getElementById('dp-uid');
+        if (uid) uid.textContent = user.uid || '';
     }
 
     // ── Auth Flow ────────────────────────────────────────────────
