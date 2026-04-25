@@ -154,6 +154,11 @@ function startListen(){
     }, { onError(err) {
         console.error(err);
         UI.showApp();
+        if (err && err.code === 'permission-denied') {
+            fh.toast('Yetki yok — yanlış hesapla mı girdin?', 'error');
+        } else {
+            fh.toast('Veri yüklenemedi: ' + ((err && (err.code || err.message)) || 'bilinmiyor'), 'error');
+        }
     }});
 }
 

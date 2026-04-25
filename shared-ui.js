@@ -113,9 +113,35 @@ window.UI = (function () {
         });
         // Çıkış butonu en altta
         html += '<div class="drawer-spacer"></div>';
+        html += '<button onclick="UI.clearCacheAndReload()" style="margin:0 16px 8px;padding:10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">🧹 Cache Temizle ve Yenile</button>';
         html += '<button class="drawer-logout" onclick="fh.signOut()">Çıkış Yap</button>';
 
         drawer.innerHTML = html;
+    }
+
+    // ── Cache Temizle (geçici debug) ─────────────────────────────
+    // Firestore IndexedDB persistence + browser caches + storage
+    function clearCacheAndReload() {
+        if (!confirm('Tüm yerel cache silinecek ve sayfa yeniden yüklenecek. Devam?')) return;
+        var done = function () { location.reload(); };
+        (async function () {
+            try {
+                if (window.firebase && firebase.firestore) {
+                    try { await firebase.firestore().terminate(); } catch (e) { console.warn('terminate:', e); }
+                    try { await firebase.firestore().clearPersistence(); } catch (e) { console.warn('clearPersistence:', e); }
+                }
+                if ('caches' in window) {
+                    try {
+                        var names = await caches.keys();
+                        await Promise.all(names.map(function (n) { return caches.delete(n); }));
+                    } catch (e) { console.warn('caches.delete:', e); }
+                }
+                try { localStorage.clear(); } catch (e) {}
+                try { sessionStorage.clear(); } catch (e) {}
+            } finally {
+                done();
+            }
+        })();
     }
 
     // ── Drawer'daki profili güncelle ─────────────────────────────
@@ -175,6 +201,7 @@ window.UI = (function () {
         injectBnav: injectBnav,
         injectDrawer: injectDrawer,
         setupAuth: setupAuth,
-        showApp: showApp
+        showApp: showApp,
+        clearCacheAndReload: clearCacheAndReload
     };
 })();
