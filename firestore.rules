@@ -2,14 +2,56 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Sadece İbrahim ve Hilal erişebilir
-    // v1.0'da UID allowlist → wedding membership modeline geçilecek
-    function isOwner() {
+    // ── Legacy (v0.x): nişan dönemi shared/* verisi ──
+    // Sadece İbrahim ve Hilal. Migration sonrası arşiv olarak duruyor,
+    // kod artık yazmıyor. Bir süre sonra tamamen kaldırılabilir.
+    function legacyOwner() {
       return request.auth != null &&
         request.auth.uid in ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
     }
-    match /{document=**} {
-      allow read, write: if isOwner();
+    match /shared/{document=**} {
+      allow read, write: if legacyOwner();
+    }
+
+    // ── v0.7+: düğün üyelik modeli ──
+    // Her düğün bir weddings/{wid} dokümanı; memberUids üyeleri tutar.
+    function isMember(wid) {
+      return request.auth != null &&
+        request.auth.uid in get(/databases/$(database)/documents/weddings/$(wid)).data.memberUids;
+    }
+
+    match /weddings/{wid} {
+      // Oluşturan kendini üye yazmak zorunda
+      allow create: if request.auth != null &&
+        request.auth.uid in request.resource.data.memberUids;
+      allow read, update: if request.auth != null &&
+        request.auth.uid in resource.data.memberUids;
+      // delete yok — düğün alanı silinmez (veri kaybı koruması)
+
+      match /data/{doc} {
+        allow read, write: if isMember(wid);
+        match /history/{version} {
+          allow read, write: if isMember(wid);
+        }
+      }
+
+      // Davetli RSVP yanıtları — login'siz erişim:
+      // token (doc id) tahmin edilemez; linki olan sadece kendi dokümanını
+      // okuyabilir ve yalnızca yanıt alanlarını güncelleyebilir.
+      match /rsvp/{token} {
+        allow get: if true;
+        allow list, create, delete: if isMember(wid);
+        allow update: if isMember(wid) || (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'partySize', 'note', 'respondedAt']) &&
+          request.resource.data.status in ['Katilacak', 'Katilmayacak'] &&
+          request.resource.data.partySize is int &&
+          request.resource.data.partySize >= 1 &&
+          request.resource.data.partySize <= 20 &&
+          request.resource.data.note is string &&
+          request.resource.data.note.size() <= 500
+        );
+      }
     }
   }
 }

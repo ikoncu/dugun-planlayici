@@ -1,35 +1,56 @@
 /**
  * shared.css — Düğün Planlayıcı ortak stil dosyası
- * Tüm sayfalarda kullanılan UI bileşenlerinin stilleri.
- * Yeni sayfa eklerken bu dosyayı <link> ile dahil et.
+ * v0.7 "Zarif & Romantik" teması: fildişi zemin, antika altın vurgu,
+ * serif (Cormorant Garamond) başlıklar, yumuşak sıcak griler.
+ * Var isimleri v0.6 ile aynı tutuldu — sayfa içi stiller otomatik uyar.
  */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* RESET */
 *{margin:0;padding:0;box-sizing:border-box}
 
 /* CSS VARIABLES — tek kaynak */
 :root{
-    --gold:#d64f6d;--gold-light:#e8829a;--gold-bg:#fdf2f5;
-    --green:#059669;--green-bg:#ecfdf5;--green-light:#34d399;
-    --red:#dc2626;--red-bg:#fef2f2;
-    --blue:#2563eb;--blue-bg:#eff6ff;
-    --orange:#ea580c;--orange-bg:#fff7ed;
-    --purple:#7c3aed;--purple-bg:#f5f3ff;
-    --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
-    --gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-900:#111827;
+    /* Vurgu: antika altın (eski adıyla --gold, tüm sayfalar bunu kullanır) */
+    --gold:#a8814f;--gold-light:#c5a36f;--gold-bg:#f5eee1;
+    /* Pudra/gül — ikincil romantik vurgu */
+    --blush:#c08e8e;--blush-bg:#f7edec;
+    /* Durum renkleri — yumuşatılmış ama ayırt edilebilir */
+    --green:#4f7d5d;--green-bg:#ebf2ec;--green-light:#7fa98c;
+    --red:#b0524a;--red-bg:#f7ebe9;
+    --blue:#5b7ca3;--blue-bg:#ecf1f7;
+    --orange:#b67d36;--orange-bg:#f8f0e0;
+    --purple:#94719f;--purple-bg:#f3edf5;
+    /* Sıcak griler (fildişi → mürekkep) */
+    --gray-50:#faf8f4;--gray-100:#f2eee7;--gray-200:#e6dfd3;--gray-300:#d2c8b8;
+    --gray-400:#a2968a;--gray-500:#7e7366;--gray-600:#60564b;--gray-700:#4b4239;--gray-900:#2d2823;
+    /* Tipografi */
+    --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+    --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
 }
 
 /* BODY */
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--sans);background:var(--gray-50);color:var(--gray-900);min-height:100vh;-webkit-tap-highlight-color:transparent}
 
 /* LOGIN */
-#login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1b2a4a,#253a5e,#2f4a7a)}
-.login-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;margin:16px}
-.login-card .logo{font-size:48px;margin-bottom:16px}
-.login-card h1{color:white;font-size:22px;font-weight:700;margin-bottom:6px}
-.login-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:24px}
-.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+#login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(165deg,#f7f0e4,#fdfbf7 45%,#f2e7d8)}
+.login-card{background:rgba(255,255,255,0.78);backdrop-filter:blur(20px);border:1px solid var(--gray-200);border-radius:24px;padding:44px 32px;text-align:center;max-width:340px;width:100%;margin:16px;box-shadow:0 24px 60px rgba(168,129,79,0.14)}
+.login-card .logo{font-family:var(--serif);font-size:34px;font-weight:600;color:var(--gold);margin-bottom:14px;letter-spacing:2px}
+.login-card .logo::after{content:'';display:block;width:48px;height:1px;background:var(--gold-light);margin:14px auto 0}
+.login-card h1{font-family:var(--serif);color:var(--gray-900);font-size:27px;font-weight:600;margin-bottom:6px;letter-spacing:0.5px}
+.login-card p{color:var(--gray-500);font-size:14px;margin-bottom:26px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:1px solid var(--gray-200);border-radius:12px;padding:14px 20px;font-size:15px;font-weight:500;cursor:pointer;width:100%;color:#333;box-shadow:0 2px 10px rgba(45,40,35,0.08);font-family:var(--sans)}
 .google-btn svg{width:20px;height:20px;flex-shrink:0}
+
+/* SETUP (düğün alanı kurulumu / migration) */
+#setup-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(165deg,#f7f0e4,#fdfbf7 45%,#f2e7d8);padding:16px}
+.setup-card{background:rgba(255,255,255,0.85);border:1px solid var(--gray-200);border-radius:24px;padding:36px 28px;text-align:center;max-width:400px;width:100%;box-shadow:0 24px 60px rgba(168,129,79,0.14)}
+.setup-card h1{font-family:var(--serif);font-size:25px;font-weight:600;margin-bottom:10px}
+.setup-card p{font-size:14px;color:var(--gray-600);line-height:1.6;margin-bottom:22px}
+.setup-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--gold);color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+.setup-btn:active{opacity:0.85}
+.setup-btn[disabled]{opacity:0.5;cursor:default}
 
 /* LOADING */
 #loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;background:var(--gray-50)}
@@ -40,33 +61,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 #app{display:none;padding-bottom:68px}
 
 /* HEADER */
-.header{background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white;padding:12px 16px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.header{background:rgba(252,250,246,0.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--gray-900);padding:12px 16px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--gray-200)}
 .header-row{display:flex;align-items:center;justify-content:space-between}
-.header h1{font-size:17px;font-weight:700;flex:1;text-align:center}
-.header-logo{text-decoration:none;color:white;font-size:12px;font-weight:600;padding:4px 8px;border:1.5px solid rgba(255,255,255,0.4);border-radius:8px;white-space:nowrap;letter-spacing:1px;width:56px;text-align:center}
+.header h1{font-family:var(--serif);font-size:20px;font-weight:600;flex:1;text-align:center;letter-spacing:0.6px;line-height:1.2;color:var(--gray-900)}
+.header-logo{text-decoration:none;color:var(--gold);font-family:var(--serif);font-size:14px;font-weight:700;padding:3px 8px;border:1px solid var(--gold-light);border-radius:8px;white-space:nowrap;letter-spacing:1px;width:56px;text-align:center}
 .header-logo:active{opacity:0.7}
-.hamburger{background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;width:56px;text-align:center}
+.hamburger{background:none;border:none;color:var(--gray-600);font-size:22px;cursor:pointer;padding:4px 8px;width:56px;text-align:center}
 
 /* DRAWER */
-.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(45,40,35,0.4);z-index:300}
 .drawer-overlay.open{display:block}
-.drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:white;z-index:301;transition:right 0.25s ease;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,0.15);display:flex;flex-direction:column}
+.drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:#fdfbf7;z-index:301;transition:right 0.25s ease;overflow-y:auto;box-shadow:-4px 0 24px rgba(45,40,35,0.18);display:flex;flex-direction:column}
 .drawer.open{right:0}
-.drawer-profile{display:flex;align-items:center;gap:12px;padding:20px 16px;background:linear-gradient(135deg,#1b2a4a,#253a5e);color:white}
+.drawer-profile{display:flex;align-items:center;gap:12px;padding:22px 16px;background:linear-gradient(135deg,#f5eee1,#fdfaf4);color:var(--gray-900);border-bottom:1px solid var(--gray-200)}
 .dp-img{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold-light)}
 .dp-fallback{width:40px;height:40px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white}
 .dp-name{font-size:14px;font-weight:600}
 .drawer-spacer{flex:1}
-.drawer-logout{width:calc(100% - 32px);margin:12px 16px;padding:12px;border:1px solid var(--gray-200);border-radius:10px;background:none;color:var(--red);font-size:14px;font-weight:500;cursor:pointer;text-align:center}
+.drawer-logout{width:calc(100% - 32px);margin:12px 16px;padding:12px;border:1px solid var(--gray-200);border-radius:10px;background:none;color:var(--red);font-size:14px;font-weight:500;cursor:pointer;text-align:center;font-family:var(--sans)}
 .drawer-logout:active{background:var(--red-bg)}
-.drawer-section{padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
+.drawer-section{padding:12px 16px 6px;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.8px}
 .drawer-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--gray-100);text-decoration:none;color:var(--gray-900);font-size:14px;font-weight:500}
 .drawer-item:active{background:var(--gray-50)}
 .drawer-item.active{background:var(--gold-bg);color:var(--gold);font-weight:600}
 .di-icon{font-size:18px;width:24px;text-align:center}
 
 /* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--gray-200);display:none;height:56px;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.06);padding:6px 0 env(safe-area-inset-bottom)}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(253,251,247,0.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--gray-200);display:none;height:56px;z-index:100;box-shadow:0 -2px 16px rgba(45,40,35,0.05);padding:6px 0 env(safe-area-inset-bottom)}
 .bnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;padding:6px 0;text-decoration:none;color:var(--gray-400);font-size:9px;font-weight:500}
 .bnav a.active{color:var(--gold)}
 .bicon{font-size:20px}
+
+/* ORTAK YARDIMCILAR */
+.serif{font-family:var(--serif)}

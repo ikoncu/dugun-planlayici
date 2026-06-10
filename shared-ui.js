@@ -9,9 +9,8 @@ window.UI = (function () {
     // ── Sayfa Tanımları ──────────────────────────────────────────
     const PAGES = [
         { id: 'index',      path: 'index.html',      title: 'Ana Sayfa',   icon: '🏠', bnavIcon: '🏠', bnav: true,  drawer: true },
-        { id: 'gorevler',   path: 'gorevler.html',    title: 'Görevler',    icon: '📋', bnavIcon: '✅', bnav: true,  drawer: true },
-        { id: 'mekanlar',   path: 'mekanlar.html',    title: 'Mekanlar',    icon: '🏛️', bnavIcon: '🏛️', bnav: true,  drawer: true },
         { id: 'davetliler', path: 'davetliler.html',  title: 'Davetliler',  icon: '👥', bnavIcon: '👥', bnav: true,  drawer: true },
+        { id: 'gorevler',   path: 'gorevler.html',    title: 'Görevler',    icon: '📋', bnavIcon: '✅', bnav: true,  drawer: true },
         { id: 'masa-plani', path: 'masa-plani.html',  title: 'Masa Planı',  icon: '🪑', bnavIcon: '🪑', bnav: true,  drawer: true },
     ];
 
@@ -46,7 +45,7 @@ window.UI = (function () {
         if (!el) return;
         el.innerHTML =
             '<div class="login-card">' +
-                '<div class="logo">💍</div>' +
+                '<div class="logo">&amp;</div>' +
                 '<h1>' + esc(title || 'Düğün Planlayıcı') + '</h1>' +
                 '<p>' + esc(subtitle || 'Planınıza erişin') + '</p>' +
                 '<button class="google-btn" onclick="fh.signIn()">' +
@@ -160,6 +159,39 @@ window.UI = (function () {
         if (uid) uid.textContent = user.uid || '';
     }
 
+    // ── Setup Ekranı (düğün alanı kurulumu / nişan→düğün migration) ──
+    function _showSetup() {
+        document.getElementById('loading-screen').style.display = 'none';
+        var el = document.getElementById('setup-screen');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'setup-screen';
+            document.body.appendChild(el);
+        }
+        el.innerHTML =
+            '<div class="setup-card">' +
+                '<h1>Düğün alanınızı oluşturun</h1>' +
+                '<p>Nişan döneminden kalan davetli ve görev verileriniz yeni düğün alanına taşınacak. ' +
+                'RSVP ve davetiye durumları sıfırlanır; nişan listesi orijinal haliyle arşivde saklanır, hiçbir veri silinmez.</p>' +
+                '<button class="setup-btn" id="setup-go" onclick="UI._runSetup(this)">Başlayalım</button>' +
+            '</div>';
+        el.style.display = 'flex';
+    }
+
+    function _runSetup(btn) {
+        btn.disabled = true;
+        btn.textContent = 'Taşınıyor...';
+        fh.setupWedding().then(function () {
+            fh.toast('Düğün alanı hazır', 'success');
+            location.reload();
+        }).catch(function (e) {
+            console.error('Setup error:', e);
+            fh.toast('Kurulum başarısız: ' + (e.code || e.message || ''), 'error');
+            btn.disabled = false;
+            btn.textContent = 'Tekrar dene';
+        });
+    }
+
     // ── Auth Flow ────────────────────────────────────────────────
     function setupAuth(config) {
         fh.init();
@@ -171,12 +203,21 @@ window.UI = (function () {
                 var bnav = document.getElementById('bnav');
                 if (bnav) bnav.style.display = 'flex';
                 _updateDrawerProfile(user);
-                if (config && config.onLogin) config.onLogin(user);
+                // Düğün bağlamını çöz — yoksa kurulum ekranı
+                fh.resolveWedding().then(function (wid) {
+                    if (!wid) { _showSetup(); return; }
+                    if (config && config.onLogin) config.onLogin(user);
+                }).catch(function (e) {
+                    console.error('resolveWedding error:', e);
+                    fh.toast('Düğün bilgisi yüklenemedi', 'error');
+                });
             },
             onLogout: function () {
                 _currentUser = null;
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('app').style.display = 'none';
+                var setup = document.getElementById('setup-screen');
+                if (setup) setup.style.display = 'none';
                 var bnav = document.getElementById('bnav');
                 if (bnav) bnav.style.display = 'none';
                 document.getElementById('login-screen').style.display = 'flex';
@@ -202,6 +243,7 @@ window.UI = (function () {
         injectDrawer: injectDrawer,
         setupAuth: setupAuth,
         showApp: showApp,
-        clearCacheAndReload: clearCacheAndReload
+        clearCacheAndReload: clearCacheAndReload,
+        _runSetup: _runSetup
     };
 })();

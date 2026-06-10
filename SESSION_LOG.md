@@ -1,6 +1,6 @@
 # Session Log — Düğün Planlayıcı
 
-Son güncelleme: 2026-04-09
+Son güncelleme: 2026-06-10
 
 ## Tamamlanan Fazlar
 
@@ -102,9 +102,23 @@ Son güncelleme: 2026-04-09
 - **Migration kaldırıldı**: applyMigration_20260406() (zaten çalışmış)
 - **Kararlar**: İbrahim ile 4 turda AskUserQuestion ile tüm kararlar alındı
 
+### Phase O — v0.7: Düğün Modu Redesign + SaaS Temeli (10 Haziran 2026)
+- **Bağlam**: Nişan bitti (16 Mayıs), düğün kesinleşti (10 Eylül 2026, MSM Erikçe). Kullanıcı: tasarım eski, liste yönetimi zor (drag-drop asenkron karışıklığı), mekan işi bitti, RSVP için AI fikri var, ileride SaaS olarak yayma niyeti.
+- **Kararlar (AskUserQuestion ile)**: Hibrit kapsam (SaaS temelli veri modeli + düğün öncelikli UI), vanilla'da kal + modernize, önce link bazlı RSVP (AI arama sonra), nişan listesi RSVP sıfırlanarak taşınsın, zarif & romantik tema.
+- **Tema**: shared.css yeniden yazıldı — fildişi/antika altın palet, Cormorant Garamond serif, açık header + blur, eski Rose & Navy gitti. Var isimleri korundu → sayfalar otomatik uyum.
+- **Veri modeli**: `weddings/{wid}` (memberUids) + `data/guests|tasks|tables`; fh'a resolveWedding/path/setupWedding eklendi; _docRef ile derin path desteği.
+- **Migration**: Login'de düğün yoksa kurulum ekranı → nişan davetlileri RSVP/davetiye/masa sıfırlanarak taşınır; orijinal liste data/nisan_arsiv'e, açık görevler data/tasks'a, tam görev listesi data/nisan_gorev_arsiv'e. shared/* dokunulmadan kalır.
+- **RSVP sistemi**: rsvp.html (login'siz davetiye sayfası, token bazlı), davetlilerde "Davet Linki" + "WhatsApp" butonları, yanıtlar idempotent şekilde listeye işlenir; rules'ta sadece yanıt alanları güncellenebilir (validasyonlu).
+- **Davetliler**: drag-drop tamamen kaldırıldı (şikayet kaynağı), manuel sıralama gitti, Yedekler butonu eklendi, "✓ yanıtladı" rozeti + davetli notu gösterimi.
+- **Görevler**: 🎤 sesli görev ekleme (Web Speech API tr-TR, modal onaylı).
+- **index.html**: Yeniden yazıldı — geri sayım hero'su (çift adı, tarih, mekan, kalan gün), RSVP özeti, ilerleme, yaklaşan görevler. Nişan timeline + mekan kartı kaldırıldı.
+- **mekanlar.html silindi**, bnav 4 linke indi (Ana Sayfa, Davetliler, Görevler, Masa).
+- **Rules**: üyelik modeli + legacy allowlist + public rsvp token kuralları.
+- **Not**: Deploy yapılmadı — `claude/wedding-app-redesign-6lf3ie` branch'inde; canlıya almak için main'e merge gerekli (rules deploy'u unutma!).
+
 ## Son Durum
-- Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
-- Versiyon: v0.6
-- 5 sayfa: index, gorevler, davetliler, mekanlar, masa-plani
+- Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting) — henüz v0.6; v0.7 branch'te
+- Versiyon: v0.7 (branch: claude/wedding-app-redesign-6lf3ie)
+- 5 sayfa: index, davetliler, gorevler, masa-plani, rsvp (public)
 - 3 JS modülü: firebase-config.js, firestore-helpers.js, shared-ui.js
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)

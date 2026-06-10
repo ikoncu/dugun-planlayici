@@ -8,46 +8,47 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
-    <script src="./firestore-helpers.js?v=2"></script>
-    <link rel="stylesheet" href="shared.css">
-    <script src="./shared-ui.js"></script>
+    <script src="./firestore-helpers.js?v=3"></script>
+    <link rel="stylesheet" href="shared.css?v=3">
+    <script src="./shared-ui.js?v=3"></script>
     <style>
-        /* HEADER OVERRIDE (index has special padding for timeline) */
-        .header{padding:14px 16px 12px}
-
-        /* TIMELINE */
-        .tl-wrap{padding:8px 0 4px;margin-top:4px}
-        .tl-track{position:relative;height:52px;margin:0 20px}
-        .tl-line{position:absolute;top:8px;left:0;right:0;height:2px;background:rgba(255,255,255,0.12);border-radius:2px}
-        .tl-fill{position:absolute;top:8px;left:0;height:2px;background:linear-gradient(90deg,rgba(255,255,255,0.25),#e8829a);border-radius:2px;transition:width 1s}
-        .tl-dot{position:absolute;top:9px;transform:translate(-50%,-50%);border-radius:50%;z-index:2}
-        .tl-dot.past{width:5px;height:5px;background:rgba(255,255,255,0.2)}
-        .tl-dot.today{width:10px;height:10px;background:#d64f6d;border:2px solid white;animation:tlpulse 2s infinite}
-        .tl-dot.ms{width:10px;height:10px;border:2px solid #e8829a;background:rgba(255,255,255,0.1)}
-        .tl-dot.ms-uncertain{border-style:dashed;border-color:rgba(255,255,255,0.3)}
-        @keyframes tlpulse{0%,100%{box-shadow:0 0 4px rgba(214,79,109,0.4)}50%{box-shadow:0 0 12px rgba(214,79,109,0.9)}}
-        .tl-lbl{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap;top:18px}
-        .tl-name{font-size:11px;font-weight:700;color:white;line-height:1.2}
-        .tl-date{font-size:9px;color:rgba(255,255,255,0.45)}
-        .tl-past-lbl{font-size:7px;color:rgba(255,255,255,0.25)}
-        .tl-uncertain .tl-name{color:rgba(255,255,255,0.5);font-style:italic}
-        .tl-clickable{cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .tl-clickable:active{opacity:0.7}
+        /* HERO — düğün geri sayımı */
+        .hero{text-align:center;padding:34px 20px 28px;background:linear-gradient(175deg,#f7f0e4,var(--gray-50));border-bottom:1px solid var(--gray-100)}
+        .hero-names{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:1px;color:var(--gray-900)}
+        .hero-names::after{content:'';display:block;width:56px;height:1px;background:var(--gold-light);margin:12px auto}
+        .hero-meta{font-size:13px;color:var(--gray-500);letter-spacing:0.4px}
+        .hero-meta strong{color:var(--gold);font-weight:600}
+        .hero-count{margin-top:18px;display:flex;align-items:baseline;justify-content:center;gap:8px}
+        .hero-count .hc-num{font-family:var(--serif);font-size:56px;font-weight:600;color:var(--gold);line-height:1}
+        .hero-count .hc-lbl{font-size:14px;color:var(--gray-500)}
+        .hero-today{margin-top:6px;font-family:var(--serif);font-size:22px;color:var(--gold);font-style:italic}
 
         /* DASHBOARD CARDS */
         .dash-cards{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto;padding-bottom:80px}
-        .dash-card{background:white;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid var(--gray-100)}
-        .dash-card-title{font-size:13px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-        .dash-card-title a{font-size:12px;color:var(--gold);text-decoration:none;font-weight:500;text-transform:none;letter-spacing:0}
+        .dash-card{background:white;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(45,40,35,0.05);border:1px solid var(--gray-100)}
+        .dash-card-title{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--gray-900);letter-spacing:0.3px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+        .dash-card-title a{font-family:var(--sans);font-size:12px;color:var(--gold);text-decoration:none;font-weight:500}
+
+        /* MINI STATS */
+        .mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+        .mini-stat{text-align:center;padding:10px 4px;border-radius:10px;background:var(--gray-50)}
+        .mini-stat .ms-num{font-size:21px;font-weight:800}
+        .mini-stat .ms-label{font-size:9px;color:var(--gray-500);margin-top:1px}
+        .mini-stat.green .ms-num{color:var(--green)}
+        .mini-stat.orange .ms-num{color:var(--orange)}
+        .mini-stat.red .ms-num{color:var(--red)}
+        .mini-stat.blue .ms-num{color:var(--blue)}
+        .rsvp-note{font-size:12px;color:var(--gray-500);margin-top:10px;display:flex;align-items:center;gap:6px}
+        .rsvp-note .rn-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
 
         /* PROGRESS BAR */
         .progress-wrap{margin-bottom:4px}
-        .progress-bar{width:100%;height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden}
-        .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light),#e8a0bf);border-radius:4px;transition:width 0.5s}
-        .progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-top:4px}
+        .progress-bar{width:100%;height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:4px;transition:width 0.5s}
+        .progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--gray-500);margin-top:6px}
 
         /* TASK PREVIEW */
-        .task-preview{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer}
+        .task-preview{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--gray-100);cursor:pointer}
         .task-preview:last-child{border-bottom:none}
         .tp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
         .tp-dot.urgent{background:var(--red)}
@@ -59,26 +60,8 @@
         .tp-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;flex-shrink:0}
         .tp-tag.assignee{background:var(--blue-bg);color:var(--blue)}
 
-        /* MINI STATS */
-        .mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-        .mini-stat{text-align:center;padding:8px 4px;border-radius:8px;background:var(--gray-50)}
-        .mini-stat .ms-num{font-size:20px;font-weight:800}
-        .mini-stat .ms-label{font-size:9px;color:var(--gray-500);margin-top:1px}
-        .mini-stat.green .ms-num{color:var(--green)}
-        .mini-stat.orange .ms-num{color:var(--orange)}
-        .mini-stat.red .ms-num{color:var(--red)}
-        .mini-stat.blue .ms-num{color:var(--blue)}
-
-
-        /* VENUE SUMMARY */
-        .venue-summary{display:flex;align-items:center;justify-content:space-between}
-        .venue-summary .vs-text{font-size:14px;color:var(--gray-700)}
-        .venue-summary .vs-text strong{color:var(--gold)}
-        .venue-summary a{font-size:13px;color:var(--gold);text-decoration:none;font-weight:600}
-
         /* EMPTY STATE */
         .empty-state{text-align:center;padding:12px 0;color:var(--gray-400);font-size:13px}
-
     </style>
 </head>
 <body>
@@ -93,19 +76,31 @@
 <div id="app">
     <div class="header">
         <div class="header-row">
-            <a href="index.html" class="header-logo">H 💞 İ</a>
+            <a href="index.html" class="header-logo">H&amp;İ</a>
             <h1>Ana Sayfa</h1>
             <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
-        <div class="tl-wrap" id="tl-wrap"></div>
-        <input type="date" id="date-nisan" style="position:absolute;opacity:0;pointer-events:none;height:0" onchange="changeNisanDate(this.value)">
-        <input type="date" id="date-dugun" style="position:absolute;opacity:0;pointer-events:none;height:0" onchange="changeDugunDate(this.value)">
     </div>
 
+    <!-- HERO: geri sayım -->
+    <div class="hero" id="hero"></div>
+
     <div class="dash-cards" id="dash-cards">
+        <!-- Davetli & RSVP Özeti -->
+        <div class="dash-card">
+            <div class="dash-card-title">Davetliler <a href="davetliler.html">Tümü &rarr;</a></div>
+            <div class="mini-stats" id="guest-stats">
+                <div class="mini-stat blue"><div class="ms-num" id="gs-total">0</div><div class="ms-label">Toplam Kişi</div></div>
+                <div class="mini-stat green"><div class="ms-num" id="gs-confirmed">0</div><div class="ms-label">Katılacak</div></div>
+                <div class="mini-stat orange"><div class="ms-num" id="gs-pending">0</div><div class="ms-label">Beklemede</div></div>
+                <div class="mini-stat red"><div class="ms-num" id="gs-declined">0</div><div class="ms-label">Katılmayacak</div></div>
+            </div>
+            <div class="rsvp-note" id="rsvp-note" style="display:none"><span class="rn-dot"></span><span id="rsvp-note-text"></span></div>
+        </div>
+
         <!-- Genel İlerleme -->
         <div class="dash-card">
-            <div class="dash-card-title">Genel İlerleme <a href="gorevler.html">Tümü &rarr;</a></div>
+            <div class="dash-card-title">Hazırlık İlerlemesi <a href="gorevler.html">Tümü &rarr;</a></div>
             <div class="progress-wrap">
                 <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
                 <div class="progress-text"><span id="prog-label">0 / 0 görev</span><span id="prog-pct">0%</span></div>
@@ -116,25 +111,6 @@
         <div class="dash-card">
             <div class="dash-card-title">Yaklaşan Görevler <a href="gorevler.html">Tümü &rarr;</a></div>
             <div id="upcoming-tasks"><div class="empty-state">Görev bulunamadı</div></div>
-        </div>
-
-        <!-- Davetli Özeti -->
-        <div class="dash-card">
-            <div class="dash-card-title">Davetli Özeti <a href="davetliler.html">Tümü &rarr;</a></div>
-            <div class="mini-stats" id="guest-stats">
-                <div class="mini-stat blue"><div class="ms-num" id="gs-total">0</div><div class="ms-label">Toplam Kişi</div></div>
-                <div class="mini-stat green"><div class="ms-num" id="gs-confirmed">0</div><div class="ms-label">Katılacak</div></div>
-                <div class="mini-stat orange"><div class="ms-num" id="gs-pending">0</div><div class="ms-label">Beklemede</div></div>
-                <div class="mini-stat red"><div class="ms-num" id="gs-declined">0</div><div class="ms-label">Katılmayacak</div></div>
-            </div>
-        </div>
-
-        <!-- Mekan Durumu -->
-        <div class="dash-card">
-            <div class="dash-card-title">Mekan Durumu <a href="mekanlar.html">Mekanları Gör &rarr;</a></div>
-            <div class="venue-summary" id="venue-summary">
-                <span class="vs-text">Henüz mekan eklenmedi</span>
-            </div>
         </div>
     </div>
 </div>
@@ -149,59 +125,70 @@ UI.injectLoading();
 UI.injectBnav('index');
 UI.injectDrawer('index');
 
-let NISAN_DATE = '2026-05-16';
-let WEDDING_DATE = '2026-09-01';
-
-function loadDates() {
-    fh.db.collection('shared').doc('dates').get().then(snap => {
-        if (snap.exists) {
-            if (snap.data().nisan) NISAN_DATE = snap.data().nisan;
-            if (snap.data().dugun) WEDDING_DATE = snap.data().dugun;
-        }
-        updateCountdowns();
-    }).catch(() => {});
-}
-
-function saveDates() {
-    fh.db.collection('shared').doc('dates').set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }, { merge: true }).catch(e => console.error(e));
-}
-
 // State
-let dashData = { tasks: [], guests: [], venues: [] };
+let dashData = { tasks: [], guests: [] };
 
 UI.setupAuth({
     onLogin: function() {
-        loadDates();
         loadDashboard();
     }
 });
 
-// Dashboard Loading — helper üzerinden
 function loadDashboard() {
-    fh.listen('shared/planner_tasks', (data) => {
+    fh.listen(fh.path('tasks'), (data) => {
         dashData.tasks = (data && data.list) ? data.list : [];
         renderDashboard();
     });
 
-    fh.listen('shared/guests', (data) => {
+    fh.listen(fh.path('guests'), (data) => {
         dashData.guests = (data && data.list) ? data.list : [];
-        renderDashboard();
-    });
-
-    fh.listen('shared/venues', (data) => {
-        dashData.venues = (data && data.list) ? data.list : [];
         renderDashboard();
     });
 }
 
-// Render
 function renderDashboard() {
     UI.showApp();
+    renderHero();
     renderProgress();
     renderUpcomingTasks();
     renderGuestSummary();
-    renderVenueSummary();
-    updateCountdowns();
+}
+
+// ── HERO: geri sayım ──
+const MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const DAYS = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+
+function renderHero() {
+    const w = fh.wedding() || {};
+    const el = document.getElementById('hero');
+    const date = parseLocalDate(w.weddingDate);
+    let metaHtml = '';
+    if (date) {
+        metaHtml = date.getDate() + ' ' + MONTHS[date.getMonth()] + ' ' + date.getFullYear() +
+            ', ' + DAYS[date.getDay()] +
+            (w.venue ? ' &middot; <strong>' + UI.esc(w.venue) + '</strong>' : '');
+    } else if (w.venue) {
+        metaHtml = '<strong>' + UI.esc(w.venue) + '</strong>';
+    }
+
+    let countHtml = '';
+    if (date) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const days = Math.round((date - today) / 864e5);
+        if (days > 0) {
+            countHtml = '<div class="hero-count"><span class="hc-num">' + days + '</span><span class="hc-lbl">gün kaldı</span></div>';
+        } else if (days === 0) {
+            countHtml = '<div class="hero-today">Bugün evleniyorsunuz! 🤍</div>';
+        } else {
+            countHtml = '<div class="hero-today">Mutluluklar! 🤍</div>';
+        }
+    }
+
+    el.innerHTML =
+        '<div class="hero-names">' + UI.esc(w.coupleNames || 'Düğünümüz') + '</div>' +
+        '<div class="hero-meta">' + metaHtml + '</div>' +
+        countHtml;
 }
 
 function renderProgress() {
@@ -224,7 +211,6 @@ function renderProgress() {
 
 function renderUpcomingTasks() {
     const container = document.getElementById('upcoming-tasks');
-    const now = new Date();
     const upcoming = dashData.tasks
         .filter(t => !t.done && t.due)
         .sort((a, b) => new Date(a.due) - new Date(b.due))
@@ -237,7 +223,7 @@ function renderUpcomingTasks() {
 
     container.innerHTML = upcoming.map(t => {
         const pClass = t.priority === 'urgent' ? 'urgent' : (t.priority === 'low' ? 'low' : 'normal');
-        const assignee = t.assignee ? '<span class="tp-tag assignee">' + UI.esc(trLabel(t.assignee)) + '</span>' : '';
+        const assignee = t.assignee ? '<span class="tp-tag assignee">' + UI.esc(UI.trLabel(t.assignee)) + '</span>' : '';
         return '<div class="task-preview" onclick="location.href=\'gorevler.html\'">' +
             '<div class="tp-dot ' + pClass + '"></div>' +
             '<div class="tp-info">' +
@@ -251,7 +237,7 @@ function renderUpcomingTasks() {
 
 function renderGuestSummary() {
     const guests = dashData.guests;
-    let total = 0, confirmed = 0, pending = 0, declined = 0;
+    let total = 0, confirmed = 0, pending = 0, declined = 0, selfResponded = 0;
     guests.forEach(g => {
         const count = (g.total || 1);
         total += count;
@@ -259,139 +245,28 @@ function renderGuestSummary() {
         if (s === 'Katilacak') confirmed += count;
         else if (s === 'Katilmayacak') declined += count;
         else pending += count;
+        if (g.rsvpRespondedAt) selfResponded++;
     });
     document.getElementById('gs-total').textContent = total;
     document.getElementById('gs-confirmed').textContent = confirmed;
     document.getElementById('gs-pending').textContent = pending;
     document.getElementById('gs-declined').textContent = declined;
-}
 
-function renderVenueSummary() {
-    const venues = dashData.venues;
-    const container = document.getElementById('venue-summary');
-    const total = venues.length;
-    const favs = venues.filter(v => v.favorite || v.fav).length;
-    if (total === 0) {
-        container.innerHTML = '<span class="vs-text">Henüz mekan eklenmedi</span>';
+    const note = document.getElementById('rsvp-note');
+    if (selfResponded > 0) {
+        note.style.display = 'flex';
+        document.getElementById('rsvp-note-text').textContent =
+            selfResponded + ' davetli RSVP bağlantısından kendisi yanıtladı';
     } else {
-        container.innerHTML = '<span class="vs-text"><strong>' + total + '</strong> mekan listelendi, <strong>' + favs + '</strong> favori</span>';
+        note.style.display = 'none';
     }
-}
-
-function updateCountdowns() {
-    const now = new Date();
-    const nisan = parseLocalDate(NISAN_DATE);
-    const dugun = parseLocalDate(WEDDING_DATE);
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const nisanDays = Math.max(0, Math.round((nisan - today) / 864e5));
-    const dugunDays = Math.max(0, Math.round((dugun - today) / 864e5));
-
-    // Sabit pozisyonlar: gorsel netlik icin
-    // Sol: 1 hafta once (3%), Bugun (12%), Nisan (55%), Dugun (93%)
-    const todayPos = 12;
-    const nisanPos = 55;
-    const dugunPos = 93;
-
-    const wrap = document.getElementById('tl-wrap');
-    wrap.innerHTML = '<div class="tl-track">'
-        + '<div class="tl-line"></div>'
-        + '<div class="tl-fill" style="width:'+todayPos+'%"></div>'
-        // 1 hafta once - sadece nokta
-        + '<div class="tl-dot past" style="left:2%"></div>'
-        // Bugün
-        + '<div class="tl-dot today" style="left:'+todayPos+'%"></div>'
-        + '<div class="tl-lbl" style="left:'+todayPos+'%"><div class="tl-name" style="color:rgba(255,255,255,0.8)">Bugün</div><div class="tl-date">'+now.getDate()+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][now.getMonth()]+'</div></div>'
-        // Nisan - tiklanabilir
-        + '<div class="tl-dot ms" style="left:'+nisanPos+'%"></div>'
-        + '<div class="tl-lbl tl-clickable" style="left:'+nisanPos+'%" onclick="openDatePicker(\'nisan\')">'
-        +   '<div class="tl-name">'+fmtDateShort(NISAN_DATE)+'</div>'
-        +   '<div class="tl-date">Nişan · '+nisanDays+' gün</div>'
-        + '</div>'
-        // Dugun - tiklanabilir
-        + '<div class="tl-dot ms ms-uncertain" style="left:'+dugunPos+'%"></div>'
-        + '<div class="tl-lbl tl-uncertain tl-clickable" style="left:'+dugunPos+'%" onclick="openDatePicker(\'dugun\')">'
-        +   '<div class="tl-name">'+fmtDateShort(WEDDING_DATE)+' ~</div>'
-        +   '<div class="tl-date">Düğün · ~'+dugunDays+' gün</div>'
-        + '</div>'
-        + '</div>';
-}
-
-// Timeline tarih formatlama (local timezone)
-function fmtDateShort(dateStr) {
-    const d = parseLocalDate(dateStr) || new Date(dateStr);
-    const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-    return d.getDate() + ' ' + months[d.getMonth()];
-}
-
-// Takvim ac
-function openDatePicker(type) {
-    const inp = document.getElementById('date-' + type);
-    inp.value = type === 'nisan' ? NISAN_DATE : WEDDING_DATE;
-    inp.style.pointerEvents = 'auto';
-    inp.showPicker ? inp.showPicker() : inp.click();
-    setTimeout(() => { inp.style.pointerEvents = 'none'; }, 100);
-}
-
-function fmtDateLong(d){
-    const date = new Date(d);
-    const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-    return date.getDate()+' '+months[date.getMonth()]+' '+date.getFullYear();
-}
-
-function changeNisanDate(val) {
-    if (!val) return;
-    if (val === NISAN_DATE) return;
-    // Validate: gecmiş tarih degil
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const newDate = new Date(val);
-    if(newDate < today){
-        if(!confirm('Seçtiğiniz tarih geçmişte. Yine de '+fmtDateLong(val)+' olarak güncellensin mi?')){
-            return;
-        }
-    }
-    // Validate: dugun tarihinden once
-    if(WEDDING_DATE && newDate >= new Date(WEDDING_DATE)){
-        alert('Nişan tarihi düğün tarihinden önce olmalı.');
-        return;
-    }
-    if(!confirm('Nişan tarihi '+fmtDateLong(NISAN_DATE)+' iken '+fmtDateLong(val)+' olarak değiştirilecek. Onaylıyor musunuz?')){
-        return;
-    }
-    NISAN_DATE = val;
-    saveDates();
-    updateCountdowns();
-}
-
-function changeDugunDate(val) {
-    if (!val) return;
-    if (val === WEDDING_DATE) return;
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const newDate = new Date(val);
-    if(newDate < today){
-        if(!confirm('Seçtiğiniz tarih geçmişte. Yine de '+fmtDateLong(val)+' olarak güncellensin mi?')){
-            return;
-        }
-    }
-    // Validate: nisan tarihinden sonra
-    if(NISAN_DATE && newDate <= new Date(NISAN_DATE)){
-        alert('Düğün tarihi nişan tarihinden sonra olmalı.');
-        return;
-    }
-    if(!confirm('Düğün tarihi '+fmtDateLong(WEDDING_DATE)+' iken '+fmtDateLong(val)+' olarak değiştirilecek. Onaylıyor musunuz?')){
-        return;
-    }
-    WEDDING_DATE = val;
-    saveDates();
-    updateCountdowns();
 }
 
 // Helpers
 function parseLocalDate(s){
     if(!s) return null;
     const [y,m,d] = s.split('-').map(Number);
+    if(!y || !m || !d) return null;
     return new Date(y, m-1, d);
 }
 
@@ -409,13 +284,9 @@ function fmtDue(d) {
     return Math.ceil(diff / 30) + ' ay sonra';
 }
 
-
-// Veri degeri -> Turkce gosterim
-function trLabel(s){return UI.trLabel(s);}
-
-// Gün bazlı geri sayım — sayfa tekrar görünür olduğunda güncelle (polling yok)
+// Gün bazlı geri sayım — sayfa tekrar görünür olduğunda güncelle
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) updateCountdowns();
+    if (!document.hidden && fh.wedding()) renderHero();
 });
 </script>
 </body>
