@@ -1,0 +1,22 @@
+name: Deploy Firestore Rules
+
+# Elle tetiklenir (Actions sekmesi → Run workflow) veya Claude tarafından.
+# Hosting'den bağımsız — sadece firestore.rules'ı yayınlar.
+on:
+  workflow_dispatch:
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Service account dosyasını hazırla
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa.json"
+
+      - name: Rules deploy
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx firebase-tools@13 deploy --only firestore:rules --project dugun-planlayici-ff34e --non-interactive
