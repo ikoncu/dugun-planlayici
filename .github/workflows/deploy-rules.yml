@@ -1,9 +1,14 @@
 name: Deploy Firestore Rules
 
-# Elle tetiklenir (Actions sekmesi → Run workflow) veya Claude tarafından.
-# Hosting'den bağımsız — sadece firestore.rules'ı yayınlar.
+# Elle tetiklenir (Actions sekmesi → Run workflow) ya da rules dosyası
+# değişince otomatik. Hosting'den bağımsız — sadece firestore.rules'ı yayınlar.
 on:
   workflow_dispatch:
+  push:
+    branches: [main, claude/wedding-app-redesign-6lf3ie]
+    paths:
+      - firestore.rules
+      - .github/workflows/deploy-rules.yml
 
 jobs:
   rules:
