@@ -27,9 +27,21 @@ const fh = (() => {
     let _currentUser = null;
     let _listeners = {};          // path -> unsubscribe fn
     let _lastVersionTime = {};    // path -> timestamp (throttle)
+    let _weddingId = null;        // aktif düğün doc id
+    let _weddingData = null;      // aktif düğün doc içeriği (canlı)
 
     const VERSION_THROTTLE_MS = 5 * 60 * 1000;  // 5 dakika
     const MAX_VERSIONS = 30;
+
+    // v0.x tek-çift dönemi UID'leri — legacy shared/* verisinin sahipleri.
+    // Migration sırasında her ikisi de yeni düğün alanına üye yapılır.
+    const LEGACY_MEMBER_UIDS = ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
+
+    // Doc path çözümleme — 'shared/guests' gibi 2 segment veya
+    // 'weddings/{id}/data/guests' gibi daha derin path'ler desteklenir.
+    function _docRef(path) {
+        return _db.doc(path);
+    }
 
     // ---- INIT ----
     function init() {
@@ -66,6 +78,8 @@ const fh = (() => {
                 if (onLogin) onLogin(user);
             } else {
                 _currentUser = null;
+                _weddingId = null;
+                _weddingData = null;
                 // Tüm aktif listener'ları temizle
                 Object.values(_listeners).forEach(unsub => { if (unsub) unsub(); });
                 _listeners = {};
@@ -98,6 +112,128 @@ const fh = (() => {
         return _currentUser;
     }
 
+    // ---- DÜĞÜN BAĞLAMI (v0.7+) ----
+    /**
+     * Login sonrası kullanıcının üye olduğu düğünü bulur.
+     * Bulursa weddingId döner ve düğün dokümanını canlı dinlemeye başlar.
+     * Bulamazsa null döner — UI kurulum ekranı gösterir.
+     */
+    async function resolveWedding() {
+        if (_weddingId) return _weddingId;
+        if (!_currentUser) return null;
+        const q = await _db.collection('weddings')
+            .where('memberUids', 'array-contains', _currentUser.uid)
+            .limit(1).get();
+        if (q.empty) return null;
+        _weddingId = q.docs[0].id;
+        _weddingData = q.docs[0].data();
+        // Düğün bilgisi (tarih/mekan/isimler) değişirse canlı güncelle
+        _db.collection('weddings').doc(_weddingId).onSnapshot(s => {
+            if (s.exists) _weddingData = s.data();
+        }, e => console.warn('Wedding listen:', e));
+        return _weddingId;
+    }
+
+    function weddingId() { return _weddingId; }
+    function wedding() { return _weddingData; }
+
+    /**
+     * Düğün içi veri dokümanı path'i: fh.path('guests') →
+     * 'weddings/{id}/data/guests'
+     */
+    function path(name) {
+        if (!_weddingId) throw new Error('Düğün alanı henüz yüklenmedi (resolveWedding çağrılmadı)');
+        return 'weddings/' + _weddingId + '/data/' + name;
+    }
+
+    /** Düğün dokümanındaki alanları günceller (tarih, mekan, isimler...) */
+    async function updateWedding(fields) {
+        if (!_weddingId) throw new Error('Düğün alanı yok');
+        await _db.collection('weddings').doc(_weddingId).set(fields, { merge: true });
+        _weddingData = Object.assign({}, _weddingData, fields);
+    }
+
+    /**
+     * Düğün alanı kurulumu + nişan (legacy shared/*) verilerinin taşınması.
+     * - Davetliler: RSVP/davetiye/masa sıfırlanarak taşınır, orijinal liste
+     *   data/nisan_arsiv olarak saklanır (shared/* da dokunulmadan kalır).
+     * - Görevler: açık görevler taşınır, tam liste data/nisan_gorev_arsiv'e.
+     * - Masalar taşınmaz (yeni mekan krokisine göre sıfırdan kurulacak).
+     * Veri kaybı yok: hiçbir legacy doc silinmez/değiştirilmez.
+     */
+    async function setupWedding() {
+        if (!_currentUser) throw new Error('Giriş gerekli');
+        const isLegacy = LEGACY_MEMBER_UIDS.indexOf(_currentUser.uid) >= 0;
+        const memberUids = isLegacy ? LEGACY_MEMBER_UIDS.slice() : [_currentUser.uid];
+
+        // Legacy verileri oku (erişim yoksa / yoksa sessizce boş geç)
+        let legacyGuests = null, legacyTasks = null, legacyDates = null;
+        if (isLegacy) {
+            try { const s = await _db.doc('shared/guests').get(); if (s.exists) legacyGuests = s.data().list || null; } catch (e) { console.warn('Legacy guests okunamadı:', e); }
+            try { const s = await _db.doc('shared/planner_tasks').get(); if (s.exists) legacyTasks = s.data().list || null; } catch (e) { console.warn('Legacy tasks okunamadı:', e); }
+            try { const s = await _db.doc('shared/dates').get(); if (s.exists) legacyDates = s.data(); } catch (e) { /* yoksa varsayılan */ }
+        }
+
+        const wref = _db.collection('weddings').doc();
+        await wref.set({
+            coupleNames: isLegacy ? 'Hilal & İbrahim' : (_currentUser.displayName || 'Çiftimiz'),
+            weddingDate: isLegacy ? '2026-09-10' : ((legacyDates && legacyDates.dugun) || ''),
+            venue: isLegacy ? 'MSM Erikçe' : '',
+            memberUids: memberUids,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdBy: { uid: _currentUser.uid, name: _currentUser.displayName || '' }
+        });
+
+        const dataCol = wref.collection('data');
+
+        if (legacyGuests && legacyGuests.length) {
+            // Nişan listesi arşivi — orijinal RSVP'ler korunur
+            await dataCol.doc('nisan_arsiv').set({
+                list: legacyGuests,
+                archivedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                note: 'Nişan davetli listesi (16 Mayıs 2026) — RSVP durumlarıyla arşivlendi'
+            });
+            // Düğün listesi — RSVP/davetiye/masa sıfırlanır
+            const resetGuests = legacyGuests.map(g => Object.assign({}, g, {
+                rsvp: 'Beklemede',
+                invited: 'Gonderilmedi',
+                table: '',
+                rsvpToken: null,
+                rsvpRespondedAt: null,
+                rsvpNote: ''
+            }));
+            await dataCol.doc('guests').set({
+                list: resetGuests,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: { uid: _currentUser.uid, name: _currentUser.displayName || '' }
+            });
+        }
+
+        if (legacyTasks && legacyTasks.length) {
+            await dataCol.doc('nisan_gorev_arsiv').set({
+                list: legacyTasks,
+                archivedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            // Sadece açık görevler düğün listesine taşınır
+            const openTasks = legacyTasks.filter(t => {
+                if (t.subtasks && t.subtasks.length > 0) {
+                    return !t.subtasks.every(s => s.done);
+                }
+                return !t.done;
+            });
+            await dataCol.doc('tasks').set({
+                list: openTasks,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: { uid: _currentUser.uid, name: _currentUser.displayName || '' }
+            });
+        }
+
+        _weddingId = wref.id;
+        const snap = await wref.get();
+        _weddingData = snap.data();
+        return _weddingId;
+    }
+
     // ---- LISTEN ----
     /**
      * Firestore dokümanını dinler.
@@ -116,8 +252,7 @@ const fh = (() => {
             _listeners[path]();
         }
 
-        const parts = path.split('/');
-        const docRef = _db.collection(parts[0]).doc(parts[1]);
+        const docRef = _docRef(path);
 
         const unsub = docRef.onSnapshot(snap => {
             // hasPendingWrites: true => bizim henüz commit olmamış yazmamız.
@@ -161,8 +296,7 @@ const fh = (() => {
     async function saveDoc(path, data, options = {}) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
 
-        const parts = path.split('/');
-        const docRef = _db.collection(parts[0]).doc(parts[1]);
+        const docRef = _docRef(path);
 
         // Metadata ekle — caller objesini mutate etmeden kopya oluştur
         const docData = Object.assign({}, data, {
@@ -265,8 +399,7 @@ const fh = (() => {
     async function adminRestore(path, versionId) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
 
-        const parts = path.split('/');
-        const docRef = _db.collection(parts[0]).doc(parts[1]);
+        const docRef = _docRef(path);
         const historyRef = docRef.collection('history');
 
         // 1. Mevcut hali "pre-restore" olarak kaydet
@@ -303,8 +436,7 @@ const fh = (() => {
     async function loadHistory(path, limit = 30) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
 
-        const parts = path.split('/');
-        const historyRef = _db.collection(parts[0]).doc(parts[1]).collection('history');
+        const historyRef = _docRef(path).collection('history');
 
         const snap = await historyRef.orderBy('createdAt', 'desc').limit(limit).get();
         return snap.docs.map(doc => ({
@@ -326,8 +458,7 @@ const fh = (() => {
      */
     async function updateItemField(path, itemId, fields) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        const parts = path.split('/');
-        const ref = _db.collection(parts[0]).doc(parts[1]);
+        const ref = _docRef(path);
         return _db.runTransaction(function (t) {
             return t.get(ref).then(function (doc) {
                 if (!doc.exists) return;
@@ -356,8 +487,7 @@ const fh = (() => {
      */
     async function addItem(path, newItem) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        var parts = path.split('/');
-        var ref = _db.collection(parts[0]).doc(parts[1]);
+        var ref = _docRef(path);
         return _db.runTransaction(function (t) {
             return t.get(ref).then(function (doc) {
                 var list = (doc.exists && doc.data().list) ? doc.data().list : [];
@@ -382,8 +512,7 @@ const fh = (() => {
      */
     async function removeItem(path, itemId) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        var parts = path.split('/');
-        var ref = _db.collection(parts[0]).doc(parts[1]);
+        var ref = _docRef(path);
         return _db.runTransaction(function (t) {
             return t.get(ref).then(function (doc) {
                 if (!doc.exists) return;
@@ -409,8 +538,7 @@ const fh = (() => {
      */
     async function reorderList(path, orderedIds) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        var parts = path.split('/');
-        var ref = _db.collection(parts[0]).doc(parts[1]);
+        var ref = _docRef(path);
         return _db.runTransaction(function (t) {
             return t.get(ref).then(function (doc) {
                 if (!doc.exists) return;
@@ -495,8 +623,7 @@ const fh = (() => {
      */
     async function forceVersion(path, label) {
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        const parts = path.split('/');
-        const docRef = _db.collection(parts[0]).doc(parts[1]);
+        const docRef = _docRef(path);
         const snap = await docRef.get();
         if (!snap.exists) throw new Error('Döküman bulunamadı: ' + path);
         await _maybeCreateVersion(path, docRef, snap.data(), label || 'Manuel', true);
@@ -509,6 +636,12 @@ const fh = (() => {
         signIn,
         signOut,
         currentUser,
+        resolveWedding,
+        weddingId,
+        wedding,
+        path,
+        updateWedding,
+        setupWedding,
         listen,
         saveDoc,
         adminRestore,

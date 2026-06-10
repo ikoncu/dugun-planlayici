@@ -8,9 +8,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
-    <script src="./firestore-helpers.js?v=2"></script>
-    <link rel="stylesheet" href="shared.css">
-    <script src="./shared-ui.js"></script>
+    <script src="./firestore-helpers.js?v=3"></script>
+    <link rel="stylesheet" href="shared.css?v=3">
+    <script src="./shared-ui.js?v=3"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         /* HEADER EXTRAS (sayfa-özel) */
@@ -51,10 +51,6 @@
         .glist{padding:8px 12px 0;max-width:640px;margin:0 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
         .glist-spacer{position:relative}
         .gcard{background:white;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:border-color 0.15s}
-        .gcard.dragging{opacity:0.4;transform:scale(0.97)}
-        .gcard.drag-over-top{border-top:3px solid var(--gold);margin-top:-1px}
-        .gcard.drag-over-bot{border-bottom:3px solid var(--gold);margin-bottom:-1px}
-        .gcard.drag-ghost{position:fixed;z-index:999;pointer-events:none;opacity:0.85;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.2);transform:rotate(1.5deg)}
         .gcard.open{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
         .gmain{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
         .gavatar{width:36px;height:36px;border-radius:50%;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
@@ -87,7 +83,13 @@
         .gbtn-del{background:var(--red-bg);color:var(--red)}
 
         /* FAB */
-        .fab{position:fixed;bottom:68px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(214,79,109,0.4);z-index:95;display:flex;align-items:center;justify-content:center;font-weight:300}
+        .fab{position:fixed;bottom:68px;right:16px;width:52px;height:52px;border-radius:50%;background:var(--gold);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(168,129,79,0.4);z-index:95;display:flex;align-items:center;justify-content:center;font-weight:300}
+
+        /* RSVP LINK */
+        .gresp-badge{font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600;background:var(--green-bg);color:var(--green)}
+        .gbtn-rsvp{background:var(--gold-bg);color:var(--gold)}
+        .gbtn-wa{background:#e7f6e9;color:#1f7a33}
+        .grsvp-note{font-size:12px;color:var(--green);background:var(--green-bg);border-radius:6px;padding:6px 8px;margin-top:6px;white-space:pre-wrap}
         .fab:active{transform:scale(0.93)}
 
         /* MODAL */
@@ -185,7 +187,7 @@
     <!-- HEADER -->
     <div class="header">
         <div class="header-row">
-            <a href="index.html" class="header-logo">H 💞 İ</a>
+            <a href="index.html" class="header-logo">H&amp;İ</a>
             <h1>Davetliler</h1>
             <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
         </div>
@@ -220,6 +222,7 @@
     <!-- EXPORT BAR -->
     <div class="io-bar">
         <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel İndir</button>
+        <button class="io-btn" onclick="showBackupHistory()"><span class="io-icon">&#x1F4BE;</span>Yedekler</button>
     </div>
 
     <!-- SEARCH & FILTER & SORT -->
@@ -234,7 +237,6 @@
             <div class="sort-wrap">
                 <div class="sort-icon-btn">&#8645;</div>
                 <select class="sort-select" id="sort-select" onchange="setSort(this.value)">
-                    <option value="manual">Manuel (sırala)</option>
                     <option value="alpha-az">A → Z</option>
                     <option value="alpha-za">Z → A</option>
                     <option value="newest">Son eklenen</option>
@@ -362,7 +364,7 @@ let deleteTargetId = null;
 
 // Firestore listen — helper üzerinden (hasPendingWrites + versiyonlama dahil)
 function startListening(){
-    fh.listen('shared/guests', (data, snap) => {
+    fh.listen(fh.path('guests'), (data, snap) => {
         UI.showApp();
         vsBindScroll();
         if(data && data.list && data.list.length > 0){
@@ -386,16 +388,124 @@ function startListening(){
             }
         }
     });
+    listenRsvpResponses();
+}
+
+// --- RSVP LİNK YANITLARI ---
+// Davetlinin rsvp.html üzerinden verdiği yanıtları davetli listesine işler.
+// respondedAt zaman damgası değiştiyse uygulanır — döngüye girmez (idempotent).
+function listenRsvpResponses(){
+    fh.db.collection('weddings/'+fh.weddingId()+'/rsvp').onSnapshot(snap=>{
+        snap.forEach(d=>{
+            const r = d.data();
+            if(!r.respondedAt || typeof r.respondedAt.toMillis !== 'function') return;
+            const g = guests.find(x=>x.id===r.guestId);
+            if(!g) return;
+            const ms = r.respondedAt.toMillis();
+            if(g.rsvpRespondedAt === ms) return;
+            const fields = {
+                rsvp: r.status,
+                rsvpNote: r.note || '',
+                rsvpRespondedAt: ms
+            };
+            if(r.status==='Katilacak' && r.partySize > 0){
+                fields.total = r.partySize;
+                fields.adults = Math.max(r.partySize - (g.children||0), 0);
+            }
+            Object.assign(g, fields);
+            fh.updateItemField(fh.path('guests'), g.id, fields)
+                .then(()=>fh.toast(g.name+' yanıtladı: '+trLabel(r.status),'success'))
+                .catch(e=>console.error('RSVP sync:',e));
+        });
+    }, e=>console.warn('RSVP listen:', e));
+}
+
+// --- RSVP LİNKİ OLUŞTURMA & PAYLAŞIM ---
+function _randToken(){
+    const a = new Uint8Array(18);
+    crypto.getRandomValues(a);
+    return Array.from(a, b=>('0'+b.toString(36)).slice(-1)+(b>>4).toString(36)).join('').substring(0,24);
+}
+
+function _rsvpUrl(token){
+    return location.origin + '/rsvp.html?w=' + fh.weddingId() + '&t=' + token;
+}
+
+async function ensureRsvpLink(g){
+    if(g.rsvpToken) return _rsvpUrl(g.rsvpToken);
+    const w = fh.wedding() || {};
+    const token = _randToken();
+    await fh.db.doc('weddings/'+fh.weddingId()+'/rsvp/'+token).set({
+        guestId: g.id,
+        guestName: g.name,
+        partySize: g.total || 1,
+        status: 'Beklemede',
+        note: '',
+        coupleNames: w.coupleNames || '',
+        weddingDate: w.weddingDate || '',
+        venue: w.venue || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    g.rsvpToken = token;
+    g.invited = 'Gonderildi';
+    await fh.updateItemField(fh.path('guests'), g.id, { rsvpToken: token, invited: 'Gonderildi' });
+    return _rsvpUrl(token);
+}
+
+function _waMessage(g, url){
+    const w = fh.wedding() || {};
+    let dateStr = '';
+    if(w.weddingDate){
+        const p = w.weddingDate.split('-').map(Number);
+        const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+        dateStr = p[2]+' '+months[p[1]-1]+' '+p[0];
+    }
+    return 'Merhaba '+g.name+'! 🤍\n\n'+
+        (w.coupleNames||'Çiftimiz')+' düğününe davetlisiniz.\n'+
+        '📅 '+dateStr+(w.venue?' · '+w.venue:'')+'\n\n'+
+        'Katılım durumunuzu aşağıdaki bağlantıdan bildirebilirseniz çok seviniriz:\n'+url;
+}
+
+async function copyRsvpLink(id){
+    const g = guests.find(x=>x.id===id);
+    if(!g) return;
+    try{
+        const url = await ensureRsvpLink(g);
+        await navigator.clipboard.writeText(url);
+        fh.toast('Davet linki kopyalandı','success');
+        vsRender();
+    }catch(e){
+        console.error(e);
+        fh.toast('Link oluşturulamadı','error');
+    }
+}
+
+async function shareRsvpWhatsApp(id){
+    const g = guests.find(x=>x.id===id);
+    if(!g) return;
+    try{
+        const url = await ensureRsvpLink(g);
+        const msg = encodeURIComponent(_waMessage(g, url));
+        let digits = (g.phone||'').replace(/\D/g,'');
+        if(digits.startsWith('0')) digits = digits.substring(1);
+        if(digits.length === 10) digits = '90' + digits;
+        const wa = digits ? 'https://wa.me/'+digits+'?text='+msg : 'https://wa.me/?text='+msg;
+        window.open(wa, '_blank');
+        vsRender();
+    }catch(e){
+        console.error(e);
+        fh.toast('Link oluşturulamadı','error');
+    }
 }
 
 // --- BACKUP SISTEMI (fh.history entegrasyonu) ---
 function createBackup(reason){
-    return fh.forceVersion('shared/guests', reason || 'Manuel')
+    return fh.forceVersion(fh.path('guests'), reason || 'Manuel')
         .catch(e=>console.error('Backup error:',e));
 }
 
 function showBackupHistory(){
-    fh.loadHistory('shared/guests').then(versions=>{
+    fh.loadHistory(fh.path('guests')).then(versions=>{
         const modal = document.createElement('div');
         modal.className = 'import-modal-bg show';
         modal.onclick = function(e){if(e.target===this)this.remove();};
@@ -428,7 +538,7 @@ function showBackupHistory(){
 
 function restoreBackup(versionId){
     if(!confirm('Bu versiyonu geri yüklemek istediğinize emin misiniz?')) return;
-    fh.adminRestore('shared/guests', versionId).then(()=>{
+    fh.adminRestore(fh.path('guests'), versionId).then(()=>{
         const m = document.querySelector('.import-modal-bg');
         if(m) m.remove();
     }).catch(e=>{
@@ -480,7 +590,6 @@ function sortGuests(list){
         return byName(a,b);
     };
     switch(activeSort){
-        case 'manual': return list; // Orijinal sira (drag-drop ile degisir)
         case 'alpha-az': return list.sort(byName);
         case 'alpha-za': return list.sort((a,b)=>b.name.localeCompare(a.name,'tr'));
         case 'newest': return list.slice().reverse();
@@ -518,7 +627,7 @@ function buildCardHTML(g) {
     h += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
     h += '<div class="gavatar">'+initials+'</div>';
     h += '<div class="ginfo">';
-    h += '<div class="gname">'+UI.esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span></div>';
+    h += '<div class="gname">'+UI.esc(g.name)+' <span class="gside-tag '+sideClass+'">'+g.side+'</span>'+(g.rsvpRespondedAt?'<span class="gresp-badge">✓ yanıtladı</span>':'')+'</div>';
     h += '<div class="gmeta">';
     if(g.phone) h += '<span>'+UI.esc(g.phone)+'</span>';
     h += '<span>'+(g.adults>0?g.adults+' yetişkin':'')+(g.adults>0&&g.children>0?', ':'')+(g.children>0?g.children+' çocuk':'')+'</span>';
@@ -534,7 +643,10 @@ function buildCardHTML(g) {
     h += '<div class="gd-item"><div class="gd-label">Toplam</div><div class="gd-val">'+g.total+' kişi</div></div>';
     h += '</div>';
     if(g.note) h += '<div class="gnote">'+UI.esc(g.note)+'</div>';
+    if(g.rsvpNote) h += '<div class="grsvp-note">💬 '+UI.esc(g.rsvpNote)+'</div>';
     h += '<div class="gbtns">';
+    h += '<button class="gbtn-rsvp" onclick="event.stopPropagation();copyRsvpLink(\''+g.id+'\')">🔗 Davet Linki</button>';
+    h += '<button class="gbtn-wa" onclick="event.stopPropagation();shareRsvpWhatsApp(\''+g.id+'\')">WhatsApp</button>';
     h += '<button class="gbtn-edit" onclick="event.stopPropagation();openEditModal(\''+g.id+'\')">Düzenle</button>';
     h += '<button class="gbtn-del" onclick="event.stopPropagation();askDelete(\''+g.id+'\')">Sil</button>';
     h += '</div></div>';
@@ -688,7 +800,7 @@ function cycleRsvp(id){
     }
     updateDashboard();
     // Transaction ile güvenli kayıt — eş zamanlı kullanımda veri kaybı olmaz
-    fh.updateItemField('shared/guests', id, { rsvp: newRsvp });
+    fh.updateItemField(fh.path('guests'), id, { rsvp: newRsvp });
 }
 
 // Modal
@@ -806,7 +918,7 @@ function saveGuest(){
         const backup = idx>=0 ? Object.assign({}, guests[idx]) : null;
         if(idx>=0) guests[idx]=obj;
         // Transaction ile güvenli güncelleme — hata olursa geri al
-        fh.updateItemField('shared/guests', id, {
+        fh.updateItemField(fh.path('guests'), id, {
             name: obj.name, side: obj.side, group: obj.group, phone: obj.phone,
             adults: obj.adults, children: obj.children, total: obj.total,
             invited: obj.invited, rsvp: obj.rsvp, table: obj.table, note: obj.note
@@ -820,7 +932,7 @@ function saveGuest(){
     } else {
         guests.push(obj);
         // Transaction ile güvenli ekleme — eş zamanlı yazma korunur
-        fh.addItem('shared/guests', obj).then(function() {
+        fh.addItem(fh.path('guests'), obj).then(function() {
             closeModal();
         }).catch(function() {
             guests = guests.filter(function(x){ return x.id !== obj.id; }); // Rollback
@@ -848,7 +960,7 @@ function confirmDelete(){
         updateDashboard();
         renderList();
         // Transaction ile güvenli silme — eş zamanlı yazma korunur
-        fh.removeItem('shared/guests', delId).catch(function() {
+        fh.removeItem(fh.path('guests'), delId).catch(function() {
             if(backup) guests.push(backup); // Rollback
             updateDashboard();
             renderList();
@@ -890,7 +1002,7 @@ function exportExcel(){
 
     // Add RSVP summary sheet
     const summaryData = [
-        ['Nişan Davet Dashboard',''],
+        ['Düğün Davet Özeti',''],
         ['',''],
         ['Toplam Kişi', guests.reduce((s,g)=>s+(g.total??1),0)],
         ['Toplam Davet', guests.length],
@@ -909,233 +1021,7 @@ function exportExcel(){
     fh.toast('Excel indirildi: '+guests.length+' davetli','success');
 }
 
-// --- DRAG & DROP (long-press, dogal surukleme) ---
-let gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
-let gAutoScrollTimer=null;
-
-function gAutoScroll(clientY){
-    // Ekranin ust/alt kenarina yakinsa otomatik scroll
-    const edge=80; // kenar mesafesi
-    const speed=12; // px her frame
-    const vh=window.innerHeight;
-    let dir=0;
-    if(clientY<edge) dir=-Math.max(2,(edge-clientY)/edge*speed);
-    else if(clientY>vh-edge) dir=Math.max(2,(clientY-(vh-edge))/edge*speed);
-    if(dir!==0){
-        if(!gAutoScrollTimer){
-            gAutoScrollTimer=setInterval(()=>{
-                var sc=document.getElementById('glist');if(sc)sc.scrollBy(0,gAutoScrollDir);
-                if(gDragState.ghost){
-                    // Ghost ekrani takip etmesin, parmak/cursor pozisyonunu koru
-                }
-            },16);
-        }
-        gAutoScrollDir=dir;
-    } else {
-        gStopAutoScroll();
-    }
-}
-let gAutoScrollDir=0;
-function gStopAutoScroll(){
-    if(gAutoScrollTimer){clearInterval(gAutoScrollTimer);gAutoScrollTimer=null;gAutoScrollDir=0;}
-}
-
-function initGuestDrag(){
-    const list=document.getElementById('glist');
-    if(!list||list.dataset.dragInit) return;
-    list.dataset.dragInit='1';
-    list.addEventListener('touchstart',gOnTouchStart,{passive:false});
-    list.addEventListener('touchmove',gOnTouchMove,{passive:false});
-    list.addEventListener('touchend',gOnTouchEnd);
-    // Mouse desktop
-    list.addEventListener('mousedown',gOnMouseDown);
-}
-
-function canDrag(){
-    // Filtre/arama acikken drag-drop devre disi (yanlis kisiyi tasiyabilir)
-    const q=(document.getElementById('search-input').value||'').trim();
-    if(activeFilter!=='all' || q){
-        fh.toast('Sürüklemek için filtre ve aramayı temizleyin','warning');
-        return false;
-    }
-    return true;
-}
-
-function gOnTouchStart(e){
-    const card=e.target.closest('.gcard');
-    if(!card) return;
-    if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
-    const dragId=card.dataset.id;
-    const idx=guests.findIndex(function(g){return g.id===dragId;});
-    if(idx<0) return;
-    const touch=e.touches[0];
-    gDragState.startY=touch.clientY;
-    gDragState.timer=setTimeout(()=>{
-        if(!canDrag()) return;
-        gDragState.active=true;
-        gDragState.srcIdx=idx;
-        gDragState.card=card;
-        const rect=card.getBoundingClientRect();
-        gDragState.offsetY=touch.clientY-rect.top;
-        const ghost=card.cloneNode(true);
-        ghost.classList.add('drag-ghost');
-        ghost.style.width=rect.width+'px';
-        ghost.style.left=rect.left+'px';
-        ghost.style.top=rect.top+'px';
-        document.body.appendChild(ghost);
-        gDragState.ghost=ghost;
-        card.classList.add('dragging');
-        navigator.vibrate&&navigator.vibrate(30);
-        if(activeSort!=='manual'){
-            activeSort='manual';
-            document.getElementById('sort-select').value='manual';
-            fh.toast('Manuel sıralamaya geçildi');
-        }
-    },400);
-}
-
-function gOnTouchMove(e){
-    if(gDragState.timer&&!gDragState.active){
-        const dy=Math.abs(e.touches[0].clientY-gDragState.startY);
-        if(dy>10){clearTimeout(gDragState.timer);gDragState.timer=null;}
-        return;
-    }
-    if(!gDragState.active) return;
-    e.preventDefault();
-    const touch=e.touches[0];
-    gDragState.ghost.style.top=(touch.clientY-gDragState.offsetY)+'px';
-    gAutoScroll(touch.clientY);
-    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
-    const el=document.elementFromPoint(touch.clientX,touch.clientY);
-    if(el){
-        const target=el.closest('.gcard');
-        if(target&&target!==gDragState.card&&!target.classList.contains('drag-ghost')){
-            const rect=target.getBoundingClientRect();
-            const mid=rect.top+rect.height/2;
-            if(touch.clientY<mid) target.classList.add('drag-over-top');
-            else target.classList.add('drag-over-bot');
-        }
-    }
-}
-
-function gOnTouchEnd(e){
-    clearTimeout(gDragState.timer);
-    gDragState.timer=null;
-    gStopAutoScroll();
-    if(!gDragState.active){gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};return;}
-    const touch=e.changedTouches[0];
-    if(gDragState.ghost) gDragState.ghost.remove();
-    if(gDragState.card) gDragState.card.classList.remove('dragging');
-    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
-    const el=document.elementFromPoint(touch.clientX,touch.clientY);
-    if(el){
-        const target=el.closest('.gcard');
-        if(target&&!target.classList.contains('drag-ghost')){
-            const targetId=target.dataset.id;
-            const targetIdx=guests.findIndex(function(g){return g.id===targetId;});
-            if(targetIdx>=0&&gDragState.srcIdx!==targetIdx){
-                const item=guests.splice(gDragState.srcIdx,1)[0];
-                const rect=target.getBoundingClientRect();
-                const insertIdx=touch.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
-                guests.splice(insertIdx>gDragState.srcIdx?insertIdx-1:insertIdx,0,item);
-                fh.reorderList('shared/guests', guests.map(function(g){return g.id;}));
-                renderList();
-            }
-        }
-    }
-    gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
-}
-
-// Mouse drag (desktop)
-function gOnMouseDown(e){
-    const card=e.target.closest('.gcard');
-    if(!card) return;
-    if(e.target.closest('.rsvp-chip')||e.target.closest('.gbtn-edit')||e.target.closest('.gbtn-del')) return;
-    const dragId=card.dataset.id;
-    const idx=guests.findIndex(function(g){return g.id===dragId;});
-    if(idx<0) return;
-    gDragState.startY=e.clientY;
-    gDragState.timer=setTimeout(()=>{
-        if(!canDrag()) return;
-        gDragState.active=true;
-        gDragState.srcIdx=idx;
-        gDragState.card=card;
-        const rect=card.getBoundingClientRect();
-        gDragState.offsetY=e.clientY-rect.top;
-        const ghost=card.cloneNode(true);
-        ghost.classList.add('drag-ghost');
-        ghost.style.width=rect.width+'px';
-        ghost.style.left=rect.left+'px';
-        ghost.style.top=rect.top+'px';
-        document.body.appendChild(ghost);
-        gDragState.ghost=ghost;
-        card.classList.add('dragging');
-        if(activeSort!=='manual'){
-            activeSort='manual';
-            document.getElementById('sort-select').value='manual';
-            fh.toast('Manuel sıralamaya geçildi');
-        }
-        document.addEventListener('mousemove',gOnMouseMove);
-        document.addEventListener('mouseup',gOnMouseUp);
-    },400);
-    document.addEventListener('mousemove',gMouseCancelCheck,{once:false});
-    document.addEventListener('mouseup',gMouseCancelLong,{once:true});
-}
-function gMouseCancelCheck(e){
-    if(gDragState.timer&&!gDragState.active){
-        if(Math.abs(e.clientY-gDragState.startY)>10){clearTimeout(gDragState.timer);gDragState.timer=null;document.removeEventListener('mousemove',gMouseCancelCheck);}
-    }
-}
-function gMouseCancelLong(){
-    if(gDragState.timer){clearTimeout(gDragState.timer);gDragState.timer=null;}
-    document.removeEventListener('mousemove',gMouseCancelCheck);
-}
-function gOnMouseMove(e){
-    if(!gDragState.active) return;
-    e.preventDefault();
-    gDragState.ghost.style.top=(e.clientY-gDragState.offsetY)+'px';
-    gAutoScroll(e.clientY);
-    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
-    const el=document.elementFromPoint(e.clientX,e.clientY);
-    if(el){
-        const target=el.closest('.gcard');
-        if(target&&target!==gDragState.card&&!target.classList.contains('drag-ghost')){
-            const rect=target.getBoundingClientRect();
-            const mid=rect.top+rect.height/2;
-            if(e.clientY<mid) target.classList.add('drag-over-top');
-            else target.classList.add('drag-over-bot');
-        }
-    }
-}
-function gOnMouseUp(e){
-    document.removeEventListener('mousemove',gOnMouseMove);
-    document.removeEventListener('mouseup',gOnMouseUp);
-    gStopAutoScroll();
-    if(!gDragState.active){return;}
-    if(gDragState.ghost) gDragState.ghost.remove();
-    if(gDragState.card) gDragState.card.classList.remove('dragging');
-    document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('drag-over-top','drag-over-bot'));
-    const el=document.elementFromPoint(e.clientX,e.clientY);
-    if(el){
-        const target=el.closest('.gcard');
-        if(target&&!target.classList.contains('drag-ghost')){
-            const targetId=target.dataset.id;
-            const targetIdx=guests.findIndex(function(g){return g.id===targetId;});
-            if(targetIdx>=0&&gDragState.srcIdx!==targetIdx){
-                const item=guests.splice(gDragState.srcIdx,1)[0];
-                const rect=target.getBoundingClientRect();
-                const insertIdx=e.clientY<rect.top+rect.height/2?targetIdx:targetIdx+1;
-                guests.splice(insertIdx>gDragState.srcIdx?insertIdx-1:insertIdx,0,item);
-                fh.reorderList('shared/guests', guests.map(function(g){return g.id;}));
-                renderList();
-            }
-        }
-    }
-    gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
-}
-
-// Init drag
-setTimeout(initGuestDrag,500);
+// Drag-drop kaldırıldı (v0.7) — sıralama artık yalnızca sort menüsünden.
 
 </script>
 </body>

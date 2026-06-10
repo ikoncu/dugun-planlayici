@@ -8,9 +8,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="./firebase-config.js"></script>
-    <script src="./firestore-helpers.js?v=2"></script>
-    <link rel="stylesheet" href="shared.css">
-    <script src="./shared-ui.js"></script>
+    <script src="./firestore-helpers.js?v=3"></script>
+    <link rel="stylesheet" href="shared.css?v=3">
+    <script src="./shared-ui.js?v=3"></script>
     <style>
         /* reset, root, body, login, header, drawer, bnav, loading, #app → shared.css */
 
@@ -20,7 +20,7 @@
         .s-card .s-num{font-size:18px;font-weight:700}
         .s-card .s-lbl{font-size:9px;color:var(--gray-500);margin-top:2px;text-transform:uppercase;font-weight:600;letter-spacing:0.3px}
         .s-card.tables .s-num{color:var(--gold)}
-        .s-card.capacity .s-num{color:#2563eb}
+        .s-card.capacity .s-num{color:var(--blue)}
         .s-card.seated .s-num{color:var(--green)}
         .s-card.empty .s-num{color:var(--red)}
 
@@ -96,7 +96,7 @@
 <div id="app" >
     <div class="header">
         <div class="header-row">
-            <a href="index.html" class="header-logo">H 💞 İ</a>
+            <a href="index.html" class="header-logo">H&amp;İ</a>
             <h1>Masa Planı</h1>
             <button class="hamburger" onclick="UI.toggleDrawer()">☰</button>
             </div>
@@ -133,7 +133,7 @@ let guests = [];
 function startListening() {
     let tablesReady = false, guestsReady = false;
 
-    fh.listen('shared/tables', (data) => {
+    fh.listen(fh.path('tables'), (data) => {
         if (data) {
             tables = (data.list && Array.isArray(data.list)) ? data.list : [];
         } else {
@@ -146,7 +146,7 @@ function startListening() {
         render();
     });
 
-    fh.listen('shared/guests', (data) => {
+    fh.listen(fh.path('guests'), (data) => {
         guests = (data && data.list) ? data.list : [];
         guestsReady = true;
         if (tablesReady) UI.showApp();
@@ -163,13 +163,13 @@ function generateDefaultTables() {
 }
 
 function saveTables() {
-    fh.saveDoc('shared/tables', { list: tables })
+    fh.saveDoc(fh.path('tables'), { list: tables })
         .catch(e=>{console.error(e);});
 }
 
 // Transaction ile guvenli guncelleme: fh.updateItemField kullanır
 function updateGuestTable(guestId, newTable) {
-    return fh.updateItemField('shared/guests', guestId, { table: newTable });
+    return fh.updateItemField(fh.path('guests'), guestId, { table: newTable });
 }
 
 // ---- RENDER ----

@@ -3,6 +3,12 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
   deploy:
@@ -10,9 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # main push → live; PR → otomatik preview channel (URL'i PR'a yorum olarak yazar)
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
+          channelId: ${{ github.event_name == 'push' && 'live' || '' }}
           projectId: dugun-planlayici-ff34e
+          expires: 30d
