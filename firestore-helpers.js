@@ -31,8 +31,62 @@ const fh = (() => {
     const VERSION_THROTTLE_MS = 5 * 60 * 1000;  // 5 dakika
     const MAX_VERSIONS = 30;
 
+    // ---- DEV BYPASS (sadece localhost) ----
+    // Lokalde Google auth + Firestore rules devrede olamaz. Bu blok login'i
+    // atlar ve bellekteki mock veriyi besler. Prod'da (web.app) ASLA aktif olmaz.
+    const _DEV = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    const _MOCK_USER = { uid: 'dev-ibrahim', displayName: 'İbrahim (DEV)', email: 'dev@local' };
+    let _mockListeners = {};   // path -> onData
+    const _mock = _DEV ? _buildMockData() : {};
+
+    function _buildMockData() {
+        return {
+            'shared/planner_tasks': { list: [
+                { id: 't1', title: 'Mekan seçimi ve kapora', done: false, due: '2026-02-15', assignee: 'Birlikte', hint: 'Mayıs 2026 hedef', note: 'Bahçe + kapalı alan şart', subtasks: [
+                    { id: 't1s1', text: 'En az 3 mekan gez', done: true },
+                    { id: 't1s2', text: 'Fiyat teklifi al', done: true },
+                    { id: 't1s3', text: 'Kaporayı yatır', done: false }
+                ] },
+                { id: 't2', title: 'Davetli listesini kesinleştir', done: false, due: '2026-03-01', assignee: 'Hilal', hint: '', note: '', subtasks: [
+                    { id: 't2s1', text: 'İki ailenin listesini birleştir', done: true },
+                    { id: 't2s2', text: 'Tekrarları temizle', done: false }
+                ] },
+                { id: 't3', title: 'Nikah memuru ve evrak', done: true, due: '2026-01-20', assignee: 'İbrahim', hint: 'Belediye', note: '', subtasks: [] },
+                { id: 't4', title: 'Fotoğrafçı anlaşması', done: false, due: '2026-03-10', assignee: 'Birlikte', hint: '', note: 'Dış çekim dahil olsun', subtasks: [] }
+            ] },
+            'shared/guests': { list: [
+                { id: 'g1', name: 'Mehmet Yılmaz', group: 'Aile', side: 'Damat', rsvp: 'Katilacak', adults: 2, children: 1, total: 3, invited: 'Gonderildi', table: 'Masa 1', note: '', phone: '0532 000 0001' },
+                { id: 'g2', name: 'Ayşe Demir', group: 'Aile', side: 'Gelin', rsvp: 'Katilacak', adults: 2, children: 0, total: 2, invited: 'Gonderildi', table: 'Masa 1', note: 'Vejetaryen', phone: '0532 000 0002' },
+                { id: 'g3', name: 'Can Öztürk', group: 'Arkadaş', side: 'Damat', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: '', phone: '0532 000 0003' },
+                { id: 'g4', name: 'Zeynep Kaya', group: 'Arkadaş', side: 'Gelin', rsvp: 'Katilmayacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: 'Şehir dışında', phone: '' },
+                { id: 'g5', name: 'Ali & Fatma Şahin', group: 'Akraba', side: 'Damat', rsvp: 'Katilacak', adults: 2, children: 2, total: 4, invited: 'Gonderilmedi', table: 'Masa 2', note: '', phone: '0532 000 0005' }
+            ] },
+            'shared/venues': { list: [
+                { id: 'v1', name: 'Bahçe Garden Davet', instagram: 'bahcegarden', notes: 'Açık + kapalı alan var. Fiyat uygun. Otopark geniş.', favorite: true },
+                { id: 'v2', name: 'Sahil Balo Salonu', instagram: 'sahilbalo', notes: 'Deniz manzaralı ama kapalı. 250 kişi.', favorite: false },
+                { id: 'v3', name: 'Köşk Kır Düğünü', instagram: 'kosakkir', notes: 'Çok şık ama bütçe üstü. Yedek.', favorite: false }
+            ] },
+            'shared/tables': { list: [
+                { id: 'm1', name: 'Masa 1', capacity: 8 },
+                { id: 'm2', name: 'Masa 2', capacity: 10 },
+                { id: 'm3', name: 'Masa 3', capacity: 8 }
+            ] }
+        };
+    }
+
+    // Mock veriyi ilgili listener'a tekrar yayınla (yazma sonrası canlı güncelleme)
+    function _mockEmit(path) {
+        const cb = _mockListeners[path];
+        if (cb) cb(_mock[path] ? JSON.parse(JSON.stringify(_mock[path])) : null);
+    }
+
     // ---- INIT ----
     function init() {
+        if (_DEV) {
+            _setupErrorHandling();
+            console.warn('🔧 DEV modu: auth atlandı, mock veri aktif (sadece localhost)');
+            return;
+        }
         if (!window.FIREBASE_CONFIG) {
             throw new Error('FIREBASE_CONFIG bulunamadı. firebase-config.js yüklendi mi?');
         }
@@ -58,6 +112,11 @@ const fh = (() => {
 
     // ---- AUTH ----
     function onAuth({ onLogin, onLogout, onLoading }) {
+        if (_DEV) {
+            _currentUser = _MOCK_USER;
+            setTimeout(function () { if (onLogin) onLogin(_MOCK_USER); }, 0);
+            return;
+        }
         if (!_auth) throw new Error('Önce fh.init() çağrılmalı');
 
         _auth.onAuthStateChanged(user => {
@@ -75,6 +134,7 @@ const fh = (() => {
     }
 
     function signIn() {
+        if (_DEV) { toast('DEV modunda zaten giriş yapılı', 'info'); return; }
         if (!_auth) return;
         var provider = new firebase.auth.GoogleAuthProvider();
         _auth.signInWithPopup(provider).catch(function (e) {
@@ -88,6 +148,7 @@ const fh = (() => {
     }
 
     function signOut() {
+        if (_DEV) { toast('DEV modunda çıkış devre dışı', 'info'); return; }
         if (!_auth) return;
         if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
             _auth.signOut();
@@ -109,6 +170,11 @@ const fh = (() => {
      * @returns {function} unsubscribe
      */
     function listen(path, onData, options = {}) {
+        if (_DEV) {
+            _mockListeners[path] = onData;
+            setTimeout(function () { _mockEmit(path); }, 30);
+            return function () { delete _mockListeners[path]; };
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
 
         // Eski listener varsa kapat
@@ -159,6 +225,11 @@ const fh = (() => {
      * @returns {Promise<void>}
      */
     async function saveDoc(path, data, options = {}) {
+        if (_DEV) {
+            _mock[path] = JSON.parse(JSON.stringify(data));
+            _mockEmit(path);
+            return;
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
 
         const parts = path.split('/');
@@ -325,6 +396,12 @@ const fh = (() => {
      * @returns {Promise<void>}
      */
     async function updateItemField(path, itemId, fields) {
+        if (_DEV) {
+            var d = _mock[path] || (_mock[path] = { list: [] });
+            var i = (d.list || []).findIndex(function (it) { return it.id === itemId; });
+            if (i >= 0) { d.list[i] = Object.assign({}, d.list[i], fields); _mockEmit(path); }
+            return;
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
         const parts = path.split('/');
         const ref = _db.collection(parts[0]).doc(parts[1]);
@@ -355,6 +432,12 @@ const fh = (() => {
      * Eş zamanlı yazma sırasında diğer kullanıcının değişikliği korunur.
      */
     async function addItem(path, newItem) {
+        if (_DEV) {
+            var d = _mock[path] || (_mock[path] = { list: [] });
+            (d.list || (d.list = [])).push(newItem);
+            _mockEmit(path);
+            return;
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
         var parts = path.split('/');
         var ref = _db.collection(parts[0]).doc(parts[1]);
@@ -381,6 +464,11 @@ const fh = (() => {
      * Eş zamanlı yazma sırasında diğer kullanıcının değişikliği korunur.
      */
     async function removeItem(path, itemId) {
+        if (_DEV) {
+            var d = _mock[path];
+            if (d && d.list) { d.list = d.list.filter(function (it) { return it.id !== itemId; }); _mockEmit(path); }
+            return;
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
         var parts = path.split('/');
         var ref = _db.collection(parts[0]).doc(parts[1]);
@@ -408,6 +496,19 @@ const fh = (() => {
      * Drag-drop sonrası kullanılır — eş zamanlı ekleme/silme korunur.
      */
     async function reorderList(path, orderedIds) {
+        if (_DEV) {
+            var d = _mock[path];
+            if (d && d.list) {
+                var idMap = {};
+                d.list.forEach(function (it) { idMap[it.id] = it; });
+                var reordered = [];
+                orderedIds.forEach(function (id) { if (idMap[id]) { reordered.push(idMap[id]); delete idMap[id]; } });
+                Object.keys(idMap).forEach(function (id) { reordered.push(idMap[id]); });
+                d.list = reordered;
+                _mockEmit(path);
+            }
+            return;
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
         var parts = path.split('/');
         var ref = _db.collection(parts[0]).doc(parts[1]);
@@ -494,6 +595,7 @@ const fh = (() => {
      * Backup butonu gibi kullanıcı aksiyonları için.
      */
     async function forceVersion(path, label) {
+        if (_DEV) { toast('DEV modunda yedek alınmaz', 'info'); return; }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
         const parts = path.split('/');
         const docRef = _db.collection(parts[0]).doc(parts[1]);
