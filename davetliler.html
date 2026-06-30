@@ -48,8 +48,7 @@
         .filter-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
 
         /* GUEST LIST */
-        .glist{padding:8px 12px 0;max-width:640px;margin:0 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
-        .glist-spacer{position:relative}
+        .glist{padding:8px 12px 0;max-width:640px;margin:0 auto}
         .gcard{background:white;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:border-color 0.15s}
         .gcard.dragging{opacity:0.4;transform:scale(0.97)}
         .gcard.drag-over-top{border-top:3px solid var(--gold);margin-top:-1px}
@@ -364,7 +363,6 @@ let deleteTargetId = null;
 function startListening(){
     fh.listen('shared/guests', (data, snap) => {
         UI.showApp();
-        vsBindScroll();
         if(data && data.list && data.list.length > 0){
             guests = data.list;
         } else {
@@ -492,21 +490,8 @@ function sortGuests(list){
     }
 }
 
-// ── VIRTUAL SCROLL ──────────────────────────────────────────
-const CARD_H = 72;        // Collapsed kart yüksekliği (px)
-const CARD_OPEN_H = 220;  // Expanded kart varsayılan yüksekliği (px)
-const CARD_GAP = 6;       // margin-bottom
-const VS_BUFFER = 8;      // Görünür alanın üst/altına ekstra render
-let vsFiltered = [];       // Filtrelenmiş + sıralanmış sonuç
-let vsScrollRAF = null;    // requestAnimationFrame id
-let vsHeightCache = {};    // Açık kartların gerçek yükseklik cache'i: {id: px}
-
-function getItemH(g) {
-    if(openCardId === g.id) {
-        return (vsHeightCache[g.id] || CARD_OPEN_H) + CARD_GAP;
-    }
-    return CARD_H + CARD_GAP;
-}
+// Filtrelenmiş + sıralanmış sonuç (renderList doldurur)
+let vsFiltered = [];
 
 function buildCardHTML(g) {
     const isOpen = openCardId===g.id;
@@ -514,7 +499,7 @@ function buildCardHTML(g) {
     const sideClass = g.side==='Gelin'?'gside-gelin':'gside-damat';
     const rsvpClass = g.rsvp==='Katilacak'?'rsvp-katilacak':g.rsvp==='Katilmayacak'?'rsvp-katilmayacak':'rsvp-beklemede';
     const rsvpLabel = trLabel(g.rsvp);
-    let h = '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'" data-idx="'+guests.indexOf(g)+'" style="position:absolute;left:0;right:0">';
+    let h = '<div class="gcard'+(isOpen?' open':'')+'" data-id="'+g.id+'" data-idx="'+guests.indexOf(g)+'">';
     h += '<div class="gmain" onclick="toggleCard(\''+g.id+'\')">';
     h += '<div class="gavatar">'+initials+'</div>';
     h += '<div class="ginfo">';
@@ -542,8 +527,7 @@ function buildCardHTML(g) {
     return h;
 }
 
-// Render: filtre + sort → vsFiltered, sonra vsRender çağır
-// Search debounce — 300+ davetlide performans için
+// Search debounce — yazarken her tuşta render etmemek için
 let _searchTimer = null;
 function debouncedSearch(){
     clearTimeout(_searchTimer);
@@ -563,106 +547,30 @@ function renderList(){
     vsFiltered = sortGuests(filtered);
 
     const container = document.getElementById('glist');
-    container.scrollTop = 0; // Filtre/search değiştiğinde en başa dön
-
     if(vsFiltered.length===0){
         container.innerHTML = '<div class="empty-msg">Davetli bulunamadı</div>';
         return;
     }
-
-    // Spacer div yoksa oluştur
-    if(!container.querySelector('.glist-spacer')){
-        container.innerHTML = '<div class="glist-spacer"></div>';
-    }
-
-    vsRender();
-}
-
-// Virtual scroll: sadece görünür kartları çiz
-function vsRender(){
-    const container = document.getElementById('glist');
-    const spacer = container.querySelector('.glist-spacer');
-    if(!spacer || vsFiltered.length===0) return;
-
-    // Toplam yükseklik hesapla
-    let totalH = 0;
-    const offsets = [];
-    vsFiltered.forEach(g => {
-        offsets.push(totalH);
-        totalH += getItemH(g);
-    });
-    spacer.style.height = totalH + 120 + 'px'; // +120 alt padding (bnav + fab)
-
-    // Görünür aralığı bul
-    const scrollTop = container.scrollTop;
-    const viewH = container.clientHeight;
-    let startIdx = 0, endIdx = vsFiltered.length - 1;
-
-    // Binary search ile başlangıç bul
-    for(let i = 0; i < vsFiltered.length; i++){
-        if(offsets[i] + getItemH(vsFiltered[i]) > scrollTop){ startIdx = i; break; }
-    }
-    for(let i = startIdx; i < vsFiltered.length; i++){
-        if(offsets[i] > scrollTop + viewH){ endIdx = i; break; }
-    }
-
-    // Buffer ekle
-    startIdx = Math.max(0, startIdx - VS_BUFFER);
-    endIdx = Math.min(vsFiltered.length - 1, endIdx + VS_BUFFER);
-
-    // Sadece görünür kartları render et
-    let html = '';
-    for(let i = startIdx; i <= endIdx; i++){
-        const g = vsFiltered[i];
-        const card = buildCardHTML(g);
-        // top pozisyonunu style'a ekle
-        html += card.replace('style="position:absolute;left:0;right:0"',
-            'style="position:absolute;left:0;right:0;top:'+offsets[i]+'px"');
-    }
-    spacer.innerHTML = html;
-}
-
-// Scroll event — throttled with rAF
-function vsOnScroll(){
-    if(vsScrollRAF) return;
-    vsScrollRAF = requestAnimationFrame(()=>{
-        vsScrollRAF = null;
-        vsRender();
-    });
-}
-
-// glist scroll listener kurulumu (bir kez)
-let vsScrollBound = false;
-function vsBindScroll(){
-    if(vsScrollBound) return;
-    const container = document.getElementById('glist');
-    if(!container) return;
-    container.addEventListener('scroll', vsOnScroll, {passive: true});
-    vsScrollBound = true;
-    // glist yüksekliğini viewport'a göre ayarla
-    function setGlistHeight(){
-        const rect = container.getBoundingClientRect();
-        container.style.height = (window.innerHeight - rect.top - 56) + 'px'; // 56 = bnav
-    }
-    setGlistHeight();
-    window.addEventListener('resize', setGlistHeight);
+    // Doğal akış: tüm kartları çiz, sayfa (window) ile scroll olsun.
+    // innerHTML aynı yükseklikte yenilenince tarayıcı scroll pozisyonunu korur —
+    // RSVP değişip listener tekrar render edince sayfa yerinde kalır.
+    container.innerHTML = vsFiltered.map(buildCardHTML).join('');
 }
 
 // Veri degeri -> Turkce gosterim
 function trLabel(s){return UI.trLabel(s);}
 
 function toggleCard(id){
-    openCardId = openCardId===id ? null : id;
-    vsRender();
-    // Açık kartın gerçek yüksekliğini ölç ve cache'le
-    if(openCardId){
-        requestAnimationFrame(function(){
-            var card = document.querySelector('.gcard[data-id="'+openCardId+'"]');
-            if(card) {
-                vsHeightCache[openCardId] = card.offsetHeight;
-                vsRender(); // Pozisyonları gerçek yükseklikle güncelle
-            }
-        });
+    const prev = openCardId;
+    openCardId = (openCardId===id) ? null : id;
+    // Doğal akışta kartlar CSS ile açılıp kapanır — re-render gerekmez, scroll korunur.
+    if(prev){
+        const pc = document.querySelector('.gcard[data-id="'+prev+'"]');
+        if(pc) pc.classList.remove('open');
+    }
+    if(openCardId && openCardId!==prev){
+        const c = document.querySelector('.gcard[data-id="'+openCardId+'"]');
+        if(c) c.classList.add('open');
     }
 }
 
@@ -924,10 +832,7 @@ function gAutoScroll(clientY){
     if(dir!==0){
         if(!gAutoScrollTimer){
             gAutoScrollTimer=setInterval(()=>{
-                var sc=document.getElementById('glist');if(sc)sc.scrollBy(0,gAutoScrollDir);
-                if(gDragState.ghost){
-                    // Ghost ekrani takip etmesin, parmak/cursor pozisyonunu koru
-                }
+                window.scrollBy(0,gAutoScrollDir); // Doğal akış: sayfayı kaydır
             },16);
         }
         gAutoScrollDir=dir;
