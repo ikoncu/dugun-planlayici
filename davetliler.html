@@ -48,7 +48,7 @@
         .filter-btn.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
 
         /* GUEST LIST */
-        .glist{padding:8px 12px 0;max-width:640px;margin:0 auto}
+        .glist{padding:8px 12px 45vh;max-width:640px;margin:0 auto}
         .gcard{background:white;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:6px;overflow:hidden;transition:border-color 0.15s}
         .gcard.dragging{opacity:0.4;transform:scale(0.97)}
         .gcard.drag-over-top{border-top:3px solid var(--gold);margin-top:-1px}
@@ -107,6 +107,14 @@
         .field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
         .btn-save{width:100%;padding:12px;border:none;border-radius:10px;background:var(--gold);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
         .btn-save:active{opacity:0.8}
+        .side-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .side-opt{padding:10px;border-radius:8px;font-size:14px;font-weight:500;border:1.5px solid var(--gray-200);background:white;color:var(--gray-500);cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+        .side-opt.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);font-weight:600}
+        .details-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:8px 2px;font-size:13px;font-weight:600;color:var(--gray-500);cursor:pointer;font-family:inherit;margin:4px 0}
+        .details-toggle .dt-arrow{transition:transform 0.15s;font-size:11px}
+        .details-toggle.open .dt-arrow{transform:rotate(180deg)}
+        .details-body{display:none}
+        .details-body.open{display:block}
 
         /* CONFIRM MODAL */
         .confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;align-items:center;justify-content:center}
@@ -262,26 +270,17 @@
         <div class="modal-hdr"><span id="modal-title">Davetli Ekle</span><button class="modal-x" onclick="tryCloseModal()">&times;</button></div>
         <div class="modal-body">
             <input type="hidden" id="f-id">
+            <input type="hidden" id="f-side" value="Gelin">
+            <div class="field">
+                <label>Taraf</label>
+                <div class="side-toggle">
+                    <button type="button" class="side-opt" data-side="Gelin" onclick="setFormSide('Gelin')">Gelin</button>
+                    <button type="button" class="side-opt" data-side="Damat" onclick="setFormSide('Damat')">Damat</button>
+                </div>
+            </div>
             <div class="field">
                 <label>Ad Soyad</label>
                 <input type="text" id="f-name" placeholder="Örnek: Ahmet Yılmaz">
-            </div>
-            <div class="field-row">
-                <div class="field">
-                    <label>Taraf</label>
-                    <select id="f-side">
-                        <option value="Gelin">Gelin</option>
-                        <option value="Damat">Damat</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Grup</label>
-                    <input type="text" id="f-group" placeholder="Aile, Arkadaş...">
-                </div>
-            </div>
-            <div class="field">
-                <label>Telefon</label>
-                <input type="tel" id="f-phone" placeholder="5XX XXX XX XX">
             </div>
             <div class="field-row3">
                 <div class="field">
@@ -297,14 +296,11 @@
                     <input type="number" id="f-total" min="0" value="1" readonly style="background:var(--gray-50)">
                 </div>
             </div>
+            <div class="field">
+                <label>Telefon</label>
+                <input type="tel" id="f-phone" placeholder="5XX XXX XX XX">
+            </div>
             <div class="field-row">
-                <div class="field">
-                    <label>Davetiye</label>
-                    <select id="f-invited">
-                        <option value="Gonderilmedi">Gönderilmedi</option>
-                        <option value="Gonderildi">Gönderildi</option>
-                    </select>
-                </div>
                 <div class="field">
                     <label>RSVP</label>
                     <select id="f-rsvp">
@@ -313,14 +309,31 @@
                         <option value="Katilmayacak">Katılmayacak</option>
                     </select>
                 </div>
+                <div class="field">
+                    <label>Davetiye</label>
+                    <select id="f-invited">
+                        <option value="Gonderilmedi">Gönderilmedi</option>
+                        <option value="Gonderildi">Gönderildi</option>
+                    </select>
+                </div>
             </div>
-            <div class="field">
-                <label>Masa No</label>
-                <input type="text" id="f-table" placeholder="Örnek: 5">
-            </div>
-            <div class="field">
-                <label>Not</label>
-                <textarea id="f-note" placeholder="Ek bilgi..."></textarea>
+            <button type="button" class="details-toggle" id="details-toggle" onclick="toggleDetails()">
+                <span>Diğer detaylar</span>
+                <span class="dt-arrow">▾</span>
+            </button>
+            <div class="details-body" id="details-body">
+                <div class="field">
+                    <label>Grup</label>
+                    <input type="text" id="f-group" placeholder="Aile, Arkadaş...">
+                </div>
+                <div class="field">
+                    <label>Masa No</label>
+                    <input type="text" id="f-table" placeholder="Örnek: 5">
+                </div>
+                <div class="field">
+                    <label>Not</label>
+                    <textarea id="f-note" placeholder="Ek bilgi..."></textarea>
+                </div>
             </div>
             <button class="btn-save" onclick="saveGuest()">Kaydet</button>
         </div>
@@ -621,11 +634,25 @@ function isModalDirty(){
     return modalSnapshot && captureModalSnapshot() !== modalSnapshot;
 }
 
+function setFormSide(s){
+    document.getElementById('f-side').value=s;
+    document.querySelectorAll('.side-opt').forEach(b=>b.classList.toggle('active', b.dataset.side===s));
+}
+
+function toggleDetails(open){
+    const body=document.getElementById('details-body');
+    const tog=document.getElementById('details-toggle');
+    const show=(open===undefined)?!body.classList.contains('open'):open;
+    body.classList.toggle('open', show);
+    tog.classList.toggle('open', show);
+}
+
 function openAddModal(){
     document.getElementById('modal-title').textContent='Davetli Ekle';
     document.getElementById('f-id').value='';
     document.getElementById('f-name').value='';
-    document.getElementById('f-side').value='Gelin';
+    setFormSide((activeFilter==='Gelin'||activeFilter==='Damat')?activeFilter:'Gelin');
+    toggleDetails(false);
     document.getElementById('f-group').value='';
     document.getElementById('f-phone').value='';
     document.getElementById('f-adults').value='1';
@@ -646,7 +673,8 @@ function openEditModal(id){
     document.getElementById('modal-title').textContent='Davetli Düzenle';
     document.getElementById('f-id').value=g.id;
     document.getElementById('f-name').value=g.name;
-    document.getElementById('f-side').value=g.side;
+    setFormSide(g.side);
+    toggleDetails(!!(g.group||g.table||g.note));
     document.getElementById('f-group').value=g.group||'';
     document.getElementById('f-phone').value=g.phone||'';
     document.getElementById('f-adults').value=g.adults??1;
