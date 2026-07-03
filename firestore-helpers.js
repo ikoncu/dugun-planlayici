@@ -31,10 +31,15 @@ const fh = (() => {
     const VERSION_THROTTLE_MS = 5 * 60 * 1000;  // 5 dakika
     const MAX_VERSIONS = 30;
 
-    // ---- DEV BYPASS (sadece localhost) ----
-    // Lokalde Google auth + Firestore rules devrede olamaz. Bu blok login'i
-    // atlar ve bellekteki mock veriyi besler. Prod'da (web.app) ASLA aktif olmaz.
-    const _DEV = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    // ---- DEV / DEMO BYPASS (localhost + Firebase önizleme kanalları) ----
+    // Lokalde ve geçici önizleme (preview channel) URL'lerinde Google auth +
+    // Firestore rules devrede olamaz. Bu blok login'i atlar ve bellekteki mock
+    // veriyi besler — gerçek Firestore verisine ASLA dokunmaz.
+    // Önizleme kanalı host'u '<proje>--<kanal>-<hash>.web.app' → '--' içerir.
+    // Canlı (dugun-planlayici-ff34e.web.app) '--' İÇERMEZ → mock canlıda aktif olmaz.
+    const _isPreviewChannel = location.hostname.indexOf('--') !== -1 &&
+        (/\.web\.app$/.test(location.hostname) || /\.firebaseapp\.com$/.test(location.hostname));
+    const _DEV = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || _isPreviewChannel);
     // DEV kimliği localStorage'dan gelir → lokalde sahip ↔ editör geçişi (paylaşım testi)
     const _DEV_OWNER = { uid: '2A9tYioQs8SmZC4v6QgZ2ct4bHI2', displayName: 'İbrahim (DEV sahip)', email: 'ibrahim.koncu@gmail.com' };
     function _devUser() {
@@ -64,24 +69,56 @@ const fh = (() => {
                     { id: 't2s2', text: 'Tekrarları temizle', done: false }
                 ] },
                 { id: 't3', title: 'Nikah memuru ve evrak', done: true, due: '2026-01-20', assignee: 'İbrahim', hint: 'Belediye', note: '', subtasks: [] },
-                { id: 't4', title: 'Fotoğrafçı anlaşması', done: false, due: '2026-03-10', assignee: 'Birlikte', hint: '', note: 'Dış çekim dahil olsun', subtasks: [] }
+                { id: 't4', title: 'Fotoğrafçı anlaşması', done: false, due: '2026-03-10', assignee: 'Birlikte', hint: '', note: 'Dış çekim dahil olsun', subtasks: [
+                    { id: 't4s1', text: '3 fotoğrafçı portfolyosu incele', done: true },
+                    { id: 't4s2', text: 'Paket + fiyat karşılaştır', done: false }
+                ] },
+                { id: 't5', title: 'Gelinlik & damatlık', done: false, due: '2026-04-01', assignee: 'Hilal', hint: '', note: 'Prova tarihleri ayarlanacak', subtasks: [
+                    { id: 't5s1', text: 'Gelinlik provası', done: false },
+                    { id: 't5s2', text: 'Damatlık ölçü', done: false }
+                ] },
+                { id: 't6', title: 'Davetiye tasarımı ve baskı', done: false, due: '2026-03-20', assignee: 'Birlikte', hint: '', note: '', subtasks: [] }
             ] },
             'shared/guests': { list: [
-                { id: 'g1', name: 'Mehmet Yılmaz', group: 'Aile', side: 'Damat', rsvp: 'Katilacak', adults: 2, children: 1, total: 3, invited: 'Gonderildi', table: 'Masa 1', note: '', phone: '0532 000 0001' },
-                { id: 'g2', name: 'Ayşe Demir', group: 'Aile', side: 'Gelin', rsvp: 'Katilacak', adults: 2, children: 0, total: 2, invited: 'Gonderildi', table: 'Masa 1', note: 'Vejetaryen', phone: '0532 000 0002' },
-                { id: 'g3', name: 'Can Öztürk', group: 'Arkadaş', side: 'Damat', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: '', phone: '0532 000 0003' },
-                { id: 'g4', name: 'Zeynep Kaya', group: 'Arkadaş', side: 'Gelin', rsvp: 'Katilmayacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: 'Şehir dışında', phone: '' },
-                { id: 'g5', name: 'Ali & Fatma Şahin', group: 'Akraba', side: 'Damat', rsvp: 'Katilacak', adults: 2, children: 2, total: 4, invited: 'Gonderilmedi', table: 'Masa 2', note: '', phone: '0532 000 0005' }
+                // ── Yılmaz Ailesi (hane) — Damat ──
+                { id: 'g_yil1', name: 'Ahmet Yılmaz', group: 'Yılmaz Ailesi', side: 'Damat', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 1', note: 'Damadın amcası', phone: '0532 111 0001' },
+                { id: 'g_yil2', name: 'Ayşe Yılmaz', group: 'Yılmaz Ailesi', side: 'Damat', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 1', note: '', phone: '' },
+                { id: 'g_yil3', name: 'Elif Yılmaz', group: 'Yılmaz Ailesi', side: 'Damat', rsvp: 'Katilacak', adults: 0, children: 1, total: 1, invited: 'Gonderildi', table: 'Masa 1', note: '5 yaşında', phone: '' },
+                // ── Demir Ailesi (hane) — Gelin ──
+                { id: 'g_dem1', name: 'Kemal Demir', group: 'Demir Ailesi', side: 'Gelin', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 2', note: 'Gelinin dayısı', phone: '0532 222 0001' },
+                { id: 'g_dem2', name: 'Sevgi Demir', group: 'Demir Ailesi', side: 'Gelin', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 2', note: 'Vejetaryen', phone: '' },
+                { id: 'g_dem3', name: 'Deniz Demir', group: 'Demir Ailesi', side: 'Gelin', rsvp: 'Beklemede', adults: 0, children: 1, total: 1, invited: 'Gonderilmedi', table: '', note: '', phone: '' },
+                // ── Şahin Ailesi (hane) — Gelin ──
+                { id: 'g_sah1', name: 'Osman Şahin', group: 'Şahin Ailesi', side: 'Gelin', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: '', phone: '0532 333 0001' },
+                { id: 'g_sah2', name: 'Nuray Şahin', group: 'Şahin Ailesi', side: 'Gelin', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: '', phone: '' },
+                { id: 'g_sah3', name: 'Berk Şahin', group: 'Şahin Ailesi', side: 'Gelin', rsvp: 'Beklemede', adults: 0, children: 1, total: 1, invited: 'Gonderilmedi', table: '', note: '', phone: '' },
+                { id: 'g_sah4', name: 'Ece Şahin', group: 'Şahin Ailesi', side: 'Gelin', rsvp: 'Beklemede', adults: 0, children: 1, total: 1, invited: 'Gonderilmedi', table: '', note: 'Bebek — mama sandalyesi', phone: '' },
+                // ── Kaya Ailesi (hane) — Damat ──
+                { id: 'g_kay1', name: 'Hasan Kaya', group: 'Kaya Ailesi', side: 'Damat', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 3', note: '', phone: '0532 444 0001' },
+                { id: 'g_kay2', name: 'Fatma Kaya', group: 'Kaya Ailesi', side: 'Damat', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 3', note: '', phone: '' },
+                // ── İş Arkadaşları (hane değil, ortak grup) — Gelin ──
+                { id: 'g_is1', name: 'Gökhan Er', group: 'İş Arkadaşları', side: 'Gelin', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 4', note: '', phone: '0532 555 0001' },
+                { id: 'g_is2', name: 'Deniz Yıldız', group: 'İş Arkadaşları', side: 'Gelin', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderilmedi', table: '', note: '', phone: '0532 555 0002' },
+                // ── Grupsuz tekil davetliler ──
+                { id: 'g_can', name: 'Can Öztürk', group: '', side: 'Damat', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: 'Üniversiteden', phone: '0532 000 0003' },
+                { id: 'g_zey', name: 'Zeynep Kaya', group: '', side: 'Gelin', rsvp: 'Katilmayacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: '', note: 'Şehir dışında — gelemeyecek', phone: '' },
+                { id: 'g_bur', name: 'Burak Çelik', group: '', side: 'Damat', rsvp: 'Katilacak', adults: 1, children: 0, total: 1, invited: 'Gonderildi', table: 'Masa 4', note: '', phone: '0532 000 0006' },
+                { id: 'g_mer', name: 'Merve Arslan', group: '', side: 'Gelin', rsvp: 'Beklemede', adults: 1, children: 0, total: 1, invited: 'Gonderilmedi', table: '', note: '', phone: '0532 000 0007' },
+                // ── Eski usul tek kart / çok kişi (adet olarak) ──
+                { id: 'g_akr', name: 'Ali & Fatma Şahin', group: 'Akrabalar', side: 'Damat', rsvp: 'Katilacak', adults: 2, children: 2, total: 4, invited: 'Gonderilmedi', table: 'Masa 5', note: 'Tek kart, 4 kişi', phone: '0532 000 0005' }
             ] },
             'shared/venues': { list: [
                 { id: 'v1', name: 'Bahçe Garden Davet', instagram: 'bahcegarden', notes: 'Açık + kapalı alan var. Fiyat uygun. Otopark geniş.', favorite: true },
                 { id: 'v2', name: 'Sahil Balo Salonu', instagram: 'sahilbalo', notes: 'Deniz manzaralı ama kapalı. 250 kişi.', favorite: false },
-                { id: 'v3', name: 'Köşk Kır Düğünü', instagram: 'kosakkir', notes: 'Çok şık ama bütçe üstü. Yedek.', favorite: false }
+                { id: 'v3', name: 'Köşk Kır Düğünü', instagram: 'kosakkir', notes: 'Çok şık ama bütçe üstü. Yedek.', favorite: false },
+                { id: 'v4', name: 'Marina Teras', instagram: 'marinateras', notes: 'Gün batımı manzarası harika. 180 kişi. Fiyat sorulacak.', favorite: false }
             ] },
             'shared/tables': { list: [
                 { id: 'm1', name: 'Masa 1', capacity: 8 },
                 { id: 'm2', name: 'Masa 2', capacity: 10 },
-                { id: 'm3', name: 'Masa 3', capacity: 8 }
+                { id: 'm3', name: 'Masa 3', capacity: 8 },
+                { id: 'm4', name: 'Masa 4', capacity: 8 },
+                { id: 'm5', name: 'Masa 5', capacity: 10 }
             ] }
         };
     }

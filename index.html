@@ -153,6 +153,7 @@ let NISAN_DATE = '2026-05-16';
 let WEDDING_DATE = '2026-09-01';
 
 function loadDates() {
+    if (!fh.db) { updateCountdowns(); return; }   // DEV/preview: mock modda db yok, varsayılan tarihler
     fh.db.collection('shared').doc('dates').get().then(snap => {
         if (snap.exists) {
             if (snap.data().nisan) NISAN_DATE = snap.data().nisan;
@@ -163,6 +164,7 @@ function loadDates() {
 }
 
 function saveDates() {
+    if (!fh.db) { fh.toast && fh.toast('Demo modunda tarih kaydedilmez', 'info'); return; }
     fh.db.collection('shared').doc('dates').set({ nisan: NISAN_DATE, dugun: WEDDING_DATE }, { merge: true }).catch(e => console.error(e));
 }
 

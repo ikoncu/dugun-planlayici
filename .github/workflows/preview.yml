@@ -1,0 +1,53 @@
+name: Önizleme (preview) deploy
+
+# Bu branch'e her push'ta (veya main'e PR'da) geçici bir Firebase Hosting
+# önizleme kanalı deploy eder. CANLI siteye (channelId: live) ASLA dokunmaz —
+# o yalnızca deploy.yml içinde, main'e push'ta çalışır.
+# Link: Actions sekmesi → ilgili run → "Summary" altında; PR'da otomatik yorum olarak da düşer.
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+  pull_request:
+    branches: [main]
+
+# Aynı branch'e arka arkaya push olursa öncekini iptal et (tek deploy)
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Kanal adı Firebase kurallarına uymalı: sadece [a-zA-Z0-9-_], '/' olmaz
+      - id: chan
+        run: echo "id=$(echo '${{ github.ref_name }}' | tr '/' '-' | tr -cd 'a-zA-Z0-9-_' | cut -c1-40)" >> "$GITHUB_OUTPUT"
+
+      - id: deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: dugun-planlayici-ff34e
+          channelId: ${{ steps.chan.outputs.id }}
+          expires: 7d
+
+      - name: Önizleme linkini özete yaz
+        if: ${{ steps.deploy.outputs.details_url != '' }}
+        run: |
+          {
+            echo "### 🔎 Önizleme hazır (7 gün geçerli)"
+            echo ""
+            echo "Aşağıdaki linke tıklayıp test edebilirsin — giriş gerekmez, mock demo veriyle çalışır, canlı listeye dokunmaz:"
+            echo ""
+            echo "**${{ steps.deploy.outputs.details_url }}**"
+          } >> "$GITHUB_STEP_SUMMARY"

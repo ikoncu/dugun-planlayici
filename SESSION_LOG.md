@@ -116,6 +116,12 @@ Son güncelleme: 2026-04-09
 - **Liste gruplu görünüm**: aynı `group`'a sahip kişiler açılır/kapanır bir **hane başlığı** altında toplanır (kişi + katılan sayısı). Başlıktaki **"+"** ile aynı haneye sonradan kişi eklenir (modal hane adı + taraf ön-dolu açılır). Grubu olmayan davetliler eskisi gibi tek tek.
 - **Test**: Playwright (localhost DEV mock) ile uçtan uca doğrulandı — otomatik hane adı, çocuk toggle, gruplu render, aç/kapa, başlıktan ekleme, grupsuz tek kişi akışı; page error yok.
 
+## v0.8.1 — Otomatik önizleme deploy + zengin mock (2026-07-03)
+- **Preview channel deploy**: `.github/workflows/preview.yml` — `claude/**` push / main'e PR'da geçici (7 gün) Firebase önizleme kanalına deploy, link Actions Summary + PR yorumu. Canlıya (deploy.yml, channelId: live) dokunmaz. Kanal adı ref'ten sanitize edilir (`/`→`-`).
+- **Preview = demo/mock modu**: `_DEV` artık localhost + host'unda `--` olan önizleme kanallarını da kapsar. Böylece önizleme linki giriş gerektirmez, zengin mock veriyle çalışır, gerçek Firestore'a dokunmaz. Canlı host (`--` yok) etkilenmez — hostname tespiti birim testiyle doğrulandı.
+- **Zengin mock veri**: 5 → 21 kayıt (22 kişi). Çok haneli aileler (Yılmaz/Demir/Şahin/Kaya Ailesi + İş Arkadaşları) yeni gruplu görünümü hemen sergiler; grupsuz tekiller + eski usul çok-kişili tek kart (Akrabalar) korunur. Görev/mekan/masa verisi de genişletildi.
+- **DEV-safe fix**: `index.html` `loadDates/saveDates` artık `fh.db` null iken (mock mod) patlamıyor — 5 sayfa da mock modda page-error'suz açılıyor (Playwright ile doğrulandı).
+
 ## Son Durum
 - Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
 - Versiyon: v0.8
