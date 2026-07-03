@@ -558,6 +558,11 @@ function updateDashboard(){
     document.getElementById('s-damat').textContent = damat;
 }
 
+// Bir davetli listesindeki toplam kişi sayısı (her davetin total'ı) — "davet" değil "kişi"
+function personCount(list){
+    return (Array.isArray(list)?list:[]).reduce((s,g)=>s+(g.total??1),0);
+}
+
 // Filter
 function setFilter(f, btn){
     activeFilter = f;
@@ -1190,7 +1195,7 @@ function renderShareHome(){
             html += '<div style="text-align:center;color:var(--gray-400);font-size:13px;padding:8px">Henüz paylaşım yok.</div>';
         } else {
             copies.forEach(function(c){
-                var count = Array.isArray(c.list) ? c.list.length : 0;
+                var count = personCount(c.list);
                 var eds = Array.isArray(c.duzenleyenler) ? c.duzenleyenler.length : 0;
                 var mine = c.olusturanUid === meUid;
                 var d = computeDiff(c.list || [], guests || []);
@@ -1214,7 +1219,7 @@ function renderShareHome(){
 
 function shareCreateForm(){
     _shareTitle('Yeni paylaşım');
-    var count = guests.length;
+    var count = personCount(guests);
     _shareBody().innerHTML =
         '<div class="field"><label>Paylaşım adı</label><input type="text" id="sc-name" placeholder="Örnek: Damat tarafı — kuzenler"></div>' +
         '<div class="field"><label>Nasıl başlasın?</label>' +
@@ -1249,7 +1254,7 @@ function shareManage(copyId){
         var c = copies.find(function(x){ return x.id === copyId; });
         if(!c){ renderShareHome(); return; }
         _smEditors = Array.isArray(c.duzenleyenler) ? c.duzenleyenler.slice() : [];
-        var count = Array.isArray(c.list) ? c.list.length : 0;
+        var count = personCount(c.list);
         var html = '<div class="field"><label>Paylaşım adı</label>' +
             '<div style="display:flex;gap:6px"><input type="text" id="sm-name" value="' + fh.esc(c.ad) + '">' +
             '<button class="io-btn" onclick="shareRename(\'' + c.id + '\')">Kaydet</button></div></div>';
