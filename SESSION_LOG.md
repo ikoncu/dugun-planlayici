@@ -110,9 +110,15 @@ Son güncelleme: 2026-04-09
 - **DEV mock genişletildi**: owner↔editör kimlik switcher + kopya localStorage persist (lokal paylaşım testi için).
 - **Süreç dersi**: İş yanlışlıkla `backup/pwa-watchdog` (main'den 13 commit geride) üzerinde yapıldı + manuel deploy canlıyı regrese etti. Düzeltme: özellik main tabanına temiz port edildi (sadece 3 dosya), kapsamlı lokal test → main'e merge → CI hosting deploy. Global CLAUDE.md'ye "Git & Deploy Disiplini" kuralları eklendi.
 
+## v0.8 — Hane (grup) olarak davetli ekleme (2026-07-03)
+- **Sürtünmesiz hane akışı**: `+` ile açılan modal aynen kalır (tek kişi ekleyen fark etmez). Ad Soyad altında "👨‍👩‍👧 Aynı haneye kişi ekle" butonu; basınca **Hane adı** 1. kişinin soyadından otomatik dolar ("Yılmaz Ailesi"), altına kişiler tek tek isimle eklenir (her satırda yetişkin/çocuk toggle). Taraf + RSVP hane geneli tek ayar.
+- **Veri modeli değişmedi**: her birey ayrı `list` kaydı, ortak `group` (hane adı) ile etiketlenir — mevcut `group` alanı kullanıldı, şema değişmedi. Excel export / paylaşım-diff / drag-drop bozulmadı.
+- **Liste gruplu görünüm**: aynı `group`'a sahip kişiler açılır/kapanır bir **hane başlığı** altında toplanır (kişi + katılan sayısı). Başlıktaki **"+"** ile aynı haneye sonradan kişi eklenir (modal hane adı + taraf ön-dolu açılır). Grubu olmayan davetliler eskisi gibi tek tek.
+- **Test**: Playwright (localhost DEV mock) ile uçtan uca doğrulandı — otomatik hane adı, çocuk toggle, gruplu render, aç/kapa, başlıktan ekleme, grupsuz tek kişi akışı; page error yok.
+
 ## Son Durum
 - Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
-- Versiyon: v0.7
+- Versiyon: v0.8
 - 5 sayfa: index, gorevler, davetliler, mekanlar, masa-plani
 - 3 JS modülü: firebase-config.js, firestore-helpers.js, shared-ui.js
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)

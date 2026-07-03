@@ -68,7 +68,7 @@ Claude her yeni bilgiyi, yönlendirmeyi veya kararı otomatik olarak doğru dosy
 
 ## Versiyon
 
-- **Şu an**: v0.7 (paylaşılan davetli listeleri: e-postayla düzenleyici + "Bana aktar")
+- **Şu an**: v0.8 (hane/grup olarak davetli ekleme: tek hane adı altında bireyleri isimle ekle, listede gruplu göster)
 - **Sıradaki**: BACKLOG.md'ye bak
 - **v1.0**: çok kullanıcılı geçiş (ertelendi)
 
@@ -76,6 +76,7 @@ Claude her yeni bilgiyi, yönlendirmeyi veya kararı otomatik olarak doğru dosy
 
 - `shared/guests` → gerçek kişiler, seed data koddan kaldırıldı (v0.6), veri sadece Firestore'da
 - `copies/{id}` → paylaşılan davetli kopyaları (v0.7): `{ad, olusturanUid, olusturanAd, duzenleyenler:[email], list:[]}`. Rules: sahip her şey, düzenleyici sadece `duzenleyenler`'de e-postası olan kopyayı okur/günceller (duzenleyenler/olusturanUid değiştiremez). Editör davetliler.html'de `GUESTS_DOC='copies/{id}'`e yönlenir.
+- **Hane/grup (v0.8)**: davetli `group` alanı hane adı olarak kullanılır. Ekleme modalında "Aynı haneye kişi ekle" → her birey ayrı `list` kaydı (total 1), ortak `group`. Liste `renderList` içinde `group`'a göre gruplanır (`buildHouseHTML`, açılır/kapanır `collapsedHouses`). Aynı `group` string'ine sahip TÜM kayıtlar tek hane başlığı altında toplanır — şema değişmedi.
 - `shared/roadmap` → eski atıl veri, kod kullanmıyor
 - `shared/budget_v2` → bütçe sayfası kaldırıldı (v0.6), Firestore doc korunuyor
 - **Lokal test**: `firestore-helpers.js` içinde `_DEV` (localhost) mock var — auth atlanır, `_mock` veriyle çalışır. Sol altta 🔧 DEV paneli owner↔editör kimlik geçişi yapar; kopyalar localStorage'a persist (`wed-dev-copies`). Prod'da (`_DEV=false`) tamamen inert.

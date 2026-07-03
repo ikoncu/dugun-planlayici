@@ -121,6 +121,35 @@
         .details-body{display:none}
         .details-body.open{display:block}
 
+        /* HANE (add modal) */
+        .hh-add-btn{width:100%;background:var(--gold-bg);color:var(--gold);border:1.5px dashed var(--gold);border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:inherit;-webkit-tap-highlight-color:transparent}
+        .hh-add-btn:active{opacity:.8}
+        .hh-panel{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:10px;margin-bottom:12px}
+        .hh-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+        .hh-row .hh-name{flex:1;min-width:0;border:1.5px solid var(--gray-200);border-radius:8px;padding:8px 10px;font-size:14px;outline:none;font-family:inherit}
+        .hh-row .hh-name:focus{border-color:var(--gold)}
+        .hh-ct{flex-shrink:0;border:1.5px solid var(--gray-200);background:white;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-600);font-family:inherit;min-width:66px}
+        .hh-ct.child{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+        .hh-rm{flex-shrink:0;background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+        .hh-member-add{background:white;border:1.5px solid var(--gray-200);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--gray-700);cursor:pointer;font-family:inherit}
+        .hh-cancel{background:none;border:none;color:var(--gray-400);font-size:12px;cursor:pointer;font-family:inherit;margin-left:10px;text-decoration:underline}
+
+        /* HANE (liste) */
+        .ghouse{background:var(--gold-bg);border:1px solid var(--gold);border-radius:12px;margin-bottom:8px;overflow:hidden}
+        .ghouse-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer}
+        .ghouse-ic{font-size:18px;flex-shrink:0}
+        .ghouse-info{flex:1;min-width:0}
+        .ghouse-name{font-size:14px;font-weight:700;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ghouse-sub{font-size:11px;color:var(--gold);font-weight:600;margin-top:1px}
+        .ghouse-add{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gold);background:white;color:var(--gold);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:300}
+        .ghouse-add:active{background:var(--gold);color:white}
+        .ghouse-arrow{color:var(--gold);font-size:11px;transition:transform .15s;flex-shrink:0}
+        .ghouse.collapsed .ghouse-arrow{transform:rotate(-90deg)}
+        .ghouse-body{padding:0 8px 8px}
+        .ghouse.collapsed .ghouse-body{display:none}
+        .ghouse-body .gcard{margin-bottom:6px;border-color:var(--gray-200)}
+        .ghouse-body .gcard:last-child{margin-bottom:0}
+
         /* CONFIRM MODAL */
         .confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;align-items:center;justify-content:center}
         .confirm-bg.show{display:flex}
@@ -290,7 +319,23 @@
                 <label>Ad Soyad</label>
                 <input type="text" id="f-name" placeholder="Örnek: Ahmet Yılmaz">
             </div>
-            <div class="field-row3">
+
+            <!-- HANE (grup) — sürtünmesiz: tek kişi ekleyen görmezden gelir -->
+            <button type="button" class="hh-add-btn" id="hh-add-btn" onclick="enableHousehold()">👨‍👩‍👧 Aynı haneye kişi ekle</button>
+            <div class="hh-panel" id="hh-panel" style="display:none">
+                <div class="field" style="margin-bottom:8px">
+                    <label>Hane adı</label>
+                    <input type="text" id="f-house" placeholder="Örnek: Yılmaz Ailesi">
+                </div>
+                <label style="display:block;font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:4px">Bu hanedeki diğer kişiler</label>
+                <div id="hh-members"></div>
+                <div style="display:flex;align-items:center;margin-top:2px">
+                    <button type="button" class="hh-member-add" onclick="addMemberRow()">+ Kişi ekle</button>
+                    <button type="button" class="hh-cancel" onclick="disableHousehold()">Tek kişiye dön</button>
+                </div>
+            </div>
+
+            <div class="field-row3" id="row-counts">
                 <div class="field">
                     <label>Yetişkin</label>
                     <input type="number" id="f-adults" min="0" value="1">
@@ -330,7 +375,7 @@
                 <span class="dt-arrow">▾</span>
             </button>
             <div class="details-body" id="details-body">
-                <div class="field">
+                <div class="field" id="field-group">
                     <label>Grup</label>
                     <input type="text" id="f-group" placeholder="Aile, Arkadaş...">
                 </div>
@@ -460,6 +505,9 @@ let activeFilter = 'all';
 let activeSort = 'alpha-az';
 let openCardId = null;
 let deleteTargetId = null;
+let collapsedHouses = {};       // hane adı -> kapalı mı (liste görünümü)
+let hhMode = false;             // ekleme modalında hane modu açık mı
+let houseNameTouched = false;   // kullanıcı hane adını elle değiştirdi mi
 
 // Firestore listen — helper üzerinden (hasPendingWrites + versiyonlama dahil)
 function startListening(){
@@ -672,9 +720,56 @@ function renderList(){
         return;
     }
     // Doğal akış: tüm kartları çiz, sayfa (window) ile scroll olsun.
-    // innerHTML aynı yükseklikte yenilenince tarayıcı scroll pozisyonunu korur —
-    // RSVP değişip listener tekrar render edince sayfa yerinde kalır.
-    container.innerHTML = vsFiltered.map(buildCardHTML).join('');
+    // Aynı gruba (hane) ait kişiler bir başlık altında toplanır; grubu olmayan tek tek çizilir.
+    const rendered = {};
+    let html = '';
+    vsFiltered.forEach(g => {
+        if(rendered[g.id]) return;
+        const grp = (g.group||'').trim();
+        if(grp){
+            const members = vsFiltered.filter(x => (x.group||'').trim() === grp && !rendered[x.id]);
+            members.forEach(m => rendered[m.id] = true);
+            html += buildHouseHTML(grp, members);
+        } else {
+            rendered[g.id] = true;
+            html += buildCardHTML(g);
+        }
+    });
+    container.innerHTML = html;
+}
+
+// Bir hane bloğu: başlık (aç/kapa + kişi ekle) + üye kartları
+function buildHouseHTML(grp, members){
+    const collapsed = !!collapsedHouses[grp];
+    const persons = members.reduce((s,m)=>s+(m.total??1),0);
+    const yes = members.filter(m=>m.rsvp==='Katilacak').reduce((s,m)=>s+(m.total??1),0);
+    let sub = persons + ' kişi · ' + yes + ' katılıyor';
+    let h = '<div class="ghouse'+(collapsed?' collapsed':'')+'" data-grp="'+UI.esc(grp).replace(/"/g,'&quot;')+'">';
+    h += '<div class="ghouse-hdr" onclick="toggleHouse(this)">';
+    h += '<span class="ghouse-ic">👨‍👩‍👧</span>';
+    h += '<div class="ghouse-info"><div class="ghouse-name">'+UI.esc(grp)+'</div>';
+    h += '<div class="ghouse-sub">'+sub+'</div></div>';
+    h += '<button class="ghouse-add" title="Bu haneye kişi ekle" onclick="event.stopPropagation();houseAdd(this)">+</button>';
+    h += '<span class="ghouse-arrow">▼</span>';
+    h += '</div>';
+    h += '<div class="ghouse-body">'+members.map(buildCardHTML).join('')+'</div>';
+    h += '</div>';
+    return h;
+}
+
+function toggleHouse(hdr){
+    const house = hdr.closest('.ghouse');
+    const grp = house.dataset.grp;
+    const willCollapse = !house.classList.contains('collapsed');
+    house.classList.toggle('collapsed', willCollapse);
+    if(willCollapse) collapsedHouses[grp] = true; else delete collapsedHouses[grp];
+}
+
+function houseAdd(btn){
+    const house = btn.closest('.ghouse');
+    const grp = house.dataset.grp;
+    const first = guests.find(g => (g.group||'').trim() === grp);
+    openAddToHousehold(grp, first ? first.side : 'Gelin');
 }
 
 // Veri degeri -> Turkce gosterim
@@ -733,7 +828,9 @@ function captureModalSnapshot(){
         invited: document.getElementById('f-invited').value,
         rsvp: document.getElementById('f-rsvp').value,
         table: document.getElementById('f-table').value,
-        note: document.getElementById('f-note').value
+        note: document.getElementById('f-note').value,
+        house: hhMode ? document.getElementById('f-house').value : '',
+        members: hhMode ? Array.prototype.map.call(document.querySelectorAll('#hh-members .hh-name'), function(i){return i.value;}).join('|') : ''
     });
 }
 
@@ -754,6 +851,88 @@ function toggleDetails(open){
     tog.classList.toggle('open', show);
 }
 
+// ── HANE (grup) ekleme akışı ──
+function defaultHouseName(fullname){
+    const n = (fullname||'').trim();
+    if(!n) return '';
+    const parts = n.split(/\s+/);
+    const surname = parts.length>1 ? parts[parts.length-1] : parts[0];
+    return surname + ' Ailesi';
+}
+
+function enableHousehold(){
+    hhMode = true;
+    document.getElementById('hh-add-btn').style.display='none';
+    document.getElementById('row-counts').style.display='none';
+    document.getElementById('hh-panel').style.display='block';
+    var fg = document.getElementById('field-group');
+    if(fg) fg.style.display='none';   // hane modunda serbest "Grup" alanı gizlenir (çakışmasın)
+    const house = document.getElementById('f-house');
+    if(!house.value.trim()){
+        house.value = defaultHouseName(document.getElementById('f-name').value);
+        houseNameTouched = false;
+    }
+    if(!document.getElementById('hh-members').children.length){
+        addMemberRow();   // başlangıçta bir boş satır
+    }
+}
+
+function disableHousehold(){
+    hhMode = false;
+    houseNameTouched = false;
+    document.getElementById('hh-panel').style.display='none';
+    document.getElementById('hh-members').innerHTML='';
+    document.getElementById('f-house').value='';
+    document.getElementById('hh-add-btn').style.display='';
+    document.getElementById('row-counts').style.display='';
+    var fg = document.getElementById('field-group');
+    if(fg) fg.style.display='';
+}
+
+function resetHousehold(){
+    hhMode = false;
+    houseNameTouched = false;
+    document.getElementById('hh-panel').style.display='none';
+    document.getElementById('hh-members').innerHTML='';
+    document.getElementById('f-house').value='';
+    document.getElementById('hh-add-btn').style.display='';
+    document.getElementById('row-counts').style.display='';
+    var fg = document.getElementById('field-group');
+    if(fg) fg.style.display='';
+}
+
+function addMemberRow(name, child){
+    const wrap = document.getElementById('hh-members');
+    const row = document.createElement('div');
+    row.className = 'hh-row';
+    row.innerHTML =
+        '<input type="text" class="hh-name" placeholder="Ad Soyad">' +
+        '<button type="button" class="hh-ct'+(child?' child':'')+'" data-child="'+(child?'1':'0')+'" onclick="toggleChild(this)">'+(child?'Çocuk':'Yetişkin')+'</button>' +
+        '<button type="button" class="hh-rm" onclick="this.closest(\'.hh-row\').remove()">&times;</button>';
+    wrap.appendChild(row);
+    if(name) row.querySelector('.hh-name').value = name;
+    const inp = row.querySelector('.hh-name');
+    if(inp && !name) inp.focus();
+}
+
+function toggleChild(btn){
+    const isChild = btn.dataset.child === '1';
+    btn.dataset.child = isChild ? '0' : '1';
+    btn.textContent = isChild ? 'Yetişkin' : 'Çocuk';
+    btn.classList.toggle('child', !isChild);
+}
+
+// Mevcut bir haneye sonradan kişi eklemek için modalı hazır aç
+function openAddToHousehold(grp, side){
+    openAddModal();
+    setFormSide(side||'Gelin');
+    enableHousehold();
+    document.getElementById('f-house').value = grp;
+    houseNameTouched = true;
+    document.getElementById('f-name').focus();
+    modalSnapshot = captureModalSnapshot();
+}
+
 function openAddModal(){
     document.getElementById('modal-title').textContent='Davetli Ekle';
     document.getElementById('f-id').value='';
@@ -769,6 +948,7 @@ function openAddModal(){
     document.getElementById('f-rsvp').value='Beklemede';
     document.getElementById('f-table').value='';
     document.getElementById('f-note').value='';
+    resetHousehold();
     document.getElementById('modal-guest').classList.add('show');
     document.body.style.overflow = 'hidden';
     modalSnapshot = captureModalSnapshot();
@@ -791,6 +971,7 @@ function openEditModal(id){
     document.getElementById('f-rsvp').value=g.rsvp||'Beklemede';
     document.getElementById('f-table').value=g.table||'';
     document.getElementById('f-note').value=g.note||'';
+    resetHousehold();   // düzenleme her zaman tek kişi modunda
     document.getElementById('modal-guest').classList.add('show');
     document.body.style.overflow = 'hidden';
     modalSnapshot = captureModalSnapshot();
@@ -814,6 +995,15 @@ function closeModal(){
 // Auto-calc total
 document.getElementById('f-adults').addEventListener('input', calcTotal);
 document.getElementById('f-children').addEventListener('input', calcTotal);
+
+// Hane adı: kullanıcı elle değiştirene kadar 1. kişinin soyadından otomatik türet
+document.getElementById('f-house').addEventListener('input', function(){ houseNameTouched = true; });
+document.getElementById('f-name').addEventListener('input', function(){
+    if(hhMode && !houseNameTouched){
+        document.getElementById('f-house').value = defaultHouseName(this.value);
+    }
+});
+
 function calcTotal(){
     const a = parseInt(document.getElementById('f-adults').value)||0;
     const c = parseInt(document.getElementById('f-children').value)||0;
@@ -824,6 +1014,13 @@ function saveGuest(){
     const id = document.getElementById('f-id').value;
     const name = document.getElementById('f-name').value.trim();
     if(!name){alert('Ad Soyad gerekli');return;}
+
+    // ── HANE MODU (yalnızca yeni ekleme) — her kişi ayrı kart, ortak hane adı ──
+    if(!id && hhMode){
+        saveHousehold(name);
+        return;
+    }
+
     let adults = parseInt(document.getElementById('f-adults').value);
     if(isNaN(adults) || adults < 0) adults = 0;
     let children = parseInt(document.getElementById('f-children').value);
@@ -872,6 +1069,63 @@ function saveGuest(){
         return;
     }
     closeModal();
+}
+
+// Bir hane olarak kaydet: 1. kişi #f-name (yetişkin), diğerleri satırlardan
+function saveHousehold(firstName){
+    const side = document.getElementById('f-side').value;
+    const phone = document.getElementById('f-phone').value.trim();
+    const invited = document.getElementById('f-invited').value;
+    const rsvp = document.getElementById('f-rsvp').value;
+
+    // Üyeler: 1. kişi (yetişkin) + panel satırları
+    const members = [{ name: firstName, child: false }];
+    document.querySelectorAll('#hh-members .hh-row').forEach(function(r){
+        const nm = r.querySelector('.hh-name').value.trim();
+        if(nm) members.push({ name: nm, child: r.querySelector('.hh-ct').dataset.child === '1' });
+    });
+
+    let group = document.getElementById('f-house').value.trim();
+    if(members.length > 1 && !group) group = defaultHouseName(firstName);
+    // Tek kişi + hane adı yok → normal tek davetli gibi (grupsuz)
+
+    const stamp = Date.now();
+    const newObjs = members.map(function(m, i){
+        return {
+            id: 'g'+stamp+'_'+i+'_'+Math.random().toString(36).slice(2,7),
+            name: m.name,
+            side: side,
+            group: group,
+            phone: phone,
+            adults: m.child ? 0 : 1,
+            children: m.child ? 1 : 0,
+            total: 1,
+            invited: invited,
+            rsvp: rsvp,
+            table: '',
+            note: ''
+        };
+    });
+
+    // Optimistic UI + sıralı güvenli ekleme (her biri transaction)
+    Array.prototype.push.apply(guests, newObjs);
+    if(group) delete collapsedHouses[group];   // yeni hane açık gelsin
+    updateDashboard();
+    renderList();
+
+    let chain = Promise.resolve();
+    newObjs.forEach(function(o){ chain = chain.then(function(){ return fh.addItem(GUESTS_DOC, o); }); });
+    chain.then(function(){
+        closeModal();
+        const msg = newObjs.length > 1
+            ? (newObjs.length + ' kişi eklendi' + (group ? ' — ' + group : ''))
+            : 'Davetli eklendi';
+        fh.toast(msg, 'success');
+    }).catch(function(e){
+        console.error('Hane ekleme hatası:', e);
+        // Sunucu listener'ı gerçek durumu geri yansıtır; kullanıcıyı uyar
+        fh.toast('Bazı kişiler eklenemedi — listeyi kontrol edin', 'error');
+    });
 }
 
 // Delete
