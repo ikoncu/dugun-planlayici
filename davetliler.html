@@ -134,21 +134,17 @@
         .hh-member-add{background:white;border:1.5px solid var(--gray-200);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--gray-700);cursor:pointer;font-family:inherit}
         .hh-cancel{background:none;border:none;color:var(--gray-400);font-size:12px;cursor:pointer;font-family:inherit;margin-left:10px;text-decoration:underline}
 
-        /* HANE (liste) */
-        .ghouse{background:var(--gold-bg);border:1px solid var(--gold);border-radius:12px;margin-bottom:8px;overflow:hidden}
-        .ghouse-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer}
-        .ghouse-ic{font-size:18px;flex-shrink:0}
-        .ghouse-info{flex:1;min-width:0}
-        .ghouse-name{font-size:14px;font-weight:700;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .ghouse-sub{font-size:11px;color:var(--gold);font-weight:600;margin-top:1px}
-        .ghouse-add{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--gold);background:white;color:var(--gold);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:300}
-        .ghouse-add:active{background:var(--gold);color:white}
-        .ghouse-arrow{color:var(--gold);font-size:11px;transition:transform .15s;flex-shrink:0}
-        .ghouse.collapsed .ghouse-arrow{transform:rotate(-90deg)}
-        .ghouse-body{padding:0 8px 8px}
-        .ghouse.collapsed .ghouse-body{display:none}
-        .ghouse-body .gcard{margin-bottom:6px;border-color:var(--gray-200)}
-        .ghouse-body .gcard:last-child{margin-bottom:0}
+        /* HANE (liste) — normal karta çok yakın; açılınca kişiler altında görünür */
+        .house{margin-bottom:6px}
+        .gavatar.house-av{background:var(--gray-100);border:1px solid var(--gray-200);font-size:19px}
+        .house-badge{padding:6px 11px;border-radius:12px;font-size:11px;font-weight:600;background:var(--gray-100);color:var(--gray-600);white-space:nowrap}
+        .house.open .house-head .garrow{transform:rotate(180deg)}
+        .house-members{display:none;margin:5px 0 2px 16px;padding-left:10px;border-left:2px solid var(--gray-200)}
+        .house.open .house-members{display:block}
+        .house-members .gcard{margin-bottom:6px}
+        .house-members .gcard:last-child{margin-bottom:6px}
+        .house-add-btn{width:100%;background:none;border:1.5px dashed var(--gray-300);border-radius:8px;padding:8px;font-size:12px;font-weight:600;color:var(--gray-500);cursor:pointer;font-family:inherit}
+        .house-add-btn:active{background:var(--gray-50)}
 
         /* CONFIRM MODAL */
         .confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;align-items:center;justify-content:center}
@@ -505,7 +501,7 @@ let activeFilter = 'all';
 let activeSort = 'alpha-az';
 let openCardId = null;
 let deleteTargetId = null;
-let collapsedHouses = {};       // hane adı -> kapalı mı (liste görünümü)
+let openHouses = {};            // hane adı -> açık mı (liste; varsayılan kapalı)
 let hhMode = false;             // ekleme modalında hane modu açık mı
 let houseNameTouched = false;   // kullanıcı hane adını elle değiştirdi mi
 
@@ -729,7 +725,7 @@ function renderList(){
         if(grp){
             const members = vsFiltered.filter(x => (x.group||'').trim() === grp && !rendered[x.id]);
             members.forEach(m => rendered[m.id] = true);
-            html += buildHouseHTML(grp, members);
+            html += buildHouseHTML(grp, members, !!q);
         } else {
             rendered[g.id] = true;
             html += buildCardHTML(g);
@@ -738,35 +734,41 @@ function renderList(){
     container.innerHTML = html;
 }
 
-// Bir hane bloğu: başlık (aç/kapa + kişi ekle) + üye kartları
-function buildHouseHTML(grp, members){
-    const collapsed = !!collapsedHouses[grp];
+// Hane = normal karta çok yakın tek kart; açılınca (büyüyünce) altında kişiler görünür
+function buildHouseHTML(grp, members, forceOpen){
+    const open = forceOpen || !!openHouses[grp];   // arama varken otomatik açık
     const persons = members.reduce((s,m)=>s+(m.total??1),0);
     const yes = members.filter(m=>m.rsvp==='Katilacak').reduce((s,m)=>s+(m.total??1),0);
-    let sub = persons + ' kişi · ' + yes + ' katılıyor';
-    let h = '<div class="ghouse'+(collapsed?' collapsed':'')+'" data-grp="'+UI.esc(grp).replace(/"/g,'&quot;')+'">';
-    h += '<div class="ghouse-hdr" onclick="toggleHouse(this)">';
-    h += '<span class="ghouse-ic">👨‍👩‍👧</span>';
-    h += '<div class="ghouse-info"><div class="ghouse-name">'+UI.esc(grp)+'</div>';
-    h += '<div class="ghouse-sub">'+sub+'</div></div>';
-    h += '<button class="ghouse-add" title="Bu haneye kişi ekle" onclick="event.stopPropagation();houseAdd(this)">+</button>';
-    h += '<span class="ghouse-arrow">▼</span>';
+    const wait = members.filter(m=>m.rsvp!=='Katilacak' && m.rsvp!=='Katilmayacak').reduce((s,m)=>s+(m.total??1),0);
+    let meta = yes + ' katılıyor';
+    if(wait>0) meta += ' · ' + wait + ' beklemede';
+    let h = '<div class="house'+(open?' open':'')+'" data-grp="'+UI.esc(grp).replace(/"/g,'&quot;')+'">';
+    // Başlık: normal .gcard/.gmain yapısı — sadece avatar aile ikonu + kişi rozeti farklı
+    h += '<div class="gcard house-head" onclick="toggleHouse(this)"><div class="gmain">';
+    h += '<div class="gavatar house-av">👨‍👩‍👧</div>';
+    h += '<div class="ginfo"><div class="gname">'+UI.esc(grp)+'</div>';
+    h += '<div class="gmeta"><span>'+meta+'</span></div></div>';
+    h += '<div class="grsvp"><span class="house-badge">'+persons+' kişi</span></div>';
+    h += '<div class="garrow">&#x25BC;</div>';
+    h += '</div></div>';
+    // Açılınca kişiler (normal kartlar) altında
+    h += '<div class="house-members">'+members.map(buildCardHTML).join('');
+    h += '<button type="button" class="house-add-btn" onclick="houseAdd(this)">+ Bu haneye kişi ekle</button>';
     h += '</div>';
-    h += '<div class="ghouse-body">'+members.map(buildCardHTML).join('')+'</div>';
     h += '</div>';
     return h;
 }
 
-function toggleHouse(hdr){
-    const house = hdr.closest('.ghouse');
+function toggleHouse(head){
+    const house = head.closest('.house');
     const grp = house.dataset.grp;
-    const willCollapse = !house.classList.contains('collapsed');
-    house.classList.toggle('collapsed', willCollapse);
-    if(willCollapse) collapsedHouses[grp] = true; else delete collapsedHouses[grp];
+    const willOpen = !house.classList.contains('open');
+    house.classList.toggle('open', willOpen);
+    if(willOpen) openHouses[grp] = true; else delete openHouses[grp];
 }
 
 function houseAdd(btn){
-    const house = btn.closest('.ghouse');
+    const house = btn.closest('.house');
     const grp = house.dataset.grp;
     const first = guests.find(g => (g.group||'').trim() === grp);
     openAddToHousehold(grp, first ? first.side : 'Gelin');
@@ -1118,7 +1120,7 @@ function saveHousehold(){
 
     // Optimistic UI + sıralı güvenli ekleme (her biri transaction)
     Array.prototype.push.apply(guests, newObjs);
-    if(group) delete collapsedHouses[group];   // yeni hane açık gelsin
+    if(group) openHouses[group] = true;   // yeni/eklenen hane açık gelsin
     updateDashboard();
     renderList();
 
