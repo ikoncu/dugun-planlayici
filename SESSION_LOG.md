@@ -102,9 +102,17 @@ Son güncelleme: 2026-04-09
 - **Migration kaldırıldı**: applyMigration_20260406() (zaten çalışmış)
 - **Kararlar**: İbrahim ile 4 turda AskUserQuestion ile tüm kararlar alındı
 
+## v0.7 — Paylaşılan Davetli Listeleri (2026-07-03)
+- **Evrensel paylaşım sistemi**: Sahip (İbrahim/Hilal) davetli listesinin izole kopyasını oluşturur (`copies/{id}`), e-postayla düzenleyici ekler. Düzenleyici sadece kendi kopyasını görür/düzenler; ana liste değişmez. Kod/kural içine e-posta gömülmez — `duzenleyenler` array'inden gelir (`isEditorOf` rule).
+- **"Bana aktar" (vurgulu birleştirme)**: Sahip, kopyadaki yeni (yeşil) / değişen (turuncu) kişileri görüp tek tıkla ana listesine ekler/günceller. Dedup guard'ı var.
+- **Rol yönlendirme**: sahip→`shared/guests`, düzenleyici→`copies/{id}`, yetkisiz→"Erişim yok". Editör modunda nav/logo/Paylaşımlar gizli, "paylaşılan liste" şeridi.
+- **Taraf avatarları**: metin etiketleri kaldırıldı → gelin (beyaz daire/siyah gelinlik SVG) · damat (koyu daire/beyaz smokin SVG).
+- **DEV mock genişletildi**: owner↔editör kimlik switcher + kopya localStorage persist (lokal paylaşım testi için).
+- **Süreç dersi**: İş yanlışlıkla `backup/pwa-watchdog` (main'den 13 commit geride) üzerinde yapıldı + manuel deploy canlıyı regrese etti. Düzeltme: özellik main tabanına temiz port edildi (sadece 3 dosya), kapsamlı lokal test → main'e merge → CI hosting deploy. Global CLAUDE.md'ye "Git & Deploy Disiplini" kuralları eklendi.
+
 ## Son Durum
 - Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
-- Versiyon: v0.6
+- Versiyon: v0.7
 - 5 sayfa: index, gorevler, davetliler, mekanlar, masa-plani
 - 3 JS modülü: firebase-config.js, firestore-helpers.js, shared-ui.js
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)
