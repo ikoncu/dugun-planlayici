@@ -563,6 +563,13 @@ function personCount(list){
     return (Array.isArray(list)?list:[]).reduce((s,g)=>s+(g.total??1),0);
 }
 
+// Paylaşımın kaynağı: taraf filtresi (Gelin/Damat) aktifse sadece o taraf, değilse tüm liste
+function shareSourceGuests(){
+    return (activeFilter==='Gelin'||activeFilter==='Damat')
+        ? guests.filter(g=>g.side===activeFilter)
+        : guests;
+}
+
 // Filter
 function setFilter(f, btn){
     activeFilter = f;
@@ -1219,13 +1226,20 @@ function renderShareHome(){
 
 function shareCreateForm(){
     _shareTitle('Yeni paylaşım');
-    var count = personCount(guests);
+    var src = shareSourceGuests();
+    var count = personCount(src);
+    var sideName = activeFilter==='Gelin' ? 'Gelin' : (activeFilter==='Damat' ? 'Damat' : '');
+    var copyLabel = sideName
+        ? sideName + ' tarafını kopyala (' + count + ' kişi)'
+        : 'Mevcut listeyi kopyala (' + count + ' kişi)';
+    var nameVal = sideName ? sideName + ' tarafı' : '';
     _shareBody().innerHTML =
-        '<div class="field"><label>Paylaşım adı</label><input type="text" id="sc-name" placeholder="Örnek: Damat tarafı — kuzenler"></div>' +
+        (sideName ? '<div style="font-size:12px;color:var(--gray-500);margin-bottom:10px">Şu an <b>' + sideName + ' Tarafı</b> filtresi seçili — paylaşım yalnızca bu tarafı içerecek.</div>' : '') +
+        '<div class="field"><label>Paylaşım adı</label><input type="text" id="sc-name" value="' + fh.esc(nameVal) + '" placeholder="Örnek: Damat tarafı — kuzenler"></div>' +
         '<div class="field"><label>Nasıl başlasın?</label>' +
             '<div class="import-mode" style="margin-bottom:0">' +
                 '<label><input type="radio" name="sc-seed" value="empty" checked><span>Boş başlasın</span></label>' +
-                '<label><input type="radio" name="sc-seed" value="copy"><span>Mevcut listeyi kopyala (' + count + ' kişi)</span></label>' +
+                '<label><input type="radio" name="sc-seed" value="copy"><span>' + copyLabel + '</span></label>' +
             '</div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;margin-top:8px">' +
@@ -1239,7 +1253,7 @@ function shareDoCreate(){
     if(!name){ fh.toast('Bir ad girin','error'); return; }
     var seedEl = document.querySelector('input[name="sc-seed"]:checked');
     var seed = seedEl ? seedEl.value : 'empty';
-    var list = seed === 'copy' ? JSON.parse(JSON.stringify(guests)) : [];
+    var list = seed === 'copy' ? JSON.parse(JSON.stringify(shareSourceGuests())) : [];
     fh.createCopy({ ad: name, list: list, duzenleyenler: [] }).then(function(id){
         fh.toast('Paylaşım oluşturuldu','success');
         shareManage(id);
