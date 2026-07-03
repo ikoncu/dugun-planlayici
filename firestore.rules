@@ -2,14 +2,44 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Sadece İbrahim ve Hilal erişebilir
+    // Sahipler: İbrahim ve Hilal — tüm veriye erişir
     // v1.0'da UID allowlist → wedding membership modeline geçilecek
     function isOwner() {
       return request.auth != null &&
         request.auth.uid in ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
     }
+
+    // Düzenleyici: e-postası kopyanın "duzenleyenler" listesinde olan kişi.
+    // Kod/kural içine hiçbir e-posta gömülmez — tamamen veriden gelir (evrensel).
+    function isEditorOf(data) {
+      return request.auth != null &&
+        request.auth.token.email != null &&
+        (data.duzenleyenler is list) &&
+        (request.auth.token.email in data.duzenleyenler);
+    }
+
+    // ── Sahipler: her şey (mevcut davranış, değişmedi) ──────────────
     match /{document=**} {
       allow read, write: if isOwner();
+    }
+
+    // ── Paylaşılan kopyalar: düzenleyici erişimi (EKLENDİ) ──────────
+    match /copies/{copyId} {
+      // Düzenleyici yalnızca kendi kopyasını okur.
+      allow read: if isEditorOf(resource.data);
+
+      // Düzenleyici SADECE listeyi değiştirebilir; düzenleyenler/oluşturan
+      // alanlarına dokunamaz, başka kopya oluşturamaz/silemez.
+      allow update: if isEditorOf(resource.data)
+        && request.resource.data.duzenleyenler == resource.data.duzenleyenler
+        && request.resource.data.olusturanUid == resource.data.olusturanUid;
+
+      // Kopya versiyon geçmişi — düzenleyici de erişebilsin
+      match /history/{v} {
+        allow read, write: if isEditorOf(
+          get(/databases/$(database)/documents/copies/$(copyId)).data
+        );
+      }
     }
   }
 }
