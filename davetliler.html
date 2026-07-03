@@ -405,8 +405,9 @@ function routeUser(user){
         return;
     }
     // Sahip değil → e-postasının bulunduğu kopyaları getir
-    fh.listCopiesForEditor(user && user.email).then(function(copies){
-        if(!copies || copies.length === 0){ showNoAccess(); return; }
+    var email = user && user.email;
+    fh.listCopiesForEditor(email).then(function(copies){
+        if(!copies || copies.length === 0){ showNoAccess(email); return; }
         APP_MODE = 'editor';
         activeCopyMeta = copies[0];   // kişi başı tek kopya varsayımı
         activeCopyId = activeCopyMeta.id;
@@ -415,18 +416,25 @@ function routeUser(user){
         startListening();
     }).catch(function(e){
         console.error('Kopya sorgusu hatası:', e);
-        showNoAccess();
+        showNoAccess(email);
     });
 }
 
-function showNoAccess(){
+function showNoAccess(email){
     var loading = document.getElementById('loading-screen');
     if(loading){
+        var safeEmail = (email || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var emailBlock = safeEmail
+            ? '<div style="font-size:12px;color:var(--gray-500,#6b7280);margin-bottom:16px">Şu hesapla giriş yaptınız:<br>' +
+              '<span style="display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:var(--gray-800,#1f2937);background:var(--gray-50,#f9fafb);border:1px solid #e5e7eb;border-radius:8px;padding:6px 12px;word-break:break-all">' + safeEmail + '</span>' +
+              '<br><span style="display:inline-block;margin-top:8px">Doğru hesap bu ise bu e-postayı liste sahibine iletin.</span></div>'
+            : '';
         loading.style.display = 'flex';
         loading.innerHTML = '<div style="text-align:center;padding:24px;max-width:320px">' +
             '<div style="font-size:40px;margin-bottom:12px">🔒</div>' +
             '<div style="font-size:16px;font-weight:700;color:var(--gray-800,#1f2937);margin-bottom:6px">Erişim yok</div>' +
             '<div style="font-size:13px;color:var(--gray-500,#6b7280);margin-bottom:16px">Bu hesap bir listeye eklenmemiş. Liste sahibinden e-postanızı eklemesini isteyin.</div>' +
+            emailBlock +
             '<button onclick="fh.auth ? fh.auth.signOut() : location.reload()" style="padding:9px 18px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">Başka hesapla gir</button>' +
             '</div>';
     }
