@@ -28,10 +28,21 @@ Claude her yeni bilgiyi, yönlendirmeyi veya kararı otomatik olarak doğru dosy
 
 - **URL**: https://dugun-planlayici-ff34e.web.app (Firebase Hosting)
 - **Repo**: https://github.com/ikoncu/dugun-planlayici (private yapılacak)
-- **Deploy**: `firebase deploy --project dugun-planlayici-ff34e`
-- **Lokal**: `ruby -run -e httpd . -p 8080` (launch.json)
-- **Sadece rules**: `firebase deploy --only firestore:rules --project dugun-planlayici-ff34e`
+- **Deploy = CI (elle DEĞİL)**: main'e push → GitHub Actions (`.github/workflows/deploy.yml`) hosting'i otomatik deploy eder. Canlının kaynağı **main**'dir. Elle `firebase deploy` YAPMA — eski/stale branch'ten deploy canlıyı geri alır.
+- **Sadece rules CI dışı**: gerekirse elle `firebase deploy --only firestore:rules --project dugun-planlayici-ff34e`.
+- **Lokal**: launch.json (`python3 -m http.server 8080`) + `firestore-helpers.js` `_DEV` mock (localhost auth bypass).
 - **Push öncesi onay al** — canlıya almadan kullanıcıya sor.
+
+## Geliştirme Akışı (Git & Paralel Agent)
+
+Paralel çalışma + merge'lerin birbirini ezmemesi için kalıcı kurallar:
+
+1. **Her yeni iş = güncel main'den worktree.** Yeni session/agent başlatırken base **her zaman `main`** + worktree aç. Eski/feature/backup branch'te başlatma (stale-base faciasının kaynağı buydu).
+2. **1 agent = 1 dosya/sayfa.** Paralel agent'lar farklı dosyalara dokunsun (sayfa-başına-dosya yapısı buna uygun: gorevler/mekanlar/davetliler/masa-plani ayrı). Aynı dosyayı iki agent düzenlemesin → çakışma olmaz.
+3. **Merge öncesi main'i çek.** `git checkout feature/x && git merge main` → conflict'i burada çöz + test et → sonra `main`'e merge. Git 3-yönlü birleştirir, main'in yeni işini sessizce ezmez.
+4. **Deploy sadece main→CI.** Hiçbir branch'ten elle deploy yok → canlı hep main = ezme yok.
+5. **Kısa branch, sık merge.** Uzun yaşayan branch = büyük conflict.
+6. **Silmeden önce bak.** Branch silmeden önce `git log main..<branch>` ile main'de olmayan commit var mı kontrol et; varsa kullanıcıya sor (ör. `backup/pwa-watchdog` = merge edilmemiş PWA+watchdog işi).
 
 ## Teknik Yığın
 
