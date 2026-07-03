@@ -315,7 +315,7 @@
                     <button type="button" class="side-opt" data-side="Damat" onclick="setFormSide('Damat')">Damat</button>
                 </div>
             </div>
-            <div class="field">
+            <div class="field" id="field-name">
                 <label>Ad Soyad</label>
                 <input type="text" id="f-name" placeholder="Örnek: Ahmet Yılmaz">
             </div>
@@ -327,7 +327,7 @@
                     <label>Hane adı</label>
                     <input type="text" id="f-house" placeholder="Örnek: Yılmaz Ailesi">
                 </div>
-                <label style="display:block;font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:4px">Bu hanedeki diğer kişiler</label>
+                <label style="display:block;font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:4px">Hanedeki kişiler</label>
                 <div id="hh-members"></div>
                 <div style="display:flex;align-items:center;margin-top:2px">
                     <button type="button" class="hh-member-add" onclick="addMemberRow()">+ Kişi ekle</button>
@@ -860,33 +860,39 @@ function defaultHouseName(fullname){
     return surname + ' Ailesi';
 }
 
+// Hane adını 1. kişinin soyadından otomatik türet (elle değiştirilmediyse)
+function refreshHouseDefault(){
+    if(!hhMode || houseNameTouched) return;
+    var first = document.querySelector('#hh-members .hh-name');
+    document.getElementById('f-house').value = defaultHouseName(first ? first.value : '');
+}
+
 function enableHousehold(){
     hhMode = true;
-    document.getElementById('hh-add-btn').style.display='none';
+    const nm = document.getElementById('f-name').value.trim();
+    // Üstteki tekli "Ad Soyad" alanını + sayaçları gizle, paneli aç
+    var fn = document.getElementById('field-name'); if(fn) fn.style.display='none';
     document.getElementById('row-counts').style.display='none';
+    document.getElementById('hh-add-btn').style.display='none';
     document.getElementById('hh-panel').style.display='block';
-    var fg = document.getElementById('field-group');
-    if(fg) fg.style.display='none';   // hane modunda serbest "Grup" alanı gizlenir (çakışmasın)
+    var fg = document.getElementById('field-group'); if(fg) fg.style.display='none';
+    // Üye listesini kur: 1. satır = ilk isim (listede görünür), 2. satır = boş (hemen yazılsın)
+    document.getElementById('hh-members').innerHTML='';
+    addMemberRow(nm, false);
+    addMemberRow('', false);
+    // Hane adı otomatik
     const house = document.getElementById('f-house');
-    if(!house.value.trim()){
-        house.value = defaultHouseName(document.getElementById('f-name').value);
-        houseNameTouched = false;
-    }
-    if(!document.getElementById('hh-members').children.length){
-        addMemberRow();   // başlangıçta bir boş satır
-    }
+    if(!house.value.trim()){ house.value = defaultHouseName(nm); houseNameTouched = false; }
+    // İlk isim varsa 2. satıra, yoksa 1. satıra odak
+    const rows = document.querySelectorAll('#hh-members .hh-name');
+    if(rows.length){ (nm ? rows[1] : rows[0]).focus(); }
 }
 
 function disableHousehold(){
-    hhMode = false;
-    houseNameTouched = false;
-    document.getElementById('hh-panel').style.display='none';
-    document.getElementById('hh-members').innerHTML='';
-    document.getElementById('f-house').value='';
-    document.getElementById('hh-add-btn').style.display='';
-    document.getElementById('row-counts').style.display='';
-    var fg = document.getElementById('field-group');
-    if(fg) fg.style.display='';
+    // 1. satır ismini üstteki tekli alana geri taşı — kullanıcı kaybetmesin
+    var first = document.querySelector('#hh-members .hh-name');
+    if(first) document.getElementById('f-name').value = first.value.trim();
+    resetHousehold();
 }
 
 function resetHousehold(){
@@ -897,8 +903,8 @@ function resetHousehold(){
     document.getElementById('f-house').value='';
     document.getElementById('hh-add-btn').style.display='';
     document.getElementById('row-counts').style.display='';
-    var fg = document.getElementById('field-group');
-    if(fg) fg.style.display='';
+    var fn = document.getElementById('field-name'); if(fn) fn.style.display='';
+    var fg = document.getElementById('field-group'); if(fg) fg.style.display='';
 }
 
 function addMemberRow(name, child){
@@ -910,9 +916,13 @@ function addMemberRow(name, child){
         '<button type="button" class="hh-ct'+(child?' child':'')+'" data-child="'+(child?'1':'0')+'" onclick="toggleChild(this)">'+(child?'Çocuk':'Yetişkin')+'</button>' +
         '<button type="button" class="hh-rm" onclick="this.closest(\'.hh-row\').remove()">&times;</button>';
     wrap.appendChild(row);
-    if(name) row.querySelector('.hh-name').value = name;
     const inp = row.querySelector('.hh-name');
-    if(inp && !name) inp.focus();
+    if(name) inp.value = name;
+    // İlk satırın ismi değişince hane adı otomatik güncellensin
+    inp.addEventListener('input', function(){
+        if(row === wrap.firstElementChild) refreshHouseDefault();
+    });
+    if(!name) inp.focus();
 }
 
 function toggleChild(btn){
@@ -929,7 +939,8 @@ function openAddToHousehold(grp, side){
     enableHousehold();
     document.getElementById('f-house').value = grp;
     houseNameTouched = true;
-    document.getElementById('f-name').focus();
+    var first = document.querySelector('#hh-members .hh-name');
+    if(first) first.focus();
     modalSnapshot = captureModalSnapshot();
 }
 
@@ -996,13 +1007,9 @@ function closeModal(){
 document.getElementById('f-adults').addEventListener('input', calcTotal);
 document.getElementById('f-children').addEventListener('input', calcTotal);
 
-// Hane adı: kullanıcı elle değiştirene kadar 1. kişinin soyadından otomatik türet
+// Hane adını kullanıcı elle değiştirdiğinde otomatik türetmeyi durdur
+// (default, ilk üye satırı yazıldıkça refreshHouseDefault ile güncellenir)
 document.getElementById('f-house').addEventListener('input', function(){ houseNameTouched = true; });
-document.getElementById('f-name').addEventListener('input', function(){
-    if(hhMode && !houseNameTouched){
-        document.getElementById('f-house').value = defaultHouseName(this.value);
-    }
-});
 
 function calcTotal(){
     const a = parseInt(document.getElementById('f-adults').value)||0;
@@ -1012,14 +1019,15 @@ function calcTotal(){
 
 function saveGuest(){
     const id = document.getElementById('f-id').value;
-    const name = document.getElementById('f-name').value.trim();
-    if(!name){alert('Ad Soyad gerekli');return;}
 
     // ── HANE MODU (yalnızca yeni ekleme) — her kişi ayrı kart, ortak hane adı ──
     if(!id && hhMode){
-        saveHousehold(name);
+        saveHousehold();
         return;
     }
+
+    const name = document.getElementById('f-name').value.trim();
+    if(!name){alert('Ad Soyad gerekli');return;}
 
     let adults = parseInt(document.getElementById('f-adults').value);
     if(isNaN(adults) || adults < 0) adults = 0;
@@ -1071,22 +1079,23 @@ function saveGuest(){
     closeModal();
 }
 
-// Bir hane olarak kaydet: 1. kişi #f-name (yetişkin), diğerleri satırlardan
-function saveHousehold(firstName){
+// Bir hane olarak kaydet: TÜM kişiler üye satırlarından (1. isim dahil)
+function saveHousehold(){
     const side = document.getElementById('f-side').value;
     const phone = document.getElementById('f-phone').value.trim();
     const invited = document.getElementById('f-invited').value;
     const rsvp = document.getElementById('f-rsvp').value;
 
-    // Üyeler: 1. kişi (yetişkin) + panel satırları
-    const members = [{ name: firstName, child: false }];
+    // Üyeler: panel satırlarındaki (ismi dolu) tüm kişiler
+    const members = [];
     document.querySelectorAll('#hh-members .hh-row').forEach(function(r){
         const nm = r.querySelector('.hh-name').value.trim();
         if(nm) members.push({ name: nm, child: r.querySelector('.hh-ct').dataset.child === '1' });
     });
+    if(members.length === 0){ alert('En az bir kişi girin'); return; }
 
     let group = document.getElementById('f-house').value.trim();
-    if(members.length > 1 && !group) group = defaultHouseName(firstName);
+    if(members.length > 1 && !group) group = defaultHouseName(members[0].name);
     // Tek kişi + hane adı yok → normal tek davetli gibi (grupsuz)
 
     const stamp = Date.now();
