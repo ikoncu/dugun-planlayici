@@ -69,12 +69,12 @@
         .gside-damat{background:var(--blue-bg);color:var(--blue)}
         .gmeta{font-size:11px;color:var(--gray-500);margin-top:1px;display:flex;gap:8px;flex-wrap:wrap}
         .grsvp{flex-shrink:0}
-        .rsvp-chip{padding:8px 12px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:transform 0.1s;min-height:36px;display:inline-flex;align-items:center}
+        .rsvp-chip{box-sizing:border-box;width:104px;padding:8px 6px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:transform 0.1s;min-height:36px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
         .rsvp-chip:active{transform:scale(0.93)}
         .rsvp-beklemede{background:var(--orange-bg);color:var(--orange)}
         .rsvp-katilacak{background:var(--green-bg);color:var(--green)}
         .rsvp-katilmayacak{background:var(--red-bg);color:var(--red)}
-        .garrow{color:var(--gray-300);font-size:10px;flex-shrink:0;transition:transform 0.15s}
+        .garrow{color:var(--gray-300);font-size:12px;flex-shrink:0;transition:transform 0.15s;width:26px;text-align:center}
         .gcard.open .garrow{transform:rotate(180deg)}
 
         .gdetail{display:none;padding:0 12px 10px;border-top:1px solid var(--gray-100)}
@@ -137,7 +137,7 @@
         /* HANE (liste) — normal karta çok yakın; açılınca kişiler altında görünür */
         .house{margin-bottom:6px}
         .gavatar.house-av{background:var(--gray-100);border:1px solid var(--gray-200);font-size:19px}
-        .house-badge{padding:6px 11px;border-radius:12px;font-size:11px;font-weight:600;background:var(--gray-100);color:var(--gray-600);white-space:nowrap}
+        .house-badge{box-sizing:border-box;width:104px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:12px;font-size:11px;font-weight:600;background:var(--gray-100);color:var(--gray-600);white-space:nowrap}
         .house.open .house-head .garrow{transform:rotate(180deg)}
         .house-members{display:none;margin:5px 0 2px 16px;padding-left:10px;border-left:2px solid var(--gray-200)}
         .house.open .house-members{display:block}
