@@ -9,14 +9,12 @@ service cloud.firestore {
         request.auth.uid in ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
     }
 
-    // Düzenleyici: e-postası shared/editors dokümanındaki "emails" listesinde
-    // olan kişi. Kod/kural içine e-posta gömülmez — e-posta eklemek/çıkarmak
-    // anında yetki verir/keser, kural deploy'u gerekmez.
+    // Düzenleyici: kendi e-postası adına editors/{email} kaydı olan kişi.
+    // Kayıt, tek seferlik davet linkinin sahiplenilmesiyle oluşur (aşağıda).
     function isGuestEditor() {
       return request.auth != null &&
         request.auth.token.email != null &&
-        request.auth.token.email in
-          get(/databases/$(database)/documents/shared/editors).data.emails;
+        exists(/databases/$(database)/documents/editors/$(request.auth.token.email));
     }
 
     // ── Sahipler: her şey (mevcut davranış, değişmedi) ──────────────
@@ -25,7 +23,6 @@ service cloud.firestore {
     }
 
     // ── Düzenleyici: YALNIZCA davetli listesi + versiyon geçmişi ────
-    // shared/editors dahil diğer tüm dokümanlar düzenleyiciye kapalı.
     match /shared/guests {
       allow read, update: if isGuestEditor();
 
@@ -33,6 +30,41 @@ service cloud.firestore {
       match /history/{v} {
         allow read, write: if isGuestEditor();
       }
+    }
+
+    // ── Tek seferlik davet linki (claim akışı) ──────────────────────
+    // Davet, linki bilen İLK kişinin sahiplenmesiyle kapanır; 7 gün geçerli.
+    // Sahiplenme tek atomik batch: invites/{token} used:false→true
+    // + editors/{kendi-eposta} oluşturma. İkisi birbirini şart koşar.
+    match /invites/{token} {
+      // Token'ı bilen (linke sahip) giriş yapmış kişi durumunu okuyabilir;
+      // koleksiyon listelenemez — token'ı bilmeyen davetleri keşfedemez.
+      allow get: if request.auth != null;
+
+      // Sahiplenme: kullanılmamış + süresi geçmemiş daveti, yalnızca kendi
+      // e-postasıyla, bir kez işaretleyebilir. Yarışta ikinci gelen reddedilir.
+      allow update: if request.auth != null &&
+        request.auth.token.email != null &&
+        resource.data.used == false &&
+        request.time < resource.data.createdAt + duration.value(7, 'd') &&
+        request.resource.data.used == true &&
+        request.resource.data.claimedBy == request.auth.token.email &&
+        request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /editors/{email} {
+      // Kişi kendi kaydını okuyabilir (sayfa rol tespiti için)
+      allow get: if request.auth != null && request.auth.token.email == email;
+
+      // Kendi editör kaydını YALNIZCA aynı batch'te geçerli bir daveti
+      // sahiplenerek oluşturabilir: get() = batch öncesi (kullanılmamış
+      // olmalı), getAfter() = batch sonrası (bu batch'te kendi adına
+      // kullanılmış olmalı). Eski/kullanılmış davetle yeniden kayıt olamaz.
+      allow create: if request.auth != null &&
+        request.auth.token.email == email &&
+        request.resource.data.via is string &&
+        get(/databases/$(database)/documents/invites/$(request.resource.data.via)).data.used == false &&
+        getAfter(/databases/$(database)/documents/invites/$(request.resource.data.via)).data.claimedBy == email;
     }
   }
 }

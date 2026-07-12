@@ -133,9 +133,18 @@ Son güncelleme: 2026-04-09
 - **Test**: lokal önizleme (DEV mock) ile doğrulandı — sahip: modal aç/e-posta ekle-çıkar/link kopyala; editör: rozet + kısıtlı UI + RSVP düzenleme + index→davetliler yönlendirme; konsol hatasız.
 - **Not**: `smydmr.1988@gmail.com` deploy sonrası canlıda modal üzerinden eklenecek (veri koda gömülmez).
 
+## v0.10 — Tek seferlik davet linki (2026-07-13)
+- **E-posta yerine link**: "Düzenleyici ekle" modalı artık e-posta sormaz — "➕ Yeni davet linki oluştur" tek seferlik link üretir (`invites/{token}`, 7 gün geçerli). Karşı tarafın Gmail adresini bilme/yazma derdi bitti.
+- **Sahiplenme (claim)**: linke tıklayıp Google ile giren İLK kişi erişimi alır — tek atomik batch: invite `used:true` + `editors/{email}` oluşur. Rules `get()`(batch öncesi kullanılmamış) + `getAfter()`(batch'te kendi adına kullanılmış) ile atomikliği şart koşar; yarışta ikinci gelen reddedilir, kullanılmış davetle yeniden kayıt (revoke bypass) imkansız.
+- **Süresi dolmuş ekranı**: kullanılmış/7 günü geçmiş/geçersiz linke tıklayan kişiye "⏳ Bu davet linkinin süresi dolmuş — lütfen İbrahim & Hilal'den yeni bir davet linki isteyin" ekranı gösterilir (İbrahim'in isteği).
+- **Modal**: bekleyen davetler (kalan gün + Kopyala + × iptal; süresi dolanlar otomatik temizlenir) + düzenleyiciler (isim+e-posta, × erişim kesme). Sahiplenilen davet bekleyenden düşer, kişi düzenleyicilerde görünür.
+- **Trade-off (bilinçli)**: link ilk sahiplenmeye kadar taşıyıcı anahtar — yanlış kişi önce tıklarsa erişimi o alır; tek kullanım + 7 gün + modalda kimin sahiplendiğinin görünmesi + anında × ile riski küçük tutuyoruz.
+- **Migrasyon**: v0.9 `shared/editors {emails}` doc'u sahip modalı ilk açtığında otomatik `editors/` kayıtlarına taşınır ve silinir — erişim kesintisi yok.
+- **Test**: DEV mock ile uçtan uca — link üret/kopyala/iptal, claim→editör modu, aynı linke 2. kişi→süresi dolmuş ekranı, 8 günlük davet→süresi dolmuş ekranı, linksiz kalıcı erişim, × ile erişim kesme→"Erişim yok". Konsol hatasız.
+
 ## Son Durum
 - Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
-- Versiyon: v0.9
+- Versiyon: v0.10
 - 5 sayfa: index, gorevler, davetliler, mekanlar, masa-plani
 - 3 JS modülü: firebase-config.js, firestore-helpers.js, shared-ui.js
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)

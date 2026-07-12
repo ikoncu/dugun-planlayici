@@ -414,10 +414,10 @@
 <script>
 
 // ?davet=<token> ile gelen kişi davet edilmiş düzenleyicidir — karşılama metni farklı.
-// Token sadece davet kapısı (UX); asıl yetki girişten sonra e-posta eşleşmesiyle verilir.
-var IS_INVITE_LINK = new URLSearchParams(location.search).has('davet');
-if(IS_INVITE_LINK){
-    UI.injectLogin('Davetli Listesi', 'İbrahim & Hilal sizi davetli listesini birlikte düzenlemeye davet etti. Eklendiğiniz e-posta ile giriş yapın.');
+// Girişten sonra token sahiplenilir (tek kullanımlık): ilk giren kişi erişimi alır.
+var INVITE_TOKEN = new URLSearchParams(location.search).get('davet');
+if(INVITE_TOKEN){
+    UI.injectLogin('Davetli Listesi', 'İbrahim & Hilal sizi davetli listesini birlikte düzenlemeye davet etti. Google ile giriş yapın.');
 } else {
     UI.injectLogin('Davetliler', 'Davetli listenize erişin');
 }
@@ -433,7 +433,7 @@ UI.setupAuth({
 
 // ── Rol yönlendirme: sahip mi, düzenleyici mi? ──
 // Düzenleyici ana listeyi (shared/guests) doğrudan düzenler; yetki kararını
-// Firestore rules verir (e-postası shared/editors.emails içinde mi).
+// Firestore rules verir (kendi e-postası adına editors/{email} kaydı var mı).
 const GUESTS_DOC = 'shared/guests';
 let APP_MODE = 'owner';             // 'owner' | 'editor'
 
@@ -445,11 +445,49 @@ function routeUser(user){
         startListening();
         return;
     }
-    // Sahip değil → düzenleyici modunda dinlemeyi dene.
-    // Erişim yetkisi yoksa rules reddeder → startListening onError → erişim-yok ekranı.
+    // Sahip değil → önce mevcut düzenleyici mi diye bak (kendi editors kaydı).
+    // Değilse ve davet linkiyle geldiyse daveti sahiplenmeyi dene (tek kullanımlık).
+    fh.getMyEditorDoc().then(function(doc){
+        if(doc){ enterEditorMode(); return; }
+        if(INVITE_TOKEN){
+            fh.claimInvite(INVITE_TOKEN).then(function(res){
+                if(res.ok){
+                    fh.toast('Hoş geldiniz — liste erişiminiz açıldı 🎉','success');
+                    enterEditorMode();
+                } else {
+                    showInviteExpired();
+                }
+            });
+        } else {
+            showNoAccess();
+        }
+    }).catch(function(e){
+        console.error('Rol tespiti hatası:', e);
+        showNoAccess();
+    });
+}
+
+function enterEditorMode(){
     APP_MODE = 'editor';
     applyEditorUI();
     startListening();
+}
+
+// Süresi dolmuş / kullanılmış / geçersiz davet linki ekranı
+function showInviteExpired(){
+    var loading = document.getElementById('loading-screen');
+    if(loading){
+        loading.style.display = 'flex';
+        loading.innerHTML = '<div style="text-align:center;padding:24px;max-width:340px">' +
+            '<div style="font-size:40px;margin-bottom:12px">⏳</div>' +
+            '<div style="font-size:16px;font-weight:700;color:var(--gray-800,#1f2937);margin-bottom:6px">Bu davet linkinin süresi dolmuş</div>' +
+            '<div style="font-size:13px;color:var(--gray-500,#6b7280);margin-bottom:16px">Davet linkleri tek kullanımlıktır ve 7 gün geçerlidir — bu link daha önce kullanılmış ya da süresi geçmiş. Lütfen İbrahim & Hilal\'den yeni bir davet linki isteyin.</div>' +
+            '<button onclick="fh.auth ? fh.auth.signOut() : location.reload()" style="padding:9px 18px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">Başka hesapla gir</button>' +
+            '</div>';
+    }
+    var bnav = document.getElementById('bnav');
+    if(bnav) bnav.style.display = 'none';
+    document.getElementById('app').style.display = 'none';
 }
 
 function showNoAccess(){
@@ -1422,10 +1460,11 @@ function gOnMouseUp(e){
     gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
 }
 
-// ═══ DÜZENLEYİCİLER (sahip görünümü) ═══════════════════════════
-// E-posta ekle → rules o kişiye SADECE bu sayfayı (shared/guests) açar.
-// Davet linki (?davet=<token>) sadece karşılama kapısı; yetki e-postadan gelir.
-var _editorEmails = [];
+// ═══ DÜZENLEYİCİLER & DAVET LİNKLERİ (sahip görünümü) ═══════════
+// Tek seferlik davet linki: Google ile giren İLK kişiyle kapanır, 7 gün geçerli.
+// Erişim kesme: düzenleyicinin yanındaki × — anında etkili.
+var _editorsCache = [];
+var _invitesCache = [];
 
 function openEditorsModal(){
     document.getElementById('modal-editors').classList.add('show');
@@ -1437,31 +1476,54 @@ function closeEditorsModal(){
     document.body.style.overflow = '';
 }
 
+function inviteLink(token){ return location.origin + location.pathname + '?davet=' + token; }
+
+function inviteDaysLeft(inv){
+    var ms = inv.createdAt && inv.createdAt.toMillis ? inv.createdAt.toMillis()
+           : (typeof inv.createdAt === 'number' ? inv.createdAt : Date.now());
+    var left = 7*24*60*60*1000 - (Date.now() - ms);
+    return Math.max(1, Math.ceil(left / (24*60*60*1000)));
+}
+
 function renderEditorsModal(){
     var body = document.getElementById('editors-body');
     body.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:16px">Yükleniyor…</div>';
-    fh.loadEditors().then(function(ed){
-        _editorEmails = Array.isArray(ed.emails) ? ed.emails.slice() : [];
-        var link = location.origin + location.pathname + '?davet=' + ed.token;
-        var html = '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Eklediğin kişi Google ile giriş yaparak davetli listesini seninle birlikte düzenler. Sadece bu sayfayı görür; her değişiklik yedek geçmişine isimle kaydedilir.</p>';
-        html += '<div class="field"><label>Düzenleyiciler (e-posta)</label>';
-        if(!_editorEmails.length){
-            html += '<div style="font-size:12px;color:var(--gray-400);padding:4px 0">Henüz kimse eklenmedi.</div>';
+    // Eski v0.9 e-posta listesi varsa önce sessizce yeni modele taşınır
+    fh.migrateLegacyEditors().catch(function(e){ console.warn('Migrasyon:', e); }).then(function(){
+        return Promise.all([fh.listEditors(), fh.listPendingInvites()]);
+    }).then(function(res){
+        _editorsCache = res[0] || [];
+        _invitesCache = res[1] || [];
+        var html = '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Davet linki oluşturup düzenlemesini istediğin kişiye gönder. Linke tıklayıp Google ile giren <b>ilk kişi</b> listeye erişir — link tek kullanımlıktır, 7 gün geçerlidir. Düzenleyici sadece bu sayfayı görür; her değişiklik yedek geçmişine isimle kaydedilir.</p>';
+        html += '<button class="btn-save" style="margin-top:0" onclick="inviteCreate()">➕ Yeni davet linki oluştur</button>';
+        if(_invitesCache.length){
+            html += '<div class="field" style="margin-top:14px"><label>Bekleyen davet linkleri</label>';
+            _invitesCache.forEach(function(inv, i){
+                html += '<div style="background:var(--gray-50);border-radius:8px;padding:8px 10px;margin-bottom:6px">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">' +
+                        '<span style="font-size:11px;color:var(--gray-500)">⏳ ' + inviteDaysLeft(inv) + ' gün geçerli · henüz kullanılmadı</span>' +
+                        '<button onclick="inviteCancel(' + i + ')" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;flex-shrink:0;padding:0 4px" title="Daveti iptal et">&times;</button>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:6px">' +
+                        '<input type="text" readonly value="' + fh.esc(inviteLink(inv.token)) + '" style="flex:1;min-width:0;border:1px solid var(--gray-200);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--gray-600)">' +
+                        '<button class="io-btn" style="flex-shrink:0" onclick="inviteCopy(' + i + ')">Kopyala</button>' +
+                    '</div></div>';
+            });
+            html += '</div>';
+        }
+        html += '<div class="field" style="margin-top:14px"><label>Düzenleyiciler</label>';
+        if(!_editorsCache.length){
+            html += '<div style="font-size:12px;color:var(--gray-400);padding:4px 0">Henüz kimse katılmadı. Link gönder, tıklayıp giriş yapan burada görünür.</div>';
         } else {
-            _editorEmails.forEach(function(em, i){
+            _editorsCache.forEach(function(ed, i){
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--gray-50);border-radius:8px;padding:8px 10px;margin-bottom:6px">' +
-                    '<span style="font-size:13px;word-break:break-all">' + fh.esc(em) + '</span>' +
-                    '<button onclick="editorsRemove(' + i + ')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px">&times;</button>' +
+                    '<div style="min-width:0"><div style="font-size:13px;font-weight:600">' + fh.esc(ed.name || '') + '</div>' +
+                    '<div style="font-size:11px;color:var(--gray-500);word-break:break-all">' + fh.esc(ed.email) + '</div></div>' +
+                    '<button onclick="editorsRemove(' + i + ')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px" title="Erişimi kes">&times;</button>' +
                 '</div>';
             });
         }
-        html += '<div style="display:flex;gap:6px;margin-top:6px">' +
-            '<input type="email" id="ed-email" placeholder="ornek@gmail.com" style="flex:1;border:1.5px solid var(--gray-200);border-radius:8px;padding:9px 12px;font-size:14px;outline:none">' +
-            '<button class="io-btn primary" onclick="editorsAdd()">Ekle</button></div></div>';
-        html += '<div style="background:var(--gray-50);border-radius:8px;padding:10px;margin-top:8px">' +
-            '<div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Davet linki — eklediğin kişiye gönder</div>' +
-            '<div style="display:flex;gap:6px"><input type="text" readonly id="ed-link" value="' + fh.esc(link) + '" style="flex:1;border:1px solid var(--gray-200);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--gray-600)">' +
-            '<button class="io-btn" onclick="editorsCopyLink()">Kopyala</button></div></div>';
+        html += '</div>';
         body.innerHTML = html;
     }).catch(function(e){
         console.error(e);
@@ -1469,28 +1531,35 @@ function renderEditorsModal(){
     });
 }
 
-function editorsAdd(){
-    var email = (document.getElementById('ed-email').value || '').trim().toLowerCase();
-    if(!email || email.indexOf('@') < 1){ fh.toast('Geçerli bir e-posta girin','error'); return; }
-    if(_editorEmails.indexOf(email) >= 0){ fh.toast('Zaten ekli','info'); return; }
-    var eds = _editorEmails.concat([email]);
-    fh.setEditorEmails(eds).then(function(){ fh.toast('Eklendi — artık erişebilir','success'); renderEditorsModal(); })
-        .catch(function(e){ console.error(e); fh.toast('Eklenemedi','error'); });
+function inviteCreate(){
+    fh.createInvite().then(function(){
+        fh.toast('Davet linki oluşturuldu — kopyalayıp gönder','success');
+        renderEditorsModal();
+    }).catch(function(e){ console.error(e); fh.toast('Oluşturulamadı','error'); });
 }
 
-function editorsRemove(idx){
-    if(idx < 0 || idx >= _editorEmails.length) return;
-    var eds = _editorEmails.slice();
-    eds.splice(idx, 1);
-    fh.setEditorEmails(eds).then(function(){ fh.toast('Çıkarıldı — erişimi kesildi','info'); renderEditorsModal(); })
-        .catch(function(e){ console.error(e); fh.toast('Çıkarılamadı','error'); });
-}
-
-function editorsCopyLink(){
-    var link = (document.getElementById('ed-link') || {}).value || '';
+function inviteCopy(idx){
+    var inv = _invitesCache[idx];
+    if(!inv) return;
+    var link = inviteLink(inv.token);
     if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(link).then(function(){ fh.toast('Link kopyalandı','success'); }, function(){ fh.toast('Kopyalanamadı','error'); });
     } else { fh.toast('Kopyalama desteklenmiyor','error'); }
+}
+
+function inviteCancel(idx){
+    var inv = _invitesCache[idx];
+    if(!inv) return;
+    fh.deleteInvite(inv.token).then(function(){ fh.toast('Davet iptal edildi','info'); renderEditorsModal(); })
+        .catch(function(e){ console.error(e); fh.toast('İptal edilemedi','error'); });
+}
+
+function editorsRemove(idx){
+    var ed = _editorsCache[idx];
+    if(!ed) return;
+    if(!confirm(ed.email + ' erişimini kesmek istediğine emin misin?')) return;
+    fh.removeEditor(ed.email).then(function(){ fh.toast('Erişimi kesildi','info'); renderEditorsModal(); })
+        .catch(function(e){ console.error(e); fh.toast('Çıkarılamadı','error'); });
 }
 
 // Init drag

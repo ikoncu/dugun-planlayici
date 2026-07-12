@@ -49,11 +49,28 @@ const fh = (() => {
     }
     let _mockListeners = {};   // path -> onData
     const _mock = _DEV ? _buildMockData() : {};
-    // Düzenleyici listesi reload'da kaybolmasın — localStorage'a kalıcı (sadece DEV)
-    if (_DEV) { try { var _pe = JSON.parse(localStorage.getItem('wed-dev-editors') || 'null'); if (_pe) _mock['shared/editors'] = _pe; } catch (e) { } }
+    // Düzenleyici + davet kayıtları reload'da kaybolmasın — localStorage'a kalıcı (sadece DEV)
+    if (_DEV) {
+        try {
+            var _pe = JSON.parse(localStorage.getItem('wed-dev-editors') || 'null');
+            if (_pe && _pe.editors) {
+                // Seed'i localStorage ile DEĞIŞTIR: önce seed'leri temizle
+                Object.keys(_mock).forEach(function (k) { if (k.indexOf('editors/') === 0 || k.indexOf('invites/') === 0) delete _mock[k]; });
+                Object.keys(_pe.editors).forEach(function (em) { _mock['editors/' + em] = _pe.editors[em]; });
+                Object.keys(_pe.invites || {}).forEach(function (t) { _mock['invites/' + t] = _pe.invites[t]; });
+            }
+        } catch (e) { }
+    }
     function _persistEditors() {
         if (!_DEV) return;
-        try { localStorage.setItem('wed-dev-editors', JSON.stringify(_mock['shared/editors'] || null)); } catch (e) { }
+        try {
+            var out = { editors: {}, invites: {} };
+            Object.keys(_mock).forEach(function (k) {
+                if (k.indexOf('editors/') === 0) out.editors[k.slice(8)] = _mock[k];
+                if (k.indexOf('invites/') === 0) out.invites[k.slice(8)] = _mock[k];
+            });
+            localStorage.setItem('wed-dev-editors', JSON.stringify(out));
+        } catch (e) { }
     }
 
     function _buildMockData() {
@@ -120,7 +137,9 @@ const fh = (() => {
                 { id: 'm4', name: 'Masa 4', capacity: 8 },
                 { id: 'm5', name: 'Masa 5', capacity: 10 }
             ] },
-            'shared/editors': { emails: ['demo.duzenleyici@gmail.com'], token: 'dev-demo-token' }
+            // Davet/claim modeli seed'i: bir aktif düzenleyici + bir bekleyen davet linki
+            'editors/demo.duzenleyici@gmail.com': { via: 'seed', name: 'Demo Düzenleyici', claimedAt: Date.now() - 86400000 },
+            'invites/dev-demo-token': { used: false, createdAt: Date.now(), createdBy: 'İbrahim (DEV sahip)' }
         };
     }
 
@@ -128,7 +147,7 @@ const fh = (() => {
     function _mockEmit(path) {
         const cb = _mockListeners[path];
         if (cb) cb(_mock[path] ? JSON.parse(JSON.stringify(_mock[path])) : null);
-        if (path === 'shared/editors') _persistEditors();
+        if (path.indexOf('editors/') === 0 || path.indexOf('invites/') === 0) _persistEditors();
     }
 
     // ---- INIT ----
@@ -658,43 +677,162 @@ const fh = (() => {
         await _maybeCreateVersion(path, docRef, snap.data(), label || 'Manuel', true);
     }
 
-    // ---- DÜZENLEYİCİLER (shared/editors) ----
-    // Sahip e-posta ekler → rules o e-postaya SADECE shared/guests erişimi verir.
-    // Doc: { emails: ['x@gmail.com', ...], token: '<davet linki için rastgele>' }
-    // Sadece sahipler okuy/yazabilir (rules'da editör istisnası yok).
+    // ---- TEK SEFERLİK DAVET + DÜZENLEYİCİLER ----
+    // Model: sahip invites/{token} oluşturur (7 gün geçerli). Linke tıklayan
+    // İLK kişi daveti "sahiplenir": tek atomik batch'te invite used:true olur
+    // + editors/{kendi-eposta} kaydı oluşur. Rules bu batch'i şart koşar —
+    // aynı link ikinci kez KULLANILAMAZ. Erişim kesme = editors doc silme.
+    var INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;  // rules'daki duration.value(7,'d') ile aynı
+
     function _genToken() {
         var bytes = new Uint8Array(16);
         window.crypto.getRandomValues(bytes);
         return Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
     }
 
-    async function loadEditors() {
+    // createdAt → epoch ms (Firestore Timestamp veya mock number)
+    function _toMs(v) {
+        if (!v) return 0;
+        if (typeof v === 'number') return v;
+        return v.toMillis ? v.toMillis() : 0;
+    }
+
+    function inviteExpired(invite) {
+        var ms = _toMs(invite && invite.createdAt);
+        return !ms || (Date.now() - ms) > INVITE_TTL_MS;
+    }
+
+    // Sahip: yeni davet linki oluştur → token döner
+    async function createInvite() {
+        var token = _genToken();
+        var doc = { used: false, createdBy: _currentUser ? (_currentUser.displayName || _currentUser.email) : '' };
         if (_DEV) {
-            if (!_mock['shared/editors']) { _mock['shared/editors'] = { emails: [], token: _genToken() }; _persistEditors(); }
-            return JSON.parse(JSON.stringify(_mock['shared/editors']));
+            _mock['invites/' + token] = Object.assign({ createdAt: Date.now() }, doc);
+            _persistEditors();
+            return token;
         }
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await _db.collection('invites').doc(token).set(doc);
+        return token;
+    }
+
+    // Sahip: bekleyen davetler (kullanılmamış; süresi dolanlar sessizce temizlenir)
+    async function listPendingInvites() {
+        var all;
+        if (_DEV) {
+            all = Object.keys(_mock)
+                .filter(function (k) { return k.indexOf('invites/') === 0; })
+                .map(function (k) { return Object.assign({ token: k.slice(8) }, _mock[k]); });
+        } else {
+            if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+            var snap = await _db.collection('invites').get();
+            all = snap.docs.map(function (d) { return Object.assign({ token: d.id }, d.data()); });
+        }
+        var pending = [];
+        for (var i = 0; i < all.length; i++) {
+            var inv = all[i];
+            if (inv.used) continue;                       // sahiplenilenler editör listesinde görünür
+            if (inviteExpired(inv)) { deleteInvite(inv.token); continue; }  // süresi dolan çöpe
+            pending.push(inv);
+        }
+        pending.sort(function (a, b) { return _toMs(b.createdAt) - _toMs(a.createdAt); });
+        return pending;
+    }
+
+    async function deleteInvite(token) {
+        if (_DEV) { delete _mock['invites/' + token]; _persistEditors(); return; }
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        await _db.collection('invites').doc(token).delete();
+    }
+
+    // Sahip: aktif düzenleyiciler
+    async function listEditors() {
+        if (_DEV) {
+            return Object.keys(_mock)
+                .filter(function (k) { return k.indexOf('editors/') === 0; })
+                .map(function (k) { return Object.assign({ email: k.slice(8) }, _mock[k]); });
+        }
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        var snap = await _db.collection('editors').get();
+        return snap.docs.map(function (d) { return Object.assign({ email: d.id }, d.data()); });
+    }
+
+    async function removeEditor(email) {
+        if (_DEV) { delete _mock['editors/' + email]; _persistEditors(); return; }
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        await _db.collection('editors').doc(email).delete();
+    }
+
+    // Giriş yapan kişi: kendi editör kaydı var mı? (rol tespiti — rules self-get izni)
+    async function getMyEditorDoc() {
+        var email = _currentUser && _currentUser.email ? _currentUser.email.toLowerCase() : null;
+        if (!email) return null;
+        if (_DEV) return _mock['editors/' + email] || null;
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        var snap = await _db.collection('editors').doc(email).get();
+        return snap.exists ? snap.data() : null;
+    }
+
+    // Davet sahiplenme. Dönüş: {ok:true} | {ok:false, reason:'expired'|'error'}
+    // 'expired' = link yok / kullanılmış / süresi geçmiş / yarışta kaybetti —
+    // kullanıcıya hepsi "linkin süresi dolmuş, yeni link isteyin" olarak gösterilir.
+    async function claimInvite(token) {
+        var email = _currentUser && _currentUser.email ? _currentUser.email.toLowerCase() : null;
+        if (!token || !email) return { ok: false, reason: 'error' };
+        if (_DEV) {
+            var inv = _mock['invites/' + token];
+            if (!inv || inv.used || inviteExpired(inv)) return { ok: false, reason: 'expired' };
+            inv.used = true; inv.claimedBy = email; inv.claimedAt = Date.now();
+            _mock['editors/' + email] = { via: token, name: _currentUser.displayName || email, claimedAt: Date.now() };
+            _persistEditors();
+            return { ok: true };
+        }
+        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
+        var inviteRef = _db.collection('invites').doc(token);
+        var snap;
+        try { snap = await inviteRef.get(); } catch (e) { return { ok: false, reason: 'error' }; }
+        if (!snap.exists) return { ok: false, reason: 'expired' };
+        var d = snap.data();
+        if (d.used || inviteExpired(d)) return { ok: false, reason: 'expired' };
+        try {
+            var batch = _db.batch();
+            batch.update(inviteRef, {
+                used: true, claimedBy: email,
+                claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            batch.set(_db.collection('editors').doc(email), {
+                via: token, name: _currentUser.displayName || email,
+                claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await batch.commit();
+            return { ok: true };
+        } catch (e) {
+            // permission-denied: yarışı kaybetti ya da bu arada süresi doldu/kullanıldı
+            console.warn('Claim başarısız:', e.code || e.message);
+            return { ok: false, reason: 'expired' };
+        }
+    }
+
+    // v0.9 → v0.10 geçişi: eski shared/editors {emails:[...]} varsa
+    // e-postaları editors/{email} kayıtlarına taşı, eski doc'u sil.
+    // Sahip modalı ilk açtığında bir kez çalışır; erişim kesintisi olmaz.
+    async function migrateLegacyEditors() {
+        if (_DEV) return;
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
         var ref = _db.collection('shared').doc('editors');
         var snap = await ref.get();
-        if (snap.exists && snap.data().token) return snap.data();
-        // İlk açılışta doc'u oluştur (token bir kez üretilir, sonra sabit kalır)
-        var doc = { emails: (snap.exists && snap.data().emails) || [], token: _genToken() };
-        await ref.set(doc, { merge: true });
-        return doc;
-    }
-
-    async function setEditorEmails(emails) {
-        var list = Array.isArray(emails) ? emails : [];
-        if (_DEV) {
-            if (!_mock['shared/editors']) _mock['shared/editors'] = { emails: [], token: _genToken() };
-            _mock['shared/editors'].emails = list;
-            _persistEditors();
-            return;
+        if (!snap.exists) return;
+        var emails = snap.data().emails || [];
+        for (var i = 0; i < emails.length; i++) {
+            var em = String(emails[i]).toLowerCase();
+            await _db.collection('editors').doc(em).set({
+                via: 'legacy', name: em,
+                claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
         }
-        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        await _db.collection('shared').doc('editors').set({
-            emails: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        await ref.delete();
+        if (emails.length) console.info('Eski düzenleyici listesi taşındı:', emails.join(', '));
     }
 
     // ---- DEV KİMLİK PANELİ (sadece localhost) ----
@@ -705,7 +843,7 @@ const fh = (() => {
         if (!el) { el = document.createElement('div'); el.id = 'fh-dev-panel'; el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:100000;font:12px/1.3 system-ui'; document.body.appendChild(el); }
         var open = false; try { open = localStorage.getItem('wed-dev-open') === '1'; } catch (e) { }
         var emails = {};
-        ((_mock['shared/editors'] || {}).emails || []).forEach(function (e) { emails[e] = 1; });
+        Object.keys(_mock).filter(function (k) { return k.indexOf('editors/') === 0; }).forEach(function (k) { emails[k.slice(8)] = 1; });
         var cur = ''; try { cur = localStorage.getItem('wed-dev-user') || 'owner'; } catch (e) { cur = 'owner'; }
         if (!open) { el.innerHTML = '<button onclick="fh._devToggle()" style="background:#111827;color:#fff;border:none;border-radius:20px;padding:6px 11px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;opacity:.85">🔧 DEV</button>'; return; }
         var opts = '<option value="owner"' + (cur === 'owner' ? ' selected' : '') + '>İbrahim (sahip)</option>';
@@ -734,8 +872,15 @@ const fh = (() => {
         addItem,
         removeItem,
         reorderList,
-        loadEditors,
-        setEditorEmails,
+        createInvite,
+        listPendingInvites,
+        deleteInvite,
+        inviteExpired,
+        listEditors,
+        removeEditor,
+        getMyEditorDoc,
+        claimInvite,
+        migrateLegacyEditors,
         _devSwitch,
         _devToggle,
         toast,

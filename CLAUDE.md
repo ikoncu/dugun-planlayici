@@ -59,7 +59,7 @@ Paralel çalışma + merge'lerin birbirini ezmemesi için kalıcı kurallar:
 |-------|-------|---------------|
 | `index.html` | Dashboard (timeline + özetler) | 3 doc dinler (tasks, guests, venues) |
 | `gorevler.html` | Görevler (subtask, drag-drop) | `shared/planner_tasks` |
-| `davetliler.html` | Davetliler, RSVP, backup, düzenleyiciler | `shared/guests` + `shared/editors` |
+| `davetliler.html` | Davetliler, RSVP, backup, düzenleyiciler | `shared/guests` + `editors/` + `invites/` |
 | `mekanlar.html` | Mekanlar, not odaklı | `shared/venues` |
 | `masa-plani.html` | Masa düzeni | `shared/tables` + `shared/guests` |
 | `shared-ui.js` | Ortak UI (login, drawer, bnav, avatar) | — |
@@ -79,14 +79,14 @@ Paralel çalışma + merge'lerin birbirini ezmemesi için kalıcı kurallar:
 
 ## Versiyon
 
-- **Şu an**: v0.9 (düzenleyici erişimi: e-postayla düzenleyici ekle → ana davetli listesini birlikte düzenler, sadece davetliler sayfası)
+- **Şu an**: v0.10 (tek seferlik davet linki: linke tıklayıp giren İLK kişi düzenleyici olur, 7 gün geçerli; ana listeyi birlikte düzenler, sadece davetliler sayfası)
 - **Sıradaki**: BACKLOG.md'ye bak
 - **v1.0**: çok kullanıcılı geçiş (ertelendi)
 
 ## Dikkat
 
 - `shared/guests` → gerçek kişiler, seed data koddan kaldırıldı (v0.6), veri sadece Firestore'da
-- **Düzenleyiciler (v0.9)**: `shared/editors` = `{emails:[...], token:'...'}`. Rules `isGuestEditor()` bu doc'u `get()` ile okur → e-postası listede olan Google hesabı SADECE `shared/guests` (+`history/`) okur/yazar; e-posta ekle/çıkar = anında yetki, rules deploy gerekmez. Davet linki `davetliler.html?davet=<token>` sadece karşılama UX'i — yetki e-postadan gelir. Sahip olmayan kullanıcı tüm sayfalardan davetliler.html'e yönlenir (`shared-ui.js` guard + `UI.isOwnerUser`).
+- **Düzenleyiciler (v0.10, tek seferlik davet)**: sahip `invites/{token}` oluşturur (`davetliler.html?davet=<token>`, 7 gün geçerli). Linkle Google ile giren İLK kişi daveti sahiplenir: tek atomik batch'te invite `used:true` + `editors/{email}` kaydı oluşur — rules (`get`/`getAfter`) bu batch'i şart koşar, aynı link ikinci kez KULLANILAMAZ (yarış güvenli). `isGuestEditor()` = `exists(editors/{email})` → SADECE `shared/guests` (+`history/`) okur/yazar. Erişim kesme = modaldan editör silme (anında). Kullanılmış/süresi geçmiş linke tıklayan "süresi dolmuş, yeni link isteyin" ekranı görür. Sahip olmayan kullanıcı tüm sayfalardan davetliler.html'e yönlenir (`shared-ui.js` guard + `UI.isOwnerUser`). Eski v0.9 `shared/editors` e-posta listesi, sahip modalı ilk açtığında otomatik `editors/` kayıtlarına taşınır.
 - `copies/{id}` → v0.7 kopya-paylaşım modeli emekli edildi (v0.9): kod ve kurallar kaldırıldı, Firestore'daki eski kopya verisi duruyor (sadece sahip erişir).
 - **Hane/grup (v0.8)**: davetli `group` alanı hane adı olarak kullanılır. Ekleme modalında "Aynı haneye kişi ekle" → her birey ayrı `list` kaydı (total 1), ortak `group`. Liste `renderList` içinde `group`'a göre gruplanır (`buildHouseHTML`, açılır/kapanır `collapsedHouses`). Aynı `group` string'ine sahip TÜM kayıtlar tek hane başlığı altında toplanır — şema değişmedi.
 - `shared/roadmap` → eski atıl veri, kod kullanmıyor
