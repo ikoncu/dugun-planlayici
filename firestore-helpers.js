@@ -49,11 +49,11 @@ const fh = (() => {
     }
     let _mockListeners = {};   // path -> onData
     const _mock = _DEV ? _buildMockData() : {};
-    // Kopyalar reload'da kaybolmasın — localStorage'a kalıcı (sadece DEV, paylaşım testi için)
-    if (_DEV) { try { var _pc = JSON.parse(localStorage.getItem('wed-dev-copies') || '{}'); Object.keys(_pc).forEach(function (k) { _mock['copies/' + k] = _pc[k]; }); } catch (e) { } }
-    function _persistCopies() {
+    // Düzenleyici listesi reload'da kaybolmasın — localStorage'a kalıcı (sadece DEV)
+    if (_DEV) { try { var _pe = JSON.parse(localStorage.getItem('wed-dev-editors') || 'null'); if (_pe) _mock['shared/editors'] = _pe; } catch (e) { } }
+    function _persistEditors() {
         if (!_DEV) return;
-        try { var out = {}; Object.keys(_mock).forEach(function (k) { if (k.indexOf('copies/') === 0) out[k.slice(7)] = _mock[k]; }); localStorage.setItem('wed-dev-copies', JSON.stringify(out)); } catch (e) { }
+        try { localStorage.setItem('wed-dev-editors', JSON.stringify(_mock['shared/editors'] || null)); } catch (e) { }
     }
 
     function _buildMockData() {
@@ -119,7 +119,8 @@ const fh = (() => {
                 { id: 'm3', name: 'Masa 3', capacity: 8 },
                 { id: 'm4', name: 'Masa 4', capacity: 8 },
                 { id: 'm5', name: 'Masa 5', capacity: 10 }
-            ] }
+            ] },
+            'shared/editors': { emails: ['demo.duzenleyici@gmail.com'], token: 'dev-demo-token' }
         };
     }
 
@@ -127,7 +128,7 @@ const fh = (() => {
     function _mockEmit(path) {
         const cb = _mockListeners[path];
         if (cb) cb(_mock[path] ? JSON.parse(JSON.stringify(_mock[path])) : null);
-        if (path.indexOf('copies/') === 0) _persistCopies();
+        if (path === 'shared/editors') _persistEditors();
     }
 
     // ---- INIT ----
@@ -657,85 +658,43 @@ const fh = (() => {
         await _maybeCreateVersion(path, docRef, snap.data(), label || 'Manuel', true);
     }
 
-    // ---- PAYLAŞILAN KOPYALAR ----
-    // Sahip: ana listeden bağımsız kopya oluşturur, e-postayla düzenleyici ekler.
-    // Düzenleyici sadece kendi kopyasını görür/düzenler (rules ile korunur).
-    // _DEV: kopyalar _mock içinde 'copies/{id}' anahtarıyla tutulur (path-bazlı CRUD zaten çalışır).
-    async function createCopy(data) {
-        var doc = {
-            ad: (data && data.ad) || 'İsimsiz liste',
-            list: (data && Array.isArray(data.list)) ? data.list : [],
-            duzenleyenler: (data && Array.isArray(data.duzenleyenler)) ? data.duzenleyenler : [],
-            olusturanUid: _currentUser ? _currentUser.uid : null,
-            olusturanAd: _currentUser ? (_currentUser.displayName || _currentUser.email || 'Bilinmiyor') : 'Bilinmiyor'
-        };
-        if (_DEV) {
-            var id = 'copy-' + Math.random().toString(36).slice(2, 9);
-            _mock['copies/' + id] = Object.assign({ _ms: Date.now() }, doc);
-            _persistCopies();
-            return id;
-        }
-        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-        var ref = await _db.collection('copies').add(doc);
-        return ref.id;
+    // ---- DÜZENLEYİCİLER (shared/editors) ----
+    // Sahip e-posta ekler → rules o e-postaya SADECE shared/guests erişimi verir.
+    // Doc: { emails: ['x@gmail.com', ...], token: '<davet linki için rastgele>' }
+    // Sadece sahipler okuy/yazabilir (rules'da editör istisnası yok).
+    function _genToken() {
+        var bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        return Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
     }
 
-    async function listCopiesForEditor(email) {
-        if (!email) return [];
+    async function loadEditors() {
         if (_DEV) {
-            return Object.keys(_mock)
-                .filter(function (k) { return k.indexOf('copies/') === 0; })
-                .map(function (k) { return Object.assign({ id: k.split('/')[1] }, _mock[k]); })
-                .filter(function (c) { return (c.duzenleyenler || []).indexOf(email) >= 0; });
+            if (!_mock['shared/editors']) { _mock['shared/editors'] = { emails: [], token: _genToken() }; _persistEditors(); }
+            return JSON.parse(JSON.stringify(_mock['shared/editors']));
         }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        var snap = await _db.collection('copies').where('duzenleyenler', 'array-contains', email).get();
-        return snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+        var ref = _db.collection('shared').doc('editors');
+        var snap = await ref.get();
+        if (snap.exists && snap.data().token) return snap.data();
+        // İlk açılışta doc'u oluştur (token bir kez üretilir, sonra sabit kalır)
+        var doc = { emails: (snap.exists && snap.data().emails) || [], token: _genToken() };
+        await ref.set(doc, { merge: true });
+        return doc;
     }
 
-    async function listAllCopies() {
-        if (_DEV) {
-            var arr = Object.keys(_mock)
-                .filter(function (k) { return k.indexOf('copies/') === 0; })
-                .map(function (k) { return Object.assign({ id: k.split('/')[1] }, _mock[k]); });
-            arr.sort(function (a, b) { return (b._ms || 0) - (a._ms || 0); });
-            return arr;
-        }
-        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        var snap = await _db.collection('copies').get();
-        var arr = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-        arr.sort(function (a, b) {
-            var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-            var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-            return tb - ta;
-        });
-        return arr;
-    }
-
-    async function setCopyEditors(copyId, emails) {
+    async function setEditorEmails(emails) {
         var list = Array.isArray(emails) ? emails : [];
-        if (_DEV) { var k = 'copies/' + copyId; if (_mock[k]) _mock[k].duzenleyenler = list; _persistCopies(); return; }
+        if (_DEV) {
+            if (!_mock['shared/editors']) _mock['shared/editors'] = { emails: [], token: _genToken() };
+            _mock['shared/editors'].emails = list;
+            _persistEditors();
+            return;
+        }
         if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        await _db.collection('copies').doc(copyId).set({
-            duzenleyenler: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        await _db.collection('shared').doc('editors').set({
+            emails: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
-    }
-
-    async function renameCopy(copyId, ad) {
-        var name = ad || 'İsimsiz liste';
-        if (_DEV) { var k = 'copies/' + copyId; if (_mock[k]) _mock[k].ad = name; _persistCopies(); return; }
-        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        await _db.collection('copies').doc(copyId).set({
-            ad: name, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-    }
-
-    async function deleteCopy(copyId) {
-        if (_DEV) { delete _mock['copies/' + copyId]; _persistCopies(); return; }
-        if (!_db) throw new Error('Önce fh.init() çağrılmalı');
-        await _db.collection('copies').doc(copyId).delete();
     }
 
     // ---- DEV KİMLİK PANELİ (sadece localhost) ----
@@ -746,7 +705,7 @@ const fh = (() => {
         if (!el) { el = document.createElement('div'); el.id = 'fh-dev-panel'; el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:100000;font:12px/1.3 system-ui'; document.body.appendChild(el); }
         var open = false; try { open = localStorage.getItem('wed-dev-open') === '1'; } catch (e) { }
         var emails = {};
-        Object.keys(_mock).filter(function (k) { return k.indexOf('copies/') === 0; }).forEach(function (k) { (_mock[k].duzenleyenler || []).forEach(function (e) { emails[e] = 1; }); });
+        ((_mock['shared/editors'] || {}).emails || []).forEach(function (e) { emails[e] = 1; });
         var cur = ''; try { cur = localStorage.getItem('wed-dev-user') || 'owner'; } catch (e) { cur = 'owner'; }
         if (!open) { el.innerHTML = '<button onclick="fh._devToggle()" style="background:#111827;color:#fff;border:none;border-radius:20px;padding:6px 11px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;opacity:.85">🔧 DEV</button>'; return; }
         var opts = '<option value="owner"' + (cur === 'owner' ? ' selected' : '') + '>İbrahim (sahip)</option>';
@@ -775,12 +734,8 @@ const fh = (() => {
         addItem,
         removeItem,
         reorderList,
-        createCopy,
-        listCopiesForEditor,
-        listAllCopies,
-        setCopyEditors,
-        renameCopy,
-        deleteCopy,
+        loadEditors,
+        setEditorEmails,
         _devSwitch,
         _devToggle,
         toast,

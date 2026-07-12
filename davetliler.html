@@ -167,8 +167,8 @@
         .io-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:1.5px solid var(--gray-200);background:white;font-size:12px;font-weight:500;cursor:pointer;color:var(--gray-700);white-space:nowrap}
         .io-btn:active{background:var(--gray-50);transform:scale(0.97)}
         .io-btn.primary{border-color:var(--gold);background:var(--gold-bg);color:var(--gold)}
-        #btn-share{margin-left:auto;background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(214,79,109,0.3)}
-        #btn-share:active{opacity:0.85;transform:scale(0.97)}
+        #btn-editors{margin-left:auto;background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(214,79,109,0.3)}
+        #btn-editors:active{opacity:0.85;transform:scale(0.97)}
         .io-btn .io-icon{font-size:14px}
         .io-btn.sheets{border-color:#34a853;color:#34a853;background:#f0fdf4;position:relative}
         .io-btn.sheets.syncing{opacity:0.7;pointer-events:none}
@@ -259,7 +259,7 @@
     <!-- EXPORT BAR -->
     <div class="io-bar">
         <button class="io-btn" onclick="exportExcel()"><span class="io-icon">&#x1F4E4;</span>Excel İndir</button>
-        <button class="io-btn primary" id="btn-share" style="display:none" onclick="openShareModal()"><span class="io-icon">&#x1F517;</span>Paylaşımlar</button>
+        <button class="io-btn primary" id="btn-editors" style="display:none" onclick="openEditorsModal()"><span class="io-icon">&#x1F464;</span>Düzenleyici ekle</button>
     </div>
 
     <!-- SEARCH & FILTER & SORT -->
@@ -392,12 +392,12 @@
 <!-- TOAST -->
 
 <!-- CONFIRM DELETE -->
-<!-- PAYLAŞIMLAR MODAL -->
-<div class="modal-bg" id="modal-share" onclick="if(event.target===this)closeShareModal()">
+<!-- DÜZENLEYİCİLER MODAL -->
+<div class="modal-bg" id="modal-editors" onclick="if(event.target===this)closeEditorsModal()">
     <div class="modal">
         <div class="modal-bar"></div>
-        <div class="modal-hdr"><span id="share-title">🔗 Paylaşımlar</span><button class="modal-x" onclick="closeShareModal()">&times;</button></div>
-        <div class="modal-body" id="share-body"></div>
+        <div class="modal-hdr"><span>👤 Düzenleyiciler</span><button class="modal-x" onclick="closeEditorsModal()">&times;</button></div>
+        <div class="modal-body" id="editors-body"></div>
     </div>
 </div>
 
@@ -413,7 +413,14 @@
 
 <script>
 
-UI.injectLogin('Davetliler', 'Davetli listenize erişin');
+// ?davet=<token> ile gelen kişi davet edilmiş düzenleyicidir — karşılama metni farklı.
+// Token sadece davet kapısı (UX); asıl yetki girişten sonra e-posta eşleşmesiyle verilir.
+var IS_INVITE_LINK = new URLSearchParams(location.search).has('davet');
+if(IS_INVITE_LINK){
+    UI.injectLogin('Davetli Listesi', 'İbrahim & Hilal sizi davetli listesini birlikte düzenlemeye davet etti. Eklendiğiniz e-posta ile giriş yapın.');
+} else {
+    UI.injectLogin('Davetliler', 'Davetli listenize erişin');
+}
 UI.injectLoading();
 UI.injectBnav('davetliler');
 UI.injectDrawer('davetliler');
@@ -424,40 +431,25 @@ UI.setupAuth({
     }
 });
 
-// ── Rol yönlendirme: sahip mi, paylaşılan liste düzenleyicisi mi? ──
-const OWNER_UIDS = ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
-let GUESTS_DOC = 'shared/guests';   // owner: ana liste, editor: copies/{id}
+// ── Rol yönlendirme: sahip mi, düzenleyici mi? ──
+// Düzenleyici ana listeyi (shared/guests) doğrudan düzenler; yetki kararını
+// Firestore rules verir (e-postası shared/editors.emails içinde mi).
+const GUESTS_DOC = 'shared/guests';
 let APP_MODE = 'owner';             // 'owner' | 'editor'
-let activeCopyId = null;
-let activeCopyMeta = null;
-
-function isOwnerUser(){
-    const u = fh.currentUser();
-    return !!(u && OWNER_UIDS.indexOf(u.uid) !== -1);
-}
 
 function routeUser(user){
-    if(isOwnerUser()){
+    if(UI.isOwnerUser(user)){
         APP_MODE = 'owner';
-        GUESTS_DOC = 'shared/guests';
-        var shareBtn = document.getElementById('btn-share');
-        if(shareBtn) shareBtn.style.display = '';
+        var editorsBtn = document.getElementById('btn-editors');
+        if(editorsBtn) editorsBtn.style.display = '';
         startListening();
         return;
     }
-    // Sahip değil → e-postasının bulunduğu kopyaları getir
-    fh.listCopiesForEditor(user && user.email).then(function(copies){
-        if(!copies || copies.length === 0){ showNoAccess(); return; }
-        APP_MODE = 'editor';
-        activeCopyMeta = copies[0];   // kişi başı tek kopya varsayımı
-        activeCopyId = activeCopyMeta.id;
-        GUESTS_DOC = 'copies/' + activeCopyId;
-        applyEditorUI(activeCopyMeta);
-        startListening();
-    }).catch(function(e){
-        console.error('Kopya sorgusu hatası:', e);
-        showNoAccess();
-    });
+    // Sahip değil → düzenleyici modunda dinlemeyi dene.
+    // Erişim yetkisi yoksa rules reddeder → startListening onError → erişim-yok ekranı.
+    APP_MODE = 'editor';
+    applyEditorUI();
+    startListening();
 }
 
 function showNoAccess(){
@@ -467,7 +459,7 @@ function showNoAccess(){
         loading.innerHTML = '<div style="text-align:center;padding:24px;max-width:320px">' +
             '<div style="font-size:40px;margin-bottom:12px">🔒</div>' +
             '<div style="font-size:16px;font-weight:700;color:var(--gray-800,#1f2937);margin-bottom:6px">Erişim yok</div>' +
-            '<div style="font-size:13px;color:var(--gray-500,#6b7280);margin-bottom:16px">Bu hesap bir listeye eklenmemiş. Liste sahibinden e-postanızı eklemesini isteyin.</div>' +
+            '<div style="font-size:13px;color:var(--gray-500,#6b7280);margin-bottom:16px">Bu hesaba erişim verilmemiş. Liste sahibinden bu e-postayı düzenleyici olarak eklemesini isteyin.</div>' +
             '<button onclick="fh.auth ? fh.auth.signOut() : location.reload()" style="padding:9px 18px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#374151">Başka hesapla gir</button>' +
             '</div>';
     }
@@ -476,7 +468,7 @@ function showNoAccess(){
     document.getElementById('app').style.display = 'none';
 }
 
-function applyEditorUI(copy){
+function applyEditorUI(){
     document.body.classList.add('editor-mode');
     var bnav = document.getElementById('bnav');
     if(bnav) bnav.style.display = 'none';
@@ -484,13 +476,11 @@ function applyEditorUI(copy){
     var logo = document.querySelector('#app .header .header-logo');
     if(logo){ logo.removeAttribute('href'); logo.style.pointerEvents = 'none'; logo.style.cursor = 'default'; }
     document.querySelectorAll('#drawer .drawer-item, #drawer .drawer-section').forEach(function(el){ el.style.display = 'none'; });
-    var h1 = document.querySelector('#app .header h1');
-    if(h1) h1.textContent = copy.ad || 'Paylaşılan Liste';
     if(!document.getElementById('editor-strip')){
         var strip = document.createElement('div');
         strip.id = 'editor-strip';
         strip.style.cssText = 'background:var(--gold-bg);color:var(--gold);font-size:12px;font-weight:600;text-align:center;padding:6px 12px;border-bottom:1px solid var(--gold)';
-        strip.textContent = '🔗 Paylaşılan liste — ekleyip çıkarabilirsiniz';
+        strip.textContent = '👤 Düzenleyici olarak görüntülüyorsunuz — ekleyip düzenleyebilirsiniz';
         var header = document.querySelector('#app .header');
         if(header) header.insertAdjacentElement('afterend', strip);
     }
@@ -519,6 +509,11 @@ function startListening(){
         renderList();
     }, {
         onError: (err) => {
+            if (err && err.code === 'permission-denied' && APP_MODE === 'editor') {
+                // Düzenleyici listesinde olmayan hesap — erişim-yok ekranı
+                showNoAccess();
+                return;
+            }
             UI.showApp();
             guests = [];
             updateDashboard();
@@ -600,18 +595,6 @@ function updateDashboard(){
     document.getElementById('s-no').textContent = no;
     document.getElementById('s-gelin').textContent = gelin;
     document.getElementById('s-damat').textContent = damat;
-}
-
-// Bir davetli listesindeki toplam kişi sayısı (her davetin total'ı) — "davet" değil "kişi"
-function personCount(list){
-    return (Array.isArray(list)?list:[]).reduce((s,g)=>s+(g.total??1),0);
-}
-
-// Paylaşımın kaynağı: taraf filtresi (Gelin/Damat) aktifse sadece o taraf, değilse tüm liste
-function shareSourceGuests(){
-    return (activeFilter==='Gelin'||activeFilter==='Damat')
-        ? guests.filter(g=>g.side===activeFilter)
-        : guests;
 }
 
 // Filter
@@ -1439,254 +1422,75 @@ function gOnMouseUp(e){
     gDragState={active:false,srcIdx:null,ghost:null,startY:0,offsetY:0,card:null,timer:null};
 }
 
-// ═══ PAYLAŞIMLAR (sahip görünümü) ══════════════════════════════
-var SHARE_LINK = location.origin + location.pathname;
-var _smEditors = [];
+// ═══ DÜZENLEYİCİLER (sahip görünümü) ═══════════════════════════
+// E-posta ekle → rules o kişiye SADECE bu sayfayı (shared/guests) açar.
+// Davet linki (?davet=<token>) sadece karşılama kapısı; yetki e-postadan gelir.
+var _editorEmails = [];
 
-function openShareModal(){
-    document.getElementById('modal-share').classList.add('show');
+function openEditorsModal(){
+    document.getElementById('modal-editors').classList.add('show');
     document.body.style.overflow = 'hidden';
-    renderShareHome();
+    renderEditorsModal();
 }
-function closeShareModal(){
-    document.getElementById('modal-share').classList.remove('show');
+function closeEditorsModal(){
+    document.getElementById('modal-editors').classList.remove('show');
     document.body.style.overflow = '';
 }
-function _shareBody(){ return document.getElementById('share-body'); }
-function _shareTitle(t){ document.getElementById('share-title').textContent = t; }
 
-function renderShareHome(){
-    _shareTitle('🔗 Paylaşımlar');
-    var body = _shareBody();
+function renderEditorsModal(){
+    var body = document.getElementById('editors-body');
     body.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:16px">Yükleniyor…</div>';
-    fh.listAllCopies().then(function(copies){
-        var meUid = (fh.currentUser()||{}).uid;
-        var html = '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Davetli listenin bir kopyasını oluştur, e-postayla düzenleyici ekle. Düzenleyici sadece kendi kopyasını görür — senin ana listen değişmez.</p>';
-        html += '<button class="btn-save" style="margin-top:0;margin-bottom:14px" onclick="shareCreateForm()">+ Yeni paylaşım oluştur</button>';
-        if(!copies.length){
-            html += '<div style="text-align:center;color:var(--gray-400);font-size:13px;padding:8px">Henüz paylaşım yok.</div>';
-        } else {
-            copies.forEach(function(c){
-                var count = personCount(c.list);
-                var eds = Array.isArray(c.duzenleyenler) ? c.duzenleyenler.length : 0;
-                var mine = c.olusturanUid === meUid;
-                var d = computeDiff(c.list || [], guests || []);
-                var chg = d.news.length + d.changed.length;
-                var chgBtn = chg > 0
-                    ? '<button class="io-btn primary" style="flex:1;justify-content:center" onclick="renderShareDiff(\'' + c.id + '\')">🆕 ' + chg + ' değişiklik</button>'
-                    : '<button class="io-btn" style="flex:1;justify-content:center;opacity:.6" onclick="renderShareDiff(\'' + c.id + '\')">Değişiklik yok</button>';
-                html += '<div style="border:1px solid var(--gray-200);border-radius:10px;padding:12px;margin-bottom:8px">' +
-                    '<div style="min-width:0;margin-bottom:8px">' +
-                        '<div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + fh.esc(c.ad) + '</div>' +
-                        '<div style="font-size:11px;color:var(--gray-500);margin-top:2px">' + count + ' kişi · ' + eds + ' düzenleyici · ' + (mine ? 'Sen' : fh.esc(c.olusturanAd||'')) + '</div>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:6px">' + chgBtn +
-                        '<button class="io-btn" style="flex-shrink:0" onclick="shareManage(\'' + c.id + '\')">Yönet</button>' +
-                    '</div></div>';
-            });
-        }
-        body.innerHTML = html;
-    }).catch(function(e){ console.error(e); body.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px">Paylaşımlar yüklenemedi.</div>'; });
-}
-
-function shareCreateForm(){
-    _shareTitle('Yeni paylaşım');
-    var src = shareSourceGuests();
-    var count = personCount(src);
-    var sideName = activeFilter==='Gelin' ? 'Gelin' : (activeFilter==='Damat' ? 'Damat' : '');
-    var copyLabel = sideName
-        ? sideName + ' tarafını kopyala (' + count + ' kişi)'
-        : 'Mevcut listeyi kopyala (' + count + ' kişi)';
-    var nameVal = sideName ? sideName + ' tarafı' : '';
-    _shareBody().innerHTML =
-        (sideName ? '<div style="font-size:12px;color:var(--gray-500);margin-bottom:10px">Şu an <b>' + sideName + ' Tarafı</b> filtresi seçili — paylaşım yalnızca bu tarafı içerecek.</div>' : '') +
-        '<div class="field"><label>Paylaşım adı</label><input type="text" id="sc-name" value="' + fh.esc(nameVal) + '" placeholder="Örnek: Damat tarafı — kuzenler"></div>' +
-        '<div class="field"><label>Nasıl başlasın?</label>' +
-            '<div class="import-mode" style="margin-bottom:0">' +
-                '<label><input type="radio" name="sc-seed" value="empty" checked><span>Boş başlasın</span></label>' +
-                '<label><input type="radio" name="sc-seed" value="copy"><span>' + copyLabel + '</span></label>' +
-            '</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px;margin-top:8px">' +
-            '<button class="io-btn" style="flex:1;justify-content:center" onclick="renderShareHome()">Geri</button>' +
-            '<button class="btn-save" style="flex:2;margin-top:0" onclick="shareDoCreate()">Oluştur</button>' +
-        '</div>';
-}
-
-function shareDoCreate(){
-    var name = (document.getElementById('sc-name').value || '').trim();
-    if(!name){ fh.toast('Bir ad girin','error'); return; }
-    var seedEl = document.querySelector('input[name="sc-seed"]:checked');
-    var seed = seedEl ? seedEl.value : 'empty';
-    var list = seed === 'copy' ? JSON.parse(JSON.stringify(shareSourceGuests())) : [];
-    fh.createCopy({ ad: name, list: list, duzenleyenler: [] }).then(function(id){
-        fh.toast('Paylaşım oluşturuldu','success');
-        shareManage(id);
-    }).catch(function(e){ console.error(e); fh.toast('Oluşturulamadı','error'); });
-}
-
-function shareManage(copyId){
-    _shareTitle('Paylaşımı yönet');
-    var body = _shareBody();
-    body.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:16px">Yükleniyor…</div>';
-    fh.listAllCopies().then(function(copies){
-        var c = copies.find(function(x){ return x.id === copyId; });
-        if(!c){ renderShareHome(); return; }
-        _smEditors = Array.isArray(c.duzenleyenler) ? c.duzenleyenler.slice() : [];
-        var count = personCount(c.list);
-        var html = '<div class="field"><label>Paylaşım adı</label>' +
-            '<div style="display:flex;gap:6px"><input type="text" id="sm-name" value="' + fh.esc(c.ad) + '">' +
-            '<button class="io-btn" onclick="shareRename(\'' + c.id + '\')">Kaydet</button></div></div>';
-        html += '<div style="font-size:12px;color:var(--gray-500);margin:4px 0 10px">' + count + ' kişi içeriyor</div>';
+    fh.loadEditors().then(function(ed){
+        _editorEmails = Array.isArray(ed.emails) ? ed.emails.slice() : [];
+        var link = location.origin + location.pathname + '?davet=' + ed.token;
+        var html = '<p style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Eklediğin kişi Google ile giriş yaparak davetli listesini seninle birlikte düzenler. Sadece bu sayfayı görür; her değişiklik yedek geçmişine isimle kaydedilir.</p>';
         html += '<div class="field"><label>Düzenleyiciler (e-posta)</label>';
-        if(!_smEditors.length){
+        if(!_editorEmails.length){
             html += '<div style="font-size:12px;color:var(--gray-400);padding:4px 0">Henüz kimse eklenmedi.</div>';
         } else {
-            _smEditors.forEach(function(em, i){
+            _editorEmails.forEach(function(em, i){
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--gray-50);border-radius:8px;padding:8px 10px;margin-bottom:6px">' +
                     '<span style="font-size:13px;word-break:break-all">' + fh.esc(em) + '</span>' +
-                    '<button onclick="shareRemoveEditor(\'' + c.id + '\',' + i + ')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px">&times;</button>' +
+                    '<button onclick="editorsRemove(' + i + ')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px">&times;</button>' +
                 '</div>';
             });
         }
         html += '<div style="display:flex;gap:6px;margin-top:6px">' +
-            '<input type="email" id="sm-email" placeholder="ornek@gmail.com" style="flex:1;border:1.5px solid var(--gray-200);border-radius:8px;padding:9px 12px;font-size:14px;outline:none">' +
-            '<button class="io-btn primary" onclick="shareAddEditor(\'' + c.id + '\')">Ekle</button></div></div>';
+            '<input type="email" id="ed-email" placeholder="ornek@gmail.com" style="flex:1;border:1.5px solid var(--gray-200);border-radius:8px;padding:9px 12px;font-size:14px;outline:none">' +
+            '<button class="io-btn primary" onclick="editorsAdd()">Ekle</button></div></div>';
         html += '<div style="background:var(--gray-50);border-radius:8px;padding:10px;margin-top:8px">' +
-            '<div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Paylaşım linki (aynı link — eklediğin kişi kendi kopyasını görür)</div>' +
-            '<div style="display:flex;gap:6px"><input type="text" readonly value="' + fh.esc(SHARE_LINK) + '" style="flex:1;border:1px solid var(--gray-200);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--gray-600)">' +
-            '<button class="io-btn" onclick="shareCopyLink()">Kopyala</button></div></div>';
-        html += '<div style="display:flex;gap:8px;margin-top:14px">' +
-            '<button class="io-btn" style="flex:1;justify-content:center" onclick="renderShareHome()">Geri</button>' +
-            '<button class="io-btn" style="color:var(--red)" onclick="shareDelete(\'' + c.id + '\',\'' + fh.esc(c.ad).replace(/'/g, "\\'") + '\')">Paylaşımı sil</button>' +
-        '</div>';
+            '<div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Davet linki — eklediğin kişiye gönder</div>' +
+            '<div style="display:flex;gap:6px"><input type="text" readonly id="ed-link" value="' + fh.esc(link) + '" style="flex:1;border:1px solid var(--gray-200);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--gray-600)">' +
+            '<button class="io-btn" onclick="editorsCopyLink()">Kopyala</button></div></div>';
         body.innerHTML = html;
+    }).catch(function(e){
+        console.error(e);
+        body.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px">Düzenleyiciler yüklenemedi.</div>';
     });
 }
 
-function shareRename(copyId){
-    var name = (document.getElementById('sm-name').value || '').trim();
-    if(!name){ fh.toast('Ad boş olamaz','error'); return; }
-    fh.renameCopy(copyId, name).then(function(){ fh.toast('Kaydedildi','success'); shareManage(copyId); });
-}
-function shareAddEditor(copyId){
-    var email = (document.getElementById('sm-email').value || '').trim().toLowerCase();
+function editorsAdd(){
+    var email = (document.getElementById('ed-email').value || '').trim().toLowerCase();
     if(!email || email.indexOf('@') < 1){ fh.toast('Geçerli bir e-posta girin','error'); return; }
-    var eds = _smEditors.slice();
-    if(eds.indexOf(email) >= 0){ fh.toast('Zaten ekli','info'); return; }
-    eds.push(email);
-    fh.setCopyEditors(copyId, eds).then(function(){ fh.toast('Eklendi','success'); shareManage(copyId); })
+    if(_editorEmails.indexOf(email) >= 0){ fh.toast('Zaten ekli','info'); return; }
+    var eds = _editorEmails.concat([email]);
+    fh.setEditorEmails(eds).then(function(){ fh.toast('Eklendi — artık erişebilir','success'); renderEditorsModal(); })
         .catch(function(e){ console.error(e); fh.toast('Eklenemedi','error'); });
 }
-function shareRemoveEditor(copyId, idx){
-    var eds = _smEditors.slice();
-    if(idx < 0 || idx >= eds.length) return;
+
+function editorsRemove(idx){
+    if(idx < 0 || idx >= _editorEmails.length) return;
+    var eds = _editorEmails.slice();
     eds.splice(idx, 1);
-    fh.setCopyEditors(copyId, eds).then(function(){ fh.toast('Çıkarıldı','info'); shareManage(copyId); })
+    fh.setEditorEmails(eds).then(function(){ fh.toast('Çıkarıldı — erişimi kesildi','info'); renderEditorsModal(); })
         .catch(function(e){ console.error(e); fh.toast('Çıkarılamadı','error'); });
 }
-function shareCopyLink(){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(SHARE_LINK).then(function(){ fh.toast('Link kopyalandı','success'); }, function(){ fh.toast('Kopyalanamadı','error'); });
-    } else { fh.toast('Kopyalama desteklenmiyor','error'); }
-}
-function shareDelete(copyId, ad){
-    if(!confirm('"' + ad + '" paylaşımını silmek istediğine emin misin? Bu kopya ve içindeki değişiklikler silinir (ana listen etkilenmez).')) return;
-    fh.deleteCopy(copyId).then(function(){ fh.toast('Paylaşım silindi','info'); renderShareHome(); })
-        .catch(function(e){ console.error(e); fh.toast('Silinemedi','error'); });
-}
 
-// ═══ VURGULU BİRLEŞTİRME ("Bana aktar") ════════════════════════
-var GUEST_DIFF_FIELDS = [['name','Ad'],['side','Taraf'],['group','Grup'],['phone','Telefon'],['adults','Yetişkin'],['children','Çocuk'],['invited','Davetiye'],['rsvp','RSVP'],['table','Masa'],['note','Not']];
-function guestFieldDiffs(a, b){
-    var out = [];
-    GUEST_DIFF_FIELDS.forEach(function(f){
-        var k = f[0];
-        var av = (a[k]===undefined || a[k]===null) ? '' : String(a[k]);
-        var bv = (b[k]===undefined || b[k]===null) ? '' : String(b[k]);
-        if(av !== bv) out.push({ label: f[1], from: av, to: bv });
-    });
-    return out;
-}
-function computeDiff(copyList, masterList){
-    var byId = {}; (masterList||[]).forEach(function(m){ byId[m.id] = m; });
-    var news = [], changed = [];
-    (copyList||[]).forEach(function(c){
-        var m = byId[c.id];
-        if(!m) news.push(c);
-        else { var df = guestFieldDiffs(m, c); if(df.length) changed.push({ item: c, diffs: df }); }
-    });
-    return { news: news, changed: changed };
-}
-function renderShareDiff(copyId){
-    _shareTitle('Değişiklikler');
-    var body = _shareBody();
-    body.innerHTML = '<div style="text-align:center;color:var(--gray-400);padding:16px">Yükleniyor…</div>';
-    fh.listAllCopies().then(function(copies){
-        var c = copies.find(function(x){ return x.id === copyId; });
-        if(!c){ renderShareHome(); return; }
-        var d = computeDiff(c.list || [], guests || []);
-        var html = '<div style="font-size:12px;color:var(--gray-500);margin-bottom:10px">“' + fh.esc(c.ad) + '” — senin ana listende olmayan/farklı olanlar. Onayladıkça senin listene işlenir.</div>';
-        if(!d.news.length && !d.changed.length){
-            html += '<div style="text-align:center;color:var(--gray-400);font-size:13px;padding:16px">Fark yok — ana listenle aynı.</div>';
-        }
-        if(d.news.length){
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 8px"><div style="font-weight:700;font-size:13px">🆕 Yeni eklenenler (' + d.news.length + ')</div><button class="io-btn primary" onclick="importAllNew(\'' + c.id + '\')">Hepsini ekle</button></div>';
-            d.news.forEach(function(it){
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:8px 10px;margin-bottom:6px">' +
-                    '<div style="min-width:0"><div style="font-weight:600;font-size:13px">' + fh.esc(it.name||'(isimsiz)') + '</div>' +
-                    '<div style="font-size:11px;color:var(--gray-500)">' + fh.esc(UI.trLabel(it.side||'')) + (it.group ? ' · ' + fh.esc(it.group) : '') + '</div></div>' +
-                    '<button class="io-btn" style="flex-shrink:0" onclick="importNewItem(\'' + c.id + '\',\'' + it.id + '\')">Listeme ekle</button></div>';
-            });
-        }
-        if(d.changed.length){
-            html += '<div style="font-weight:700;font-size:13px;margin:12px 0 6px">✏️ Değişenler (' + d.changed.length + ')</div>';
-            d.changed.forEach(function(ch){
-                var it = ch.item;
-                var diffTxt = ch.diffs.map(function(df){ return df.label + ': ' + (UI.trLabel(df.from)||'—') + ' → ' + (UI.trLabel(df.to)||'—'); }).join(', ');
-                html += '<div style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:8px;padding:8px 10px;margin-bottom:6px">' +
-                    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="min-width:0"><div style="font-weight:600;font-size:13px">' + fh.esc(it.name||'(isimsiz)') + '</div>' +
-                    '<div style="font-size:11px;color:var(--gray-600)">' + fh.esc(diffTxt) + '</div></div>' +
-                    '<button class="io-btn" style="flex-shrink:0" onclick="applyChange(\'' + c.id + '\',\'' + it.id + '\')">Güncelle</button></div></div>';
-            });
-        }
-        html += '<button class="io-btn" style="width:100%;justify-content:center;margin-top:12px" onclick="renderShareHome()">Geri</button>';
-        body.innerHTML = html;
-    });
-}
-function importNewItem(copyId, itemId){
-    fh.listAllCopies().then(function(copies){
-        var c = copies.find(function(x){ return x.id === copyId; }); if(!c) return;
-        var it = (c.list||[]).find(function(x){ return x.id === itemId; }); if(!it) return;
-        if((guests||[]).some(function(g){ return g.id === it.id; })){ fh.toast('Zaten listende','info'); renderShareDiff(copyId); return; }
-        fh.addItem('shared/guests', JSON.parse(JSON.stringify(it))).then(function(){
-            fh.toast('Listene eklendi','success');
-            setTimeout(function(){ renderShareDiff(copyId); }, 300);
-        });
-    });
-}
-function importAllNew(copyId){
-    fh.listAllCopies().then(function(copies){
-        var c = copies.find(function(x){ return x.id === copyId; }); if(!c) return;
-        var d = computeDiff(c.list || [], guests || []);
-        if(!d.news.length){ fh.toast('Eklenecek yeni kişi yok','info'); return; }
-        var chain = Promise.resolve();
-        d.news.forEach(function(it){ chain = chain.then(function(){ return fh.addItem('shared/guests', JSON.parse(JSON.stringify(it))); }); });
-        chain.then(function(){ fh.toast(d.news.length + ' kişi eklendi','success'); setTimeout(function(){ renderShareDiff(copyId); }, 350); });
-    });
-}
-function applyChange(copyId, itemId){
-    fh.listAllCopies().then(function(copies){
-        var c = copies.find(function(x){ return x.id === copyId; }); if(!c) return;
-        var it = (c.list||[]).find(function(x){ return x.id === itemId; }); if(!it) return;
-        var fields = {};
-        GUEST_DIFF_FIELDS.forEach(function(f){ fields[f[0]] = it[f[0]]; });
-        fields.total = it.total;
-        fh.updateItemField('shared/guests', itemId, fields).then(function(){
-            fh.toast('Güncellendi','success');
-            setTimeout(function(){ renderShareDiff(copyId); }, 300);
-        });
-    });
+function editorsCopyLink(){
+    var link = (document.getElementById('ed-link') || {}).value || '';
+    if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(link).then(function(){ fh.toast('Link kopyalandı','success'); }, function(){ fh.toast('Kopyalanamadı','error'); });
+    } else { fh.toast('Kopyalama desteklenmiyor','error'); }
 }
 
 // Init drag

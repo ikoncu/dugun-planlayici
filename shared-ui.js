@@ -17,6 +17,16 @@ window.UI = (function () {
 
     var _currentUser = null;
 
+    // ── Sahip Kontrolü ───────────────────────────────────────────
+    // Sahipler (İbrahim + Hilal) UID ile tanınır — firestore.rules ile aynı liste.
+    // Sahip olmayan (düzenleyici) yalnızca davetliler sayfasını kullanabilir;
+    // asıl güvenlik Firestore rules'da, buradaki yönlendirme sadece UX.
+    var OWNER_UIDS = ['2A9tYioQs8SmZC4v6QgZ2ct4bHI2', 'xJt5BecC3yQLAIxFGGTvj3gs37m1'];
+    function isOwnerUser(user) {
+        var u = user || _currentUser;
+        return !!(u && OWNER_UIDS.indexOf(u.uid) !== -1);
+    }
+
     // ── XSS Escape ───────────────────────────────────────────────
     function esc(s) {
         if (!s) return '';
@@ -166,6 +176,12 @@ window.UI = (function () {
         fh.onAuth({
             onLogin: function (user) {
                 _currentUser = user;
+                // Düzenleyici sadece davetliler sayfasını kullanır — diğer
+                // sayfalardan oraya taşı (veriyi zaten rules kapatıyor).
+                if (!isOwnerUser(user) && location.pathname.indexOf('davetliler') === -1) {
+                    location.replace('davetliler.html');
+                    return;
+                }
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('loading-screen').style.display = 'flex';
                 var bnav = document.getElementById('bnav');
@@ -193,6 +209,7 @@ window.UI = (function () {
     // ── Public API ───────────────────────────────────────────────
     return {
         PAGES: PAGES,
+        isOwnerUser: isOwnerUser,
         esc: esc,
         trLabel: trLabel,
         toggleDrawer: toggleDrawer,

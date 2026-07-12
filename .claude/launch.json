@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8080"],
       "port": 8080
+    },
+    {
+      "name": "wedding-app-node",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "-p", "8081", "-c-1"],
+      "port": 8081
     }
   ]
 }

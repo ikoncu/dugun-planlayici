@@ -122,9 +122,20 @@ Son güncelleme: 2026-04-09
 - **Zengin mock veri**: 5 → 21 kayıt (22 kişi). Çok haneli aileler (Yılmaz/Demir/Şahin/Kaya Ailesi + İş Arkadaşları) yeni gruplu görünümü hemen sergiler; grupsuz tekiller + eski usul çok-kişili tek kart (Akrabalar) korunur. Görev/mekan/masa verisi de genişletildi.
 - **DEV-safe fix**: `index.html` `loadDates/saveDates` artık `fh.db` null iken (mock mod) patlamıyor — 5 sayfa da mock modda page-error'suz açılıyor (Playwright ile doğrulandı).
 
+## v0.9 — Düzenleyici erişimi: ana listeyi birlikte düzenleme (2026-07-12)
+- **Kopya modeli emekli, doğrudan düzenleme geldi**: "Paylaşımlar" (copies + diff/merge, ~350 satır) kaldırıldı → tek "👤 Düzenleyici ekle" modalı. Eklenen e-posta ana davetli listesini (`shared/guests`) sahiplerle birlikte gerçek zamanlı düzenler — kopya/aktarma derdi yok.
+- **Veri modeli**: yeni `shared/editors` = `{emails:[...], token:'...'}` (ilk açılışta otomatik oluşur, token bir kez üretilir). Sadece sahip okur/yazar → düzenleyici kendine/başkasına yetki veremez.
+- **Rules**: `isGuestEditor()` `shared/editors`'ı `get()` ile okur; düzenleyiciye SADECE `shared/guests` + `history/` açık (read/update). E-posta ekle/çıkar = anında yetki/kesme, rules deploy gerekmez. Eski `copies` kural bloğu kaldırıldı (Firestore'daki kopya verisi duruyor, sadece sahip erişir).
+- **Davet linki**: `davetliler.html?davet=<token>` — girişte özel karşılama metni. Güvenlik e-posta eşleşmesinden; link sadece davet kapısı (UX).
+- **Sadece davetliler sayfası**: sahip olmayan kullanıcı hangi sayfayı açarsa açsın `davetliler.html`'e yönlenir (`shared-ui.js` guard, `UI.isOwnerUser` tek kaynak). Editör modunda bnav/drawer linkleri/yönetim butonu gizli, "Düzenleyici olarak görüntülüyorsunuz" şeridi.
+- **Geri alınabilirlik**: mevcut otomatik versiyonlama düzenleyici kayıtlarını da `history/`'ye isimle snapshot'lar (rules izni eklendi) — yanlışlık olursa yedek geçmişinden geri yüklenir.
+- **DEV mock uyarlandı**: `shared/editors` mock'a eklendi, DEV paneli editör listesini oradan okur, `wed-dev-editors` localStorage persist. launch.json'a node tabanlı `wedding-app-node` (8081) alternatifi eklendi (python sandbox sorunu).
+- **Test**: lokal önizleme (DEV mock) ile doğrulandı — sahip: modal aç/e-posta ekle-çıkar/link kopyala; editör: rozet + kısıtlı UI + RSVP düzenleme + index→davetliler yönlendirme; konsol hatasız.
+- **Not**: `smydmr.1988@gmail.com` deploy sonrası canlıda modal üzerinden eklenecek (veri koda gömülmez).
+
 ## Son Durum
 - Canlı: `dugun-planlayici-ff34e.web.app` (Firebase Hosting)
-- Versiyon: v0.8
+- Versiyon: v0.9
 - 5 sayfa: index, gorevler, davetliler, mekanlar, masa-plani
 - 3 JS modülü: firebase-config.js, firestore-helpers.js, shared-ui.js
 - Detaylar: CLAUDE.md (proje), BACKLOG.md (roadmap)

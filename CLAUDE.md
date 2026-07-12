@@ -59,7 +59,7 @@ Paralel çalışma + merge'lerin birbirini ezmemesi için kalıcı kurallar:
 |-------|-------|---------------|
 | `index.html` | Dashboard (timeline + özetler) | 3 doc dinler (tasks, guests, venues) |
 | `gorevler.html` | Görevler (subtask, drag-drop) | `shared/planner_tasks` |
-| `davetliler.html` | Davetliler, RSVP, backup, paylaşım | `shared/guests` + `copies/{id}` |
+| `davetliler.html` | Davetliler, RSVP, backup, düzenleyiciler | `shared/guests` + `shared/editors` |
 | `mekanlar.html` | Mekanlar, not odaklı | `shared/venues` |
 | `masa-plani.html` | Masa düzeni | `shared/tables` + `shared/guests` |
 | `shared-ui.js` | Ortak UI (login, drawer, bnav, avatar) | — |
@@ -79,17 +79,18 @@ Paralel çalışma + merge'lerin birbirini ezmemesi için kalıcı kurallar:
 
 ## Versiyon
 
-- **Şu an**: v0.8 (hane/grup olarak davetli ekleme: tek hane adı altında bireyleri isimle ekle, listede gruplu göster)
+- **Şu an**: v0.9 (düzenleyici erişimi: e-postayla düzenleyici ekle → ana davetli listesini birlikte düzenler, sadece davetliler sayfası)
 - **Sıradaki**: BACKLOG.md'ye bak
 - **v1.0**: çok kullanıcılı geçiş (ertelendi)
 
 ## Dikkat
 
 - `shared/guests` → gerçek kişiler, seed data koddan kaldırıldı (v0.6), veri sadece Firestore'da
-- `copies/{id}` → paylaşılan davetli kopyaları (v0.7): `{ad, olusturanUid, olusturanAd, duzenleyenler:[email], list:[]}`. Rules: sahip her şey, düzenleyici sadece `duzenleyenler`'de e-postası olan kopyayı okur/günceller (duzenleyenler/olusturanUid değiştiremez). Editör davetliler.html'de `GUESTS_DOC='copies/{id}'`e yönlenir.
+- **Düzenleyiciler (v0.9)**: `shared/editors` = `{emails:[...], token:'...'}`. Rules `isGuestEditor()` bu doc'u `get()` ile okur → e-postası listede olan Google hesabı SADECE `shared/guests` (+`history/`) okur/yazar; e-posta ekle/çıkar = anında yetki, rules deploy gerekmez. Davet linki `davetliler.html?davet=<token>` sadece karşılama UX'i — yetki e-postadan gelir. Sahip olmayan kullanıcı tüm sayfalardan davetliler.html'e yönlenir (`shared-ui.js` guard + `UI.isOwnerUser`).
+- `copies/{id}` → v0.7 kopya-paylaşım modeli emekli edildi (v0.9): kod ve kurallar kaldırıldı, Firestore'daki eski kopya verisi duruyor (sadece sahip erişir).
 - **Hane/grup (v0.8)**: davetli `group` alanı hane adı olarak kullanılır. Ekleme modalında "Aynı haneye kişi ekle" → her birey ayrı `list` kaydı (total 1), ortak `group`. Liste `renderList` içinde `group`'a göre gruplanır (`buildHouseHTML`, açılır/kapanır `collapsedHouses`). Aynı `group` string'ine sahip TÜM kayıtlar tek hane başlığı altında toplanır — şema değişmedi.
 - `shared/roadmap` → eski atıl veri, kod kullanmıyor
 - `shared/budget_v2` → bütçe sayfası kaldırıldı (v0.6), Firestore doc korunuyor
-- **Lokal test & önizleme**: `firestore-helpers.js` içinde `_DEV` mock var — **localhost** VE **Firebase önizleme kanalları** (host'ta `--` var, ör. `...--kanal-hash.web.app`) mock moda girer: auth atlanır, `_mock` (zengin demo veri) ile çalışır, gerçek Firestore'a dokunmaz. Sol altta 🔧 DEV paneli owner↔editör geçişi; kopyalar `wed-dev-copies` localStorage. **Canlı** (`dugun-planlayici-ff34e.web.app`, `--` yok) mock ASLA aktif olmaz.
+- **Lokal test & önizleme**: `firestore-helpers.js` içinde `_DEV` mock var — **localhost** VE **Firebase önizleme kanalları** (host'ta `--` var, ör. `...--kanal-hash.web.app`) mock moda girer: auth atlanır, `_mock` (zengin demo veri) ile çalışır, gerçek Firestore'a dokunmaz. Sol altta 🔧 DEV paneli owner↔editör geçişi; düzenleyici listesi `wed-dev-editors` localStorage. **Canlı** (`dugun-planlayici-ff34e.web.app`, `--` yok) mock ASLA aktif olmaz.
 - **Önizleme deploy**: `.github/workflows/preview.yml` → `claude/**` branch'ine push veya main'e PR'da geçici (7 gün) önizleme kanalı deploy eder. Link: Actions run "Summary" / PR yorumu. Canlıya dokunmaz. Canlı deploy yalnızca `deploy.yml` (main'e push, `channelId: live`).
 - Yeni sayfa eklemek: `shared-ui.js` PAGES dizisine 1 satır + yeni HTML dosyası
